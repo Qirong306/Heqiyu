@@ -1678,3 +1678,141 @@ body {
         height: 32px;
     }
 }
+/* ========== 21. 视频弹幕词库弹窗 ========== */
+.vd-wb-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 300;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.vd-wb-modal {
+    background: var(--panel-bg);
+    border-radius: var(--radius-lg);
+    width: 88%;
+    max-width: 380px;
+    max-height: 65vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.vd-wb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1.5px solid var(--border);
+    font-size: 15px;
+    color: var(--text);
+    letter-spacing: 1px;
+}
+
+.vd-wb-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: var(--font-main);
+}
+
+.vd-wb-add-row {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.vd-wb-add-row input {
+    flex: 1;
+    padding: 7px 12px;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    font-size: 13px;
+    font-family: var(--font-main);
+    background: var(--input-box);
+    color: var(--text);
+    outline: none;
+}
+
+.vd-wb-add-row input:focus {
+    border-color: var(--accent);
+}
+
+.vd-wb-add-row button {
+    padding: 7px 14px;
+    background: var(--accent);
+    color: var(--text);
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.vd-wb-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 14px;
+    max-height: 220px;
+}
+
+.vd-wb-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--item-bg);
+    border-radius: var(--radius-sm);
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.vd-wb-del {
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    line-height: 1;
+}
+
+.vd-wb-empty {
+    text-align: center;
+    color: var(--text-system);
+    padding: 20px;
+    font-size: 13px;
+}
+
+.vd-wb-footer {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1.5px solid var(--border);
+}
+
+.vd-wb-footer button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    background: var(--item-bg);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--font-main);
+    color: var(--text-secondary);
+}
