@@ -66,7 +66,45 @@ const VideoDanmaku = (function() {
         return lines[Math.floor(Math.random() * lines.length)];
     }
 
+    function closeWordBankModal() {
+        const overlay = document.getElementById('vd-wb-overlay');
+        if (overlay) overlay.remove();
+    }
+
+    function renderWordBankList() {
+        const list = document.getElementById('vd-wb-list');
+        if (!list) return;
+        const lines = getWordBank();
+        if (lines.length === 0) {
+            list.innerHTML = '<div class="vd-wb-empty">还没有词条</div>';
+            return;
+        }
+        let html = '';
+        lines.forEach(function(line, i) {
+            html += '<div class="vd-wb-item"><span>' + line + '</span><button class="vd-wb-del" data-idx="' + i + '">x</button></div>';
+        });
+        list.innerHTML = html;
+        // 更新标题计数
+        const header = document.querySelector('.vd-wb-header span');
+        if (header) header.textContent = '弹幕词库 (' + lines.length + '条)';
+        // 重新绑定删除按钮
+        list.querySelectorAll('.vd-wb-del').forEach(function(btn) {
+            btn.onclick = function() {
+                const idx = parseInt(this.getAttribute('data-idx'));
+                const linesArr = getWordBank();
+                if (linesArr.length <= 1) { showToast('至少保留一条'); return; }
+                linesArr.splice(idx, 1);
+                saveWordBank(linesArr);
+                refreshWordBankCache();
+                renderWordBankList();
+            };
+        });
+    }
+
     function openWordBankModal() {
+        // 先移除已有的
+        closeWordBankModal();
+
         const lines = getWordBank();
         let listHtml = '';
         lines.forEach(function(line, i) {
@@ -84,7 +122,7 @@ const VideoDanmaku = (function() {
             '<input type="text" id="vd-wb-new-word" placeholder="添加新词条..." maxlength="30">' +
             '<button id="vd-wb-add-btn">添加</button>' +
             '</div>' +
-            '<div class="vd-wb-list">' + (listHtml || '<div class="vd-wb-empty">还没有词条</div>') + '</div>' +
+            '<div class="vd-wb-list" id="vd-wb-list">' + (listHtml || '<div class="vd-wb-empty">还没有词条</div>') + '</div>' +
             '<div class="vd-wb-footer">' +
             '<button id="vd-wb-reset">恢复默认</button>' +
             '<button id="vd-wb-done">完成</button>' +
@@ -105,13 +143,12 @@ const VideoDanmaku = (function() {
             const word = input.value.trim();
             if (!word) return;
             if (word.length > 30) { showToast('词条不能超过30个字'); return; }
-            const lines = getWordBank();
-            lines.push(word);
-            saveWordBank(lines);
+            const linesArr = getWordBank();
+            linesArr.push(word);
+            saveWordBank(linesArr);
             refreshWordBankCache();
             input.value = '';
-            closeWordBankModal();
-            openWordBankModal();
+            renderWordBankList();
         };
 
         document.getElementById('vd-wb-new-word').addEventListener('keydown', function(e) {
@@ -122,28 +159,21 @@ const VideoDanmaku = (function() {
             if (!confirm('恢复默认词库？当前词库将被覆盖。')) return;
             saveWordBank(DEFAULT_LINES.slice());
             refreshWordBankCache();
-            closeWordBankModal();
-            openWordBankModal();
+            renderWordBankList();
             showToast('已恢复默认词库');
         };
 
         document.querySelectorAll('.vd-wb-del').forEach(function(btn) {
             btn.onclick = function() {
                 const idx = parseInt(this.getAttribute('data-idx'));
-                const lines = getWordBank();
-                if (lines.length <= 1) { showToast('至少保留一条'); return; }
-                lines.splice(idx, 1);
-                saveWordBank(lines);
+                const linesArr = getWordBank();
+                if (linesArr.length <= 1) { showToast('至少保留一条'); return; }
+                linesArr.splice(idx, 1);
+                saveWordBank(linesArr);
                 refreshWordBankCache();
-                closeWordBankModal();
-                openWordBankModal();
+                renderWordBankList();
             };
         });
-    }
-
-    function closeWordBankModal() {
-        const overlay = document.getElementById('vd-wb-overlay');
-        if (overlay) overlay.remove();
     }
 
     // ==================== 状态管理 ====================
@@ -396,7 +426,7 @@ const VideoDanmaku = (function() {
 
     function handleKeyboard(e) {
         if (!state.isOpen) return;
-        if (e.key === 'Escape') { close(); return; }
+        if (e.key === 'Escape') { closeWordBankModal(); close(); return; }
         if (e.key === ' ' && document.activeElement !== els.chatInput && document.activeElement !== els.urlInput) {
             e.preventDefault();
             if (state.video && state.video.src && state.video.src !== window.location.href) {
@@ -456,7 +486,6 @@ const VideoDanmaku = (function() {
 
         if (state.video && !state.video.paused) startDanmakuLoop();
 
-        // 在主聊天发一条系统消息
         var otherName = (typeof appData !== 'undefined' && appData.otherName) ? appData.otherName : 'TA';
         if (typeof addSystemMsg === 'function') {
             addSystemMsg('你和 ' + otherName + ' 开始一起看视频了');
@@ -465,6 +494,7 @@ const VideoDanmaku = (function() {
 
     function close() {
         if (!state.isOpen) return;
+        closeWordBankModal();
         state.isOpen = false;
         if (els.container) els.container.classList.remove('vd-open');
         document.body.style.overflow = '';
