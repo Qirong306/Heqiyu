@@ -523,8 +523,8 @@ function sendRandomReply() {
         var eid = appData.emojiIds[Math.floor(Math.random() * appData.emojiIds.length)];
         return getImageFromDB('images', eid).then(function(img) {
             if (!img) return false;
-            addMessage(img, 'other', true);
-            appData.chatHistory.push({ type: 'other', content: '', imageId: eid, time: Date.now() });
+            addMessage(img, 'other', true, true);
+            appData.chatHistory.push({ type: 'other', content: '', imageId: eid, time: Date.now(), isSticker: true });
             return saveData().then(function() { return true; });
         });
     } else {
@@ -542,12 +542,17 @@ function sendMsg() {
     input.value = ''; saveData();
     setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
 }
-function addMessage(content, type, isImage) {
+// ========== addMessage（支持 isSticker）==========
+function addMessage(content, type, isImage, isSticker) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
-    div.className = 'msg ' + type;
+    div.className = 'msg ' + type + (isSticker ? ' is-sticker' : '');
     var handler = type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
     var av = getAvatarHTMLSync(type === 'me');
-    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImage ? '<img class="msg-image" src="' + content + '">' : content) + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
+    if (isSticker) {
+        div.innerHTML = '<div class="bubble"><img class="msg-image" src="' + content + '"></div>';
+    } else {
+        div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImage ? '<img class="msg-image" src="' + content + '">' : content) + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
+    }
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
 }
 function addMessageWithRole(content, role, roleClass) {
@@ -566,6 +571,7 @@ function addSystemMsg(text) {
     appData.chatHistory.push({ type: 'system', content: text, time: Date.now() });
     saveData();
 }
+// ========== renderChatHistory（支持 isSticker）==========
 function renderChatHistory() {
     var chat = document.getElementById('chat'); chat.innerHTML = '';
     if (!appData.chatHistory || appData.chatHistory.length === 0) {
@@ -577,12 +583,18 @@ function renderChatHistory() {
         if (m.type === 'system') {
             var d = document.createElement('div'); d.className = 'system-msg'; d.textContent = m.content; chat.appendChild(d);
         } else {
-            var d = document.createElement('div'); d.className = 'msg ' + m.type;
+            var d = document.createElement('div');
+            d.className = 'msg ' + m.type;
             var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
             var av = getAvatarHTMLSync(m.type === 'me');
             if (m.imageId) {
                 promises.push(getImageFromDB('images', m.imageId).then(function(img) {
-                    d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                    if (m.isSticker) {
+                        d.className = 'msg ' + m.type + ' is-sticker';
+                        d.innerHTML = '<div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]') + '</div>';
+                    } else {
+                        d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                    }
                     chat.appendChild(d);
                 }));
             } else {
@@ -629,12 +641,13 @@ function uploadToMorePanel() {
     }).catch(function() { showToast('上传失败，请重试'); });
     document.getElementById('moreFileInput').value = '';
 }
+// ========== sendFromMorePanel（表情包 isSticker）==========
 function sendFromMorePanel(index) {
     if (!Array.isArray(appData.emojiIds) || index >= appData.emojiIds.length) return;
     getImageFromDB('images', appData.emojiIds[index]).then(function(url) {
         if (!url) { showToast('表情包已失效'); return; }
-        addMessage(url, 'me', true);
-        appData.chatHistory.push({ type: 'me', content: '', imageId: appData.emojiIds[index], time: Date.now() });
+        addMessage(url, 'me', true, true);
+        appData.chatHistory.push({ type: 'me', content: '', imageId: appData.emojiIds[index], time: Date.now(), isSticker: true });
         saveData(); toggleMorePanel();
         setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 800);
     });
