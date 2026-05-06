@@ -18,6 +18,7 @@
   "theme_color": "#f0c78e",
   "background_color": "#f5f0eb",
   "display": "standalone",
-  "start_url": "/Heqiyu/",
+  "scope": "/Heqiyu/",
+  "start_url": "/Heqiyu/index.html",
   "description": "甜心助手聊天应用"
 }
