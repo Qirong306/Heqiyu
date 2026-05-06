@@ -1,10 +1,12 @@
 // ==================== 音乐模块 ====================
 // 网易云外链播放器 + 歌单管理 + 浮动小球（可拖动）
+// 支持简单格式 { id, title, artist } 和外部歌单 { title, sub, url, isCustom }
 
 var musicPlaylist = [];
 var musicCurrentIndex = -1;
 var musicPlayMode = 'order';
 var musicFloatingImg = '';
+var musicAudio = null; // 用于自定义链接的 audio 元素
 
 // ========== 入口加到"+"面板 ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -18,9 +20,15 @@ document.addEventListener('DOMContentLoaded', function() {
             grid.appendChild(btn);
         }
     }, 600);
-    
     createFloatingBall();
 });
+
+// ========== 从 URL 提取歌曲 ID ==========
+function getSongIdFromUrl(url) {
+    if (!url) return '';
+    var match = url.match(/[?&]id=(\d+)/);
+    return match ? match[1] : '';
+}
 
 // ========== 浮动小球（可拖动） ==========
 function createFloatingBall() {
@@ -154,19 +162,30 @@ function openMusicPlayer() {
 
         overlay.innerHTML = '<div class="modal" style="text-align:center;max-width:420px;">' +
             '<h3>音乐小憩</h3>' +
-            '<div id="musicNowPlaying" style="font-size:13px;color:var(--text-secondary);margin:4px 0;">未在播放</div>' +
-            '<div id="musicPlayerContainer" style="margin:8px 0;min-height:66px;"></div>' +
-            '<div class="btn-row" style="justify-content:center;margin:6px 0;">' +
+            '<div id="musicNowPlaying" style="font-size:14px;color:var(--text);margin:6px 0;font-weight:bold;">未在播放</div>' +
+            '<div id="musicPlayerContainer" style="margin:8px 0;min-height:40px;"></div>' +
+            // 播放控制按钮（仿网易云风格）
+            '<div class="btn-row" style="justify-content:center;align-items:center;gap:16px;margin:10px 0;">' +
+            '<button class="music-ctrl-btn" onclick="prevSong()" title="上一曲">&#9664;&#9664;</button>' +
+            '<button class="music-ctrl-btn music-ctrl-play" id="btnPlayPause" onclick="togglePlayPause()" title="播放/暂停">&#9654;</button>' +
+            '<button class="music-ctrl-btn" onclick="nextSong()" title="下一曲">&#9654;&#9654;</button>' +
+            '</div>' +
+            // 播放模式
+            '<div class="btn-row" style="justify-content:center;margin:6px 0;gap:6px;">' +
             '<button class="btn-sm" id="btnModeLoop" onclick="setPlayMode(\'loop\')">单曲循环</button>' +
             '<button class="btn-sm outline" id="btnModeOrder" onclick="setPlayMode(\'order\')">顺序</button>' +
             '<button class="btn-sm outline" id="btnModeRandom" onclick="setPlayMode(\'random\')">随机</button>' +
             '</div>' +
-            '<div class="btn-row" style="justify-content:center;margin:4px 0;">' +
-            '<button class="btn-sm outline" onclick="prevSong()">上一曲</button>' +
-            '<button class="btn-sm outline" onclick="nextSong()">下一曲</button>' +
+            // 进度条
+            '<div style="display:flex;align-items:center;gap:8px;padding:0 10px;margin:4px 0;">' +
+            '<span id="musicCurTime" style="font-size:10px;color:var(--text-system);">00:00</span>' +
+            '<input type="range" id="musicProgress" min="0" max="100" value="0" oninput="seekMusic(this.value)" style="flex:1;height:4px;accent-color:var(--accent);">' +
+            '<span id="musicDurTime" style="font-size:10px;color:var(--text-system);">00:00</span>' +
             '</div>' +
-            '<div style="max-height:180px;overflow-y:auto;margin-top:10px;text-align:left;" id="musicPlaylistEl"></div>' +
-            '<div class="btn-row" style="justify-content:center;margin-top:8px;">' +
+            // 歌单列表
+            '<div style="max-height:150px;overflow-y:auto;margin-top:6px;text-align:left;" id="musicPlaylistEl"></div>' +
+            // 管理按钮
+            '<div class="btn-row" style="justify-content:center;margin-top:8px;gap:4px;">' +
             '<button class="btn-sm outline" onclick="importMusicJSON()">导入歌单</button>' +
             '<button class="btn-sm outline" onclick="exportMusicJSON()">导出歌单</button>' +
             '<button class="btn-sm outline" onclick="addSongPrompt()">添加歌曲</button>' +
@@ -180,12 +199,145 @@ function openMusicPlayer() {
 
     renderPlaylist();
     updateModeButtons();
+    updatePlayPauseButton();
     openModal('musicOverlay');
 }
 
 function closeMusicPlayer() {
     closeModal('musicOverlay');
     showFloatingBall();
+}
+
+// ========== 播放/暂停 ==========
+function togglePlayPause() {
+    if (musicAudio) {
+        if (musicAudio.paused) {
+            musicAudio.play();
+        } else {
+            musicAudio.pause();
+        }
+        updatePlayPauseButton();
+    }
+}
+
+function updatePlayPauseButton() {
+    var btn = document.getElementById('btnPlayPause');
+    if (!btn) return;
+    if (musicAudio && !musicAudio.paused) {
+        btn.innerHTML = '&#10074;&#10074;'; // 暂停图标
+    } else {
+        btn.innerHTML = '&#9654;'; // 播放图标
+    }
+}
+
+// ========== 进度条 ==========
+function seekMusic(value) {
+    if (musicAudio && musicAudio.duration) {
+        musicAudio.currentTime = (value / 100) * musicAudio.duration;
+    }
+}
+
+function updateProgress() {
+    if (!musicAudio) return;
+    var curEl = document.getElementById('musicCurTime');
+    var durEl = document.getElementById('musicDurTime');
+    var progEl = document.getElementById('musicProgress');
+    if (curEl) curEl.textContent = formatSeconds(musicAudio.currentTime);
+    if (durEl) durEl.textContent = formatSeconds(musicAudio.duration || 0);
+    if (progEl && musicAudio.duration) {
+        progEl.value = (musicAudio.currentTime / musicAudio.duration) * 100;
+    }
+}
+
+function formatSeconds(sec) {
+    if (isNaN(sec) || sec < 0) return '00:00';
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// ========== 歌曲切换 ==========
+function playSong(index) {
+    if (index < 0 || index >= musicPlaylist.length) return;
+    musicCurrentIndex = index;
+    var song = musicPlaylist[index];
+
+    // 清理旧播放器
+    var container = document.getElementById('musicPlayerContainer');
+    if (container) {
+        if (song.url && song.isCustom) {
+            // 自定义链接用 audio 标签
+            if (musicAudio) {
+                musicAudio.pause();
+                musicAudio.removeEventListener('timeupdate', updateProgress);
+                musicAudio.removeEventListener('play', updatePlayPauseButton);
+                musicAudio.removeEventListener('pause', updatePlayPauseButton);
+                musicAudio.removeEventListener('ended', onSongEnd);
+            }
+            container.innerHTML = '';
+            musicAudio = new Audio(song.url);
+            musicAudio.addEventListener('timeupdate', updateProgress);
+            musicAudio.addEventListener('play', updatePlayPauseButton);
+            musicAudio.addEventListener('pause', updatePlayPauseButton);
+            musicAudio.addEventListener('ended', onSongEnd);
+            musicAudio.addEventListener('loadedmetadata', function() {
+                updateProgress();
+            });
+            musicAudio.play().catch(function() {
+                showToast('播放失败，请手动点击播放');
+            });
+            updatePlayPauseButton();
+        } else {
+            // 网易云外链用 iframe
+            if (musicAudio) {
+                musicAudio.pause();
+                musicAudio = null;
+            }
+            var songId = song.id || getSongIdFromUrl(song.url);
+            container.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="100%" height="66" src="https://music.163.com/outchain/player?type=2&id=' + songId + '&auto=1&height=66"></iframe>';
+        }
+    }
+
+    var nowPlaying = document.getElementById('musicNowPlaying');
+    if (nowPlaying) {
+        var artist = song.artist || song.sub || '';
+        nowPlaying.textContent = song.title + (artist ? ' - ' + artist : '');
+    }
+
+    renderPlaylist();
+    updatePlayPauseButton();
+}
+
+function onSongEnd() {
+    if (musicPlayMode === 'loop') {
+        playSong(musicCurrentIndex);
+    } else {
+        nextSong();
+    }
+}
+
+function nextSong() {
+    if (musicPlaylist.length === 0) return;
+    var next;
+    if (musicPlayMode === 'random') {
+        next = Math.floor(Math.random() * musicPlaylist.length);
+    } else {
+        next = musicCurrentIndex + 1;
+        if (next >= musicPlaylist.length) next = 0;
+    }
+    playSong(next);
+}
+
+function prevSong() {
+    if (musicPlaylist.length === 0) return;
+    if (musicAudio && musicAudio.currentTime > 3) {
+        // 播放超过3秒，重播当前曲目
+        musicAudio.currentTime = 0;
+        return;
+    }
+    var prev = musicCurrentIndex - 1;
+    if (prev < 0) prev = musicPlaylist.length - 1;
+    playSong(prev);
 }
 
 // ========== 播放模式 ==========
@@ -205,60 +357,21 @@ function updateModeButtons() {
     if (btnRandom) btnRandom.className = 'btn-sm' + (musicPlayMode === 'random' ? '' : ' outline');
 }
 
-// ========== 歌曲切换 ==========
-function playSong(index) {
-    if (index < 0 || index >= musicPlaylist.length) return;
-    musicCurrentIndex = index;
-    var song = musicPlaylist[index];
-
-    var container = document.getElementById('musicPlayerContainer');
-    if (container) {
-        container.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="100%" height="66" src="https://music.163.com/outchain/player?type=2&id=' + song.id + '&auto=1&height=66"></iframe>';
-    }
-
-    var nowPlaying = document.getElementById('musicNowPlaying');
-    if (nowPlaying) {
-        nowPlaying.textContent = song.title + ' - ' + (song.artist || '未知歌手');
-    }
-
-    renderPlaylist();
-}
-
-function nextSong() {
-    if (musicPlaylist.length === 0) return;
-    var next;
-    if (musicPlayMode === 'random') {
-        next = Math.floor(Math.random() * musicPlaylist.length);
-    } else if (musicPlayMode === 'loop') {
-        next = musicCurrentIndex;
-    } else {
-        next = musicCurrentIndex + 1;
-        if (next >= musicPlaylist.length) next = 0;
-    }
-    playSong(next);
-}
-
-function prevSong() {
-    if (musicPlaylist.length === 0) return;
-    var prev = musicCurrentIndex - 1;
-    if (prev < 0) prev = musicPlaylist.length - 1;
-    playSong(prev);
-}
-
 // ========== 歌单渲染 ==========
 function renderPlaylist() {
     var el = document.getElementById('musicPlaylistEl');
     if (!el) return;
     if (musicPlaylist.length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:12px;">歌单空空，点击下方添加歌曲</div>';
+        el.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:12px;">歌单空空，点击下方添加或导入</div>';
         return;
     }
     var html = '';
     musicPlaylist.forEach(function(song, i) {
         var isPlaying = i === musicCurrentIndex;
+        var artist = song.artist || song.sub || '';
         html += '<div class="music-song-item' + (isPlaying ? ' playing' : '') + '" onclick="playSong(' + i + ')">' +
             '<span class="song-index">' + (i + 1) + '</span>' +
-            '<span class="song-info"><span class="song-title">' + escapeHTML(song.title) + '</span><br><span class="song-artist">' + escapeHTML(song.artist || '') + '</span></span>' +
+            '<span class="song-info"><span class="song-title">' + escapeHTML(song.title) + '</span><br><span class="song-artist">' + escapeHTML(artist) + '</span></span>' +
             '<span class="song-del" onclick="event.stopPropagation();deleteSong(' + i + ')">&times;</span>' +
             '</div>';
     });
@@ -267,7 +380,7 @@ function renderPlaylist() {
 
 // ========== 歌单管理 ==========
 function addSongPrompt() {
-    var id = prompt('输入网易云歌曲 ID：');
+    var id = prompt('输入网易云歌曲 ID（在歌曲页网址中找 id=xxx）：');
     if (!id) return;
     var title = prompt('输入歌曲名：');
     if (!title) return;
@@ -282,6 +395,7 @@ function deleteSong(index) {
     var song = musicPlaylist[index];
     musicPlaylist.splice(index, 1);
     if (musicCurrentIndex === index) {
+        if (musicAudio) { musicAudio.pause(); musicAudio = null; }
         var container = document.getElementById('musicPlayerContainer');
         if (container) container.innerHTML = '';
         var nowPlaying = document.getElementById('musicNowPlaying');
@@ -296,7 +410,14 @@ function deleteSong(index) {
 
 function exportMusicJSON() {
     if (musicPlaylist.length === 0) { showToast('歌单为空'); return; }
-    var data = { name: '我的歌单', songs: musicPlaylist };
+    var data = musicPlaylist.map(function(s) {
+        return {
+            title: s.title,
+            sub: s.artist || s.sub || '',
+            url: s.url || ('https://music.163.com/song/media/outer/url?id=' + s.id + '.mp3'),
+            isCustom: true
+        };
+    });
     copyToClipboard(JSON.stringify(data, null, 2), '歌单');
     showToast('歌单已复制到剪贴板');
 }
@@ -311,10 +432,21 @@ function importMusicJSON() {
         var reader = new FileReader();
         reader.onload = function(e) {
             try {
-                var data = JSON.parse(e.target.result);
-                if (!data.songs || !Array.isArray(data.songs)) throw new Error();
-                musicPlaylist = data.songs;
+                var raw = JSON.parse(e.target.result);
+                var data = Array.isArray(raw) ? raw : (raw.songs || []);
+                if (!data.length) throw new Error();
+                musicPlaylist = data.map(function(s) {
+                    return {
+                        title: s.title || '',
+                        artist: s.sub || s.artist || '',
+                        sub: s.sub || s.artist || '',
+                        url: s.url || '',
+                        id: s.id || getSongIdFromUrl(s.url || ''),
+                        isCustom: s.isCustom !== undefined ? s.isCustom : true
+                    };
+                });
                 musicCurrentIndex = -1;
+                if (musicAudio) { musicAudio.pause(); musicAudio = null; }
                 var container = document.getElementById('musicPlayerContainer');
                 if (container) container.innerHTML = '';
                 var nowPlaying = document.getElementById('musicNowPlaying');
@@ -337,6 +469,10 @@ function importMusicJSON() {
     css.id = 'musicInlineStyles';
     css.textContent =
         '#musicPlayerContainer iframe { width:100%; max-width:330px; height:66px; border:none; margin:0 auto; border-radius:var(--radius-sm); }' +
+        '#musicPlayerContainer audio { width:100%; max-width:330px; height:36px; margin:0 auto; outline:none; }' +
+        '.music-ctrl-btn { width:40px; height:40px; border-radius:50%; border:2px solid var(--border); background:var(--item-bg); color:var(--text); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }' +
+        '.music-ctrl-btn:active { transform:scale(0.9); background:var(--accent); border-color:var(--accent); }' +
+        '.music-ctrl-play { width:48px; height:48px; font-size:20px; background:var(--accent); border-color:var(--accent); }' +
         '.music-song-item { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; margin:2px 0; background:var(--item-bg); border-radius:6px; cursor:pointer; font-size:12px; color:var(--text); transition:all 0.2s; }' +
         '.music-song-item.playing { border-left:3px solid var(--accent); font-weight:bold; }' +
         '.music-song-item .song-index { width:24px; text-align:center; color:var(--text-system); font-size:11px; }' +
@@ -345,6 +481,7 @@ function importMusicJSON() {
         '.music-song-item .song-artist { font-size:10px; color:var(--text-system); }' +
         '.music-song-item .song-del { color:var(--danger); cursor:pointer; padding:2px 6px; font-size:14px; }' +
         '#musicFloatingBall { transition:transform 0.3s; }' +
-        '#musicFloatingBall:active { transform:scale(1.2); }';
+        '#musicFloatingBall:active { transform:scale(1.2); }' +
+        '#musicProgress { cursor:pointer; }';
     document.head.appendChild(css);
 })();
