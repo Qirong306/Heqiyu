@@ -1353,3 +1353,328 @@ body {
     background: var(--border);
     border-radius: 3px;
 }
+/* ========== 20. 视频弹幕模块 ========== */
+
+/* 容器 - 全屏覆盖 */
+.vd-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 150;
+    display: none;
+    flex-direction: column;
+    background: var(--bg);
+    transition: opacity 0.3s;
+}
+
+.vd-container.vd-open {
+    display: flex;
+}
+
+/* 头部 */
+.vd-header {
+    background: var(--header-bg);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid var(--border);
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.vd-title {
+    font-size: 17px;
+    color: var(--text);
+    letter-spacing: 1px;
+}
+
+.vd-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.vd-btn-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--item-bg);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-family: var(--font-main);
+}
+
+.vd-btn-icon:active {
+    transform: scale(0.9);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+/* 主体 */
+.vd-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* 视频区域 */
+.vd-video-section {
+    flex-shrink: 0;
+    background: #000;
+    position: relative;
+}
+
+.vd-video-wrapper {
+    position: relative;
+    width: 100%;
+    background: #000;
+    aspect-ratio: 16 / 9;
+    max-height: 45vh;
+}
+
+.vd-video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.vd-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* 视频占位 */
+.vd-video-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 4;
+    pointer-events: none;
+}
+
+.vd-placeholder-content {
+    text-align: center;
+    color: #ccc;
+}
+
+.vd-placeholder-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.vd-placeholder-content p {
+    font-size: 14px;
+    margin: 4px 0;
+    letter-spacing: 0.5px;
+}
+
+.vd-placeholder-hint {
+    font-size: 11px !important;
+    color: #888 !important;
+}
+
+/* 视频来源标签 */
+.vd-source-label {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    z-index: 6;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+/* 拖拽状态 */
+.vd-video-wrapper.vd-dragover {
+    outline: 3px dashed var(--accent);
+    outline-offset: -6px;
+}
+
+.vd-video-wrapper.vd-dragover .vd-video-placeholder {
+    background: rgba(240,199,142,0.15);
+}
+
+/* 输入栏 */
+.vd-input-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--input-bg);
+    border-bottom: 1.5px solid var(--border);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.vd-url-input {
+    flex: 1;
+    min-width: 140px;
+    padding: 7px 12px;
+    border: 2px solid var(--border);
+    border-radius: 18px;
+    background: var(--input-box);
+    font-size: 13px;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-main);
+    letter-spacing: 0.5px;
+    height: 34px;
+    transition: border-color 0.3s;
+}
+
+.vd-url-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(240,199,142,0.2);
+}
+
+.vd-url-input::placeholder {
+    color: var(--text-system);
+    font-size: 11px;
+}
+
+/* 通用按钮 */
+.vd-btn {
+    padding: 7px 14px;
+    border-radius: 18px;
+    border: 1.5px solid var(--border);
+    background: var(--item-bg);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-family: var(--font-main);
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.vd-btn:active {
+    transform: scale(0.95);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.vd-btn-primary {
+    background: var(--accent);
+    color: var(--text);
+    border-color: var(--accent);
+    font-weight: 500;
+}
+
+.vd-btn-primary:active {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+}
+
+.vd-btn-upload {
+    cursor: pointer;
+}
+
+.vd-btn-send {
+    padding: 7px 16px;
+    background: var(--accent);
+    color: var(--text);
+    border: none;
+}
+
+.vd-btn-send:active {
+    background: var(--accent-dark);
+}
+
+/* 底部消息输入行（视频面板内） */
+.vd-send-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: var(--input-bg);
+    border-top: 1.5px solid var(--border);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.vd-send-input {
+    flex: 1;
+    padding: 8px 14px;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    background: var(--input-box);
+    font-size: 14px;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-main);
+    letter-spacing: 0.5px;
+    min-width: 0;
+    height: 36px;
+    transition: border-color 0.3s;
+}
+
+.vd-send-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(240,199,142,0.2);
+}
+
+.vd-send-input::placeholder {
+    color: var(--text-system);
+    font-size: 12px;
+}
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 600px) {
+    .vd-video-wrapper {
+        max-height: 35vh;
+    }
+
+    .vd-input-bar {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+
+    .vd-url-input {
+        font-size: 12px;
+        padding: 6px 10px;
+        height: 30px;
+    }
+
+    .vd-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .vd-send-bar {
+        padding: 6px 8px;
+    }
+
+    .vd-send-input {
+        font-size: 13px;
+        height: 32px;
+    }
+}
