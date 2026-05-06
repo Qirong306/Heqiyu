@@ -745,12 +745,20 @@ function fallbackCopy(text, label) {
     document.body.removeChild(ta);
 }
 function exportFull() {
-    copyToClipboard(JSON.stringify({
-        myName: appData.myName, myAvatarId: appData.myAvatarId,
-        otherName: appData.otherName, otherAvatarId: appData.otherAvatarId,
-        replyGroups: appData.replyGroups, emojiIds: appData.emojiIds,
-        theme: appData.theme, chatHistory: appData.chatHistory, letters: appData.letters
-    }, null, 2), '全量备份');
+    var backupData = {
+        myName: appData.myName,
+        myAvatarId: appData.myAvatarId,
+        myAvatar: appData.myAvatar || '',
+        otherName: appData.otherName,
+        otherAvatarId: appData.otherAvatarId,
+        otherAvatar: appData.otherAvatar || '',
+        replyGroups: appData.replyGroups,
+        emojiIds: appData.emojiIds,
+        theme: appData.theme,
+        chatHistory: appData.chatHistory,
+        letters: appData.letters
+    };
+    copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
     closeModal('subOverlay');
 }
 function exportChat() {
@@ -769,21 +777,81 @@ function importDataFile() {
         try {
             var data = JSON.parse(e.target.result);
             if (!data || typeof data !== 'object') throw new Error('无效数据');
+
             if (typeof data.myName === 'string') appData.myName = data.myName;
-            if (typeof data.myAvatarId === 'string') appData.myAvatarId = data.myAvatarId;
             if (typeof data.otherName === 'string') appData.otherName = data.otherName;
-            if (typeof data.otherAvatarId === 'string') appData.otherAvatarId = data.otherAvatarId;
             if (typeof data.theme === 'string') appData.theme = data.theme;
             if (Array.isArray(data.emojiIds)) appData.emojiIds = data.emojiIds;
             if (Array.isArray(data.chatHistory)) appData.chatHistory = data.chatHistory;
             if (Array.isArray(data.letters)) appData.letters = data.letters;
-            if (Array.isArray(data.replies) && !data.replyGroups) appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
-            else if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) appData.replyGroups = data.replyGroups;
-            appData.myAvatar = ''; appData.otherAvatar = '';
-            saveData(true); applyTheme(); updateHeader(); renderChatHistory(); updateLetterBadge();
-            closeModal('subOverlay');
-            showToastLong('数据已成功导入！\n昵称、词库、聊天记录已恢复\n图片需重新上传', 4000);
-        } catch(err) { showToast('导入失败，文件格式错误'); }
+            if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) {
+                appData.replyGroups = data.replyGroups;
+            } else if (Array.isArray(data.replies)) {
+                appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
+            }
+
+            var promises = [];
+            // 我的头像
+            if (data.myAvatar && typeof data.myAvatar === 'string' && data.myAvatar.length > 100) {
+                var myId = data.myAvatarId || ('avatar_me_' + Date.now());
+                promises.push(
+                    saveImageToDB('avatars', myId, data.myAvatar).then(function() {
+                        appData.myAvatarId = myId;
+                        appData.myAvatar = data.myAvatar;
+                    })
+                );
+            } else {
+                appData.myAvatarId = data.myAvatarId || '';
+                appData.myAvatar = '';
+                if (appData.myAvatarId) {
+                    promises.push(
+                        getImageFromDB('avatars', appData.myAvatarId).then(function(img) {
+                            appData.myAvatar = img || '';
+                        })
+                    );
+                }
+            }
+            // 对方头像
+            if (data.otherAvatar && typeof data.otherAvatar === 'string' && data.otherAvatar.length > 100) {
+                var otherId = data.otherAvatarId || ('avatar_other_' + Date.now());
+                promises.push(
+                    saveImageToDB('avatars', otherId, data.otherAvatar).then(function() {
+                        appData.otherAvatarId = otherId;
+                        appData.otherAvatar = data.otherAvatar;
+                    })
+                );
+            } else {
+                appData.otherAvatarId = data.otherAvatarId || '';
+                appData.otherAvatar = '';
+                if (appData.otherAvatarId) {
+                    promises.push(
+                        getImageFromDB('avatars', appData.otherAvatarId).then(function(img) {
+                            appData.otherAvatar = img || '';
+                        })
+                    );
+                }
+            }
+
+            Promise.all(promises).then(function() {
+                saveData(true);
+                applyTheme();
+                updateHeader();
+                renderChatHistory();
+                updateLetterBadge();
+                closeModal('subOverlay');
+                showToastLong('数据已成功导入！\n头像、昵称、词库、聊天记录已恢复\n表情包图片需重新上传', 4000);
+            }).catch(function() {
+                saveData(true);
+                applyTheme();
+                updateHeader();
+                renderChatHistory();
+                updateLetterBadge();
+                closeModal('subOverlay');
+                showToast('数据已导入，但头像恢复失败');
+            });
+        } catch(err) {
+            showToast('导入失败，文件格式错误');
+        }
     };
     reader.readAsText(file);
     document.getElementById('importDataFile').value = '';
