@@ -1,10 +1,10 @@
 // ==================== 音乐模块 ====================
-// 网易云外链播放器 + 歌单管理 + 浮动小球
+// 网易云外链播放器 + 歌单管理 + 浮动小球（可拖动）
 
 var musicPlaylist = [];
 var musicCurrentIndex = -1;
-var musicPlayMode = 'order'; // 'loop' | 'order' | 'random'
-var musicFloatingImg = ''; // 浮动小球自定义图片
+var musicPlayMode = 'order';
+var musicFloatingImg = '';
 
 // ========== 入口加到"+"面板 ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 600);
     
-    // 创建浮动小球
     createFloatingBall();
 });
 
@@ -32,21 +31,18 @@ function createFloatingBall() {
     ball.setAttribute('draggable', 'false');
     ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
     document.body.appendChild(ball);
-    
+
     if (!document.getElementById('musicSpinStyle')) {
-        var style = document.createElement('style');
-        style.id = 'musicSpinStyle';
-        style.textContent = '@keyframes musicSpin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }';
-        document.head.appendChild(style);
+        var styleEl = document.createElement('style');
+        styleEl.id = 'musicSpinStyle';
+        styleEl.textContent = '@keyframes musicSpin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }';
+        document.head.appendChild(styleEl);
     }
-    
+
     var isDragging = false;
     var startX, startY, startLeft, startTop;
     var hasMoved = false;
-    
-    ball.addEventListener('touchstart', onStart, { passive: false });
-    ball.addEventListener('mousedown', onStart);
-    
+
     function onStart(e) {
         e.preventDefault();
         if (e.type === 'touchstart') {
@@ -70,7 +66,7 @@ function createFloatingBall() {
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onEnd);
     }
-    
+
     function onMove(e) {
         if (!isDragging) return;
         var clientX, clientY;
@@ -96,7 +92,7 @@ function createFloatingBall() {
         ball.style.right = 'auto';
         ball.style.bottom = 'auto';
     }
-    
+
     function onEnd() {
         isDragging = false;
         ball.style.animation = 'musicSpin 4s linear infinite';
@@ -107,18 +103,20 @@ function createFloatingBall() {
         document.removeEventListener('mouseup', onEnd);
         if (!hasMoved) openMusicPlayer();
     }
+
+    ball.addEventListener('touchstart', onStart, { passive: false });
+    ball.addEventListener('mousedown', onStart);
 }
 
 function showFloatingBall() {
     var ball = document.getElementById('musicFloatingBall');
-    if (ball) {
-        if (musicFloatingImg) {
-            ball.innerHTML = '<img src="' + musicFloatingImg + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;" draggable="false">';
-        } else {
-            ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
-        }
-        ball.style.display = 'block';
+    if (!ball) return;
+    if (musicFloatingImg) {
+        ball.innerHTML = '<img src="' + musicFloatingImg + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;" draggable="false">';
+    } else {
+        ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
     }
+    ball.style.display = 'block';
 }
 
 function hideFloatingBall() {
@@ -147,14 +145,13 @@ function changeFloatingBallImage() {
 // ========== 播放器弹窗 ==========
 function openMusicPlayer() {
     hideFloatingBall();
-    
-    // 动态创建弹窗（如果不存在）
+
     if (!document.getElementById('musicOverlay')) {
         var overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         overlay.id = 'musicOverlay';
         overlay.onclick = function(e) { if (e.target === overlay) closeMusicPlayer(); };
-        
+
         overlay.innerHTML = '<div class="modal" style="text-align:center;max-width:420px;">' +
             '<h3>音乐小憩</h3>' +
             '<div id="musicNowPlaying" style="font-size:13px;color:var(--text-secondary);margin:4px 0;">未在播放</div>' +
@@ -177,10 +174,10 @@ function openMusicPlayer() {
             '</div>' +
             '<button class="btn-close" onclick="closeMusicPlayer()" style="margin-top:10px;">收起</button>' +
             '</div>';
-        
+
         document.body.appendChild(overlay);
     }
-    
+
     renderPlaylist();
     updateModeButtons();
     openModal('musicOverlay');
@@ -195,7 +192,8 @@ function closeMusicPlayer() {
 function setPlayMode(mode) {
     musicPlayMode = mode;
     updateModeButtons();
-    showToast(mode === 'loop' ? '单曲循环' : (mode === 'random' ? '随机播放' : '顺序播放'));
+    var label = mode === 'loop' ? '单曲循环' : (mode === 'random' ? '随机播放' : '顺序播放');
+    showToast(label);
 }
 
 function updateModeButtons() {
@@ -212,17 +210,17 @@ function playSong(index) {
     if (index < 0 || index >= musicPlaylist.length) return;
     musicCurrentIndex = index;
     var song = musicPlaylist[index];
-    
+
     var container = document.getElementById('musicPlayerContainer');
     if (container) {
         container.innerHTML = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="100%" height="66" src="https://music.163.com/outchain/player?type=2&id=' + song.id + '&auto=1&height=66"></iframe>';
     }
-    
+
     var nowPlaying = document.getElementById('musicNowPlaying');
     if (nowPlaying) {
         nowPlaying.textContent = song.title + ' - ' + (song.artist || '未知歌手');
     }
-    
+
     renderPlaylist();
 }
 
@@ -269,7 +267,7 @@ function renderPlaylist() {
 
 // ========== 歌单管理 ==========
 function addSongPrompt() {
-    var id = prompt('输入网易云歌曲 ID（在歌曲页网址中找 id=xxx）：');
+    var id = prompt('输入网易云歌曲 ID：');
     if (!id) return;
     var title = prompt('输入歌曲名：');
     if (!title) return;
@@ -284,8 +282,10 @@ function deleteSong(index) {
     var song = musicPlaylist[index];
     musicPlaylist.splice(index, 1);
     if (musicCurrentIndex === index) {
-        document.getElementById('musicPlayerContainer').innerHTML = '';
-        document.getElementById('musicNowPlaying').textContent = '未在播放';
+        var container = document.getElementById('musicPlayerContainer');
+        if (container) container.innerHTML = '';
+        var nowPlaying = document.getElementById('musicNowPlaying');
+        if (nowPlaying) nowPlaying.textContent = '未在播放';
         musicCurrentIndex = -1;
     } else if (musicCurrentIndex > index) {
         musicCurrentIndex--;
@@ -315,8 +315,10 @@ function importMusicJSON() {
                 if (!data.songs || !Array.isArray(data.songs)) throw new Error();
                 musicPlaylist = data.songs;
                 musicCurrentIndex = -1;
-                document.getElementById('musicPlayerContainer').innerHTML = '';
-                document.getElementById('musicNowPlaying').textContent = '未在播放';
+                var container = document.getElementById('musicPlayerContainer');
+                if (container) container.innerHTML = '';
+                var nowPlaying = document.getElementById('musicNowPlaying');
+                if (nowPlaying) nowPlaying.textContent = '未在播放';
                 renderPlaylist();
                 showToast('已导入 ' + musicPlaylist.length + ' 首歌');
             } catch(err) {
@@ -328,12 +330,12 @@ function importMusicJSON() {
     input.click();
 }
 
-// ========== 内联样式（避免改 style.css） ==========
-(function injectMusicStyles() {
+// ========== 内联样式 ==========
+(function() {
     if (document.getElementById('musicInlineStyles')) return;
     var css = document.createElement('style');
     css.id = 'musicInlineStyles';
-    css.textContent = 
+    css.textContent =
         '#musicPlayerContainer iframe { width:100%; max-width:330px; height:66px; border:none; margin:0 auto; border-radius:var(--radius-sm); }' +
         '.music-song-item { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; margin:2px 0; background:var(--item-bg); border-radius:6px; cursor:pointer; font-size:12px; color:var(--text); transition:all 0.2s; }' +
         '.music-song-item.playing { border-left:3px solid var(--accent); font-weight:bold; }' +
