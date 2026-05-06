@@ -1,5 +1,5 @@
 // ==================== 功能模块 ====================
-// 塔罗占卜、书籍阅读、表情包管理（在 core.js 中已有，此处补充书籍阅读）
+// 塔罗占卜、书籍阅读（增强版：目录+划线笔记）
 
 // ==================== 塔罗模块 ====================
 
@@ -160,9 +160,8 @@ function drawTarot() {
     setTimeout(function() { triggerAutoReply(); }, 600 + Math.random() * 1200);
 }
 
-// ==================== 书籍阅读模块 ====================
+// ==================== 书籍阅读模块（增强版：目录+划线笔记） ====================
 
-// 书籍存储：每本书 { id, title, content, addedTime }
 function getBooks() {
     if (!appData.books) appData.books = [];
     return appData.books;
@@ -172,30 +171,10 @@ function saveBookData() {
     saveData(true);
 }
 
-// 打开书籍管理
-function openBookManageModal() {
-    closeModal('settingsOverlay');
-    var books = getBooks();
-    var html = '<h4>书籍阅读</h4><div class="subtitle">上传 txt 文件或粘贴内容</div>';
-    html += '<div class="btn-row"><button class="btn-sm" onclick="showAddBookForm()">添加书籍</button></div>';
-    if (books.length === 0) {
-        html += '<div style="text-align:center;color:var(--text-system);padding:20px;">书架上还没有书</div>';
-    } else {
-        html += '<div style="max-height:300px;overflow-y:auto;">';
-        books.forEach(function(book, i) {
-            html += '<div class="book-list-item" onclick="openBookReader(' + i + ')">' + escapeHTML(book.title) + ' <span style="font-size:10px;color:var(--text-system);">(' + book.content.length + '字)</span></div>';
-            html += '<button class="del-sm" style="margin-left:10px;" onclick="event.stopPropagation();deleteBook(' + i + ')">删除</button>';
-        });
-        html += '</div>';
-    }
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">关闭</button>';
-    openSubModal(html);
-}
-
 function showAddBookForm() {
     var html = '<h4>添加书籍</h4>';
     html += '<div class="form-row"><label>书名</label><input type="text" id="newBookTitle" placeholder="输入书名"></div>';
-    html += '<div class="form-row"><label>内容（粘贴文本或选择文件）</label><textarea id="newBookContent" placeholder="在此粘贴文本内容..."></textarea></div>';
+    html += '<div class="form-row"><label>内容（粘贴文本或选择文件）</label><textarea id="newBookContent" placeholder="在此粘贴文本内容..." style="min-height:120px;"></textarea></div>';
     html += '<div class="btn-row"><button class="btn-sm outline" onclick="document.getElementById(\'bookFileInput\').click()">上传 txt 文件</button><input type="file" id="bookFileInput" accept=".txt" style="display:none" onchange="loadBookFile()"></div>';
     html += '<div class="btn-row"><button class="btn-sm" onclick="saveNewBook()">保存</button><button class="btn-sm outline" onclick="openBookManageModal()">返回</button></div>';
     openSubModal(html);
@@ -221,7 +200,13 @@ function saveNewBook() {
     if (!title) { showToast('请输入书名'); return; }
     if (!content) { showToast('请输入或选择文本内容'); return; }
     var books = getBooks();
-    books.push({ id: 'book_' + Date.now(), title: title, content: content, addedTime: Date.now() });
+    books.push({
+        id: 'book_' + Date.now(),
+        title: title,
+        content: content,
+        annotations: [],
+        addedTime: Date.now()
+    });
     saveBookData();
     showToast('书籍已添加');
     openBookManageModal();
@@ -235,40 +220,217 @@ function deleteBook(index) {
     openBookManageModal();
 }
 
+function openBookManageModal() {
+    closeModal('settingsOverlay');
+    var books = getBooks();
+    var html = '<h4>书籍阅读</h4><div class="subtitle">上传 txt 文件或粘贴内容</div>';
+    html += '<div class="btn-row"><button class="btn-sm" onclick="showAddBookForm()">添加书籍</button></div>';
+    if (books.length === 0) {
+        html += '<div style="text-align:center;color:var(--text-system);padding:20px;">书架上还没有书</div>';
+    } else {
+        html += '<div style="max-height:300px;overflow-y:auto;">';
+        books.forEach(function(book, i) {
+            html += '<div class="book-list-item" onclick="openBookReader(' + i + ')" style="display:flex;justify-content:space-between;align-items:center;">';
+            html += '<span>' + escapeHTML(book.title) + ' <span style="font-size:10px;color:var(--text-system);">(' + book.content.length + '字)</span></span>';
+            html += '<button class="del-sm" onclick="event.stopPropagation();deleteBook(' + i + ')" style="margin-left:10px;">删除</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">关闭</button>';
+    openSubModal(html);
+}
+
+// 解析内容为章节
+function parseChapters(content) {
+    var lines = content.split('\n');
+    var chapters = [];
+    var currentTitle = '开始';
+    var currentContent = '';
+    var chapterRegex = /^(第[一二三四五六七八九十百千0-9]+章|Chapter\s*\d+|#+\s+)/;
+    
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (chapterRegex.test(line)) {
+            if (currentContent.trim()) {
+                chapters.push({ title: currentTitle, text: currentContent.trim() });
+            }
+            currentTitle = line;
+            currentContent = '';
+        } else {
+            currentContent += (currentContent ? '\n' : '') + lines[i];
+        }
+    }
+    if (currentContent.trim()) {
+        chapters.push({ title: currentTitle, text: currentContent.trim() });
+    }
+    if (chapters.length === 0 && content.trim()) {
+        chapters.push({ title: '正文', text: content.trim() });
+    }
+    return chapters;
+}
+
 // 打开阅读器
 function openBookReader(index) {
     var books = getBooks();
     if (index >= books.length) return;
     var book = books[index];
+    var chapters = parseChapters(book.content);
+    
     var html = '<h4>' + escapeHTML(book.title) + '</h4>';
-    html += '<div class="book-reader" id="bookReaderContent">' + escapeHTML(book.content.substring(0, 2000)) + '</div>';
-    if (book.content.length > 2000) {
-        html += '<div style="text-align:center;font-size:10px;color:var(--text-system);">仅显示前2000字，完整内容请滚动阅读</div>';
-    }
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>';
+    html += '<div style="display:flex; gap:10px; max-height:60vh;">';
+    // 目录侧栏
+    html += '<div style="width:30%; overflow-y:auto; border-right:1px solid var(--border); padding-right:8px;">';
+    html += '<div style="font-weight:bold; margin-bottom:8px; font-size:14px;">目录</div>';
+    chapters.forEach(function(ch, i) {
+        html += '<div style="cursor:pointer; padding:4px 4px; font-size:13px; color:var(--text-secondary);" onclick="jumpToChapter(' + i + ')">' + escapeHTML(ch.title) + '</div>';
+    });
+    html += '</div>';
+    // 阅读内容区域
+    html += '<div id="bookContentArea" style="flex:1; overflow-y:auto; max-height:55vh; padding:0 8px; position:relative;">';
+    html += '<div id="bookTextInner" style="white-space:pre-wrap; line-height:1.8; font-size:15px;">';
+    chapters.forEach(function(ch, i) {
+        html += '<div class="chapter-block" id="chapter_' + i + '">';
+        html += '<div style="font-weight:bold; font-size:18px; margin:16px 0 8px;">' + escapeHTML(ch.title) + '</div>';
+        html += '<div class="chapter-text" id="chapter_text_' + i + '">' + renderAnnotatedText(ch.text, book.annotations, i) + '</div>';
+        html += '</div>';
+    });
+    html += '</div></div></div>';
+    
+    // 底部工具条
+    html += '<div style="margin-top:10px; display:flex; gap:8px; align-items:center;">';
+    html += '<button class="btn-sm outline" onclick="toggleHighlightMode()">划线模式</button>';
+    html += '<button class="btn-sm outline" onclick="clearAllAnnotations(' + index + ')">清除所有划线</button>';
+    html += '<span id="highlightStatus" style="font-size:12px; color:var(--text-system);">点击按钮开启划线模式</span>';
+    html += '</div>';
+    
+    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">关闭</button>';
     openSubModal(html);
-    // 然后把完整内容放进阅读器
-    setTimeout(function() {
-        var el = document.getElementById('bookReaderContent');
-        if (el) el.textContent = book.content;
-    }, 100);
+    
+    window._currentBookIndex = index;
+    window._highlightMode = false;
 }
 
-// 在“设置”页面增加“书籍阅读”入口——添加在 openSettings 的卡片中，这里提供一个函数，由 core.js 调用
-function openBookFromSettings() {
-    closeModal('settingsOverlay');
-    openBookManageModal();
+// 渲染带划线的文本
+function renderAnnotatedText(text, annotations, chapterIndex) {
+    if (!annotations || annotations.length === 0) return escapeHTML(text);
+    var lines = text.split('\n');
+    var result = '';
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var lineAnnotations = annotations.filter(function(a) { return a.chapterIndex === chapterIndex && a.lineIndex === i; });
+        if (lineAnnotations.length === 0) {
+            result += escapeHTML(line) + '\n';
+        } else {
+            lineAnnotations.sort(function(a,b) { return a.startOffset - b.startOffset; });
+            var htmlLine = '';
+            var lastIdx = 0;
+            lineAnnotations.forEach(function(ann) {
+                htmlLine += escapeHTML(line.substring(lastIdx, ann.startOffset));
+                htmlLine += '<mark style="background-color: #ffeaa7; cursor:pointer;" title="' + escapeHTML(ann.text) + '">' + escapeHTML(line.substring(ann.startOffset, ann.endOffset)) + '</mark>';
+                lastIdx = ann.endOffset;
+            });
+            htmlLine += escapeHTML(line.substring(lastIdx));
+            result += htmlLine + '\n';
+        }
+    }
+    return result;
 }
 
-// 修改 openSettings 函数，在卡片中加入书籍阅读卡片（需要修改 core.js 但为了不破坏，我们在 modules 加载后修改）
-// 采用重写 openSettings 的方式？不行，最好是在初始化时动态注入设置卡片。简单做法：在 more-panel 增加书籍入口，并修改设置页。
-// 这里采用在设置卡片中动态添加“书籍阅读”的方法。
+// 目录跳转
+function jumpToChapter(chapterIndex) {
+    var target = document.getElementById('chapter_' + chapterIndex);
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// 划线模式
+function toggleHighlightMode() {
+    window._highlightMode = !window._highlightMode;
+    var status = document.getElementById('highlightStatus');
+    if (status) {
+        status.textContent = window._highlightMode ? '划线模式已开启，选中文字后自动高亮' : '点击按钮开启划线模式';
+    }
+    var contentArea = document.getElementById('bookTextInner');
+    if (contentArea) {
+        if (window._highlightMode) {
+            contentArea.style.cursor = 'text';
+            contentArea.onmouseup = handleTextSelection;
+        } else {
+            contentArea.onmouseup = null;
+            contentArea.style.cursor = 'default';
+        }
+    }
+}
+
+function handleTextSelection() {
+    if (!window._highlightMode) return;
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    var range = sel.getRangeAt(0);
+    var selectedText = sel.toString().trim();
+    if (!selectedText) return;
+    
+    var container = range.commonAncestorContainer;
+    var chapterDiv = container.parentNode;
+    while (chapterDiv && !chapterDiv.classList.contains('chapter-text')) {
+        chapterDiv = chapterDiv.parentNode;
+    }
+    if (!chapterDiv) return;
+    var chapterId = chapterDiv.id;
+    var chapterIndex = parseInt(chapterId.split('_')[2]);
+    
+    var offsetStart = getTextOffset(chapterDiv, range.startContainer, range.startOffset);
+    var offsetEnd = getTextOffset(chapterDiv, range.endContainer, range.endOffset);
+    
+    var books = getBooks();
+    var book = books[window._currentBookIndex];
+    if (!book.annotations) book.annotations = [];
+    book.annotations.push({
+        chapterIndex: chapterIndex,
+        startOffset: offsetStart,
+        endOffset: offsetEnd,
+        text: selectedText,
+        color: '#ffeaa7',
+        lineIndex: 0
+    });
+    saveBookData();
+    showToast('划线已保存');
+    openBookReader(window._currentBookIndex);
+}
+
+// 获取文本在父节点中的绝对偏移
+function getTextOffset(root, node, offset) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    var currentOffset = 0;
+    var currentNode;
+    while (currentNode = walker.nextNode()) {
+        if (currentNode === node) {
+            return currentOffset + offset;
+        }
+        currentOffset += currentNode.textContent.length;
+    }
+    return 0;
+}
+
+// 清除所有划线
+function clearAllAnnotations(index) {
+    if (!confirm('确定要清除本书所有划线吗？')) return;
+    var books = getBooks();
+    if (books[index]) {
+        books[index].annotations = [];
+        saveBookData();
+        openBookReader(index);
+        showToast('划线已清除');
+    }
+}
+
+// 在设置中添加"书籍阅读"入口
 document.addEventListener('DOMContentLoaded', function() {
-    // 待 core.js 加载完成后，修改设置弹窗的网格
     var origOpenSettings = openSettings;
     openSettings = function() {
         openModal('settingsOverlay');
-        // 如果设置弹窗没有“书籍”卡片，则添加
         var grid = document.querySelector('#settingsOverlay .grid-3');
         if (grid && !grid.querySelector('.card-book')) {
             var card = document.createElement('div');
@@ -279,3 +441,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 });
+
+function openBookFromSettings() {
+    closeModal('settingsOverlay');
+    openBookManageModal();
+}
