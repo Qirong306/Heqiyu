@@ -717,7 +717,8 @@ function openBackupModal() {
         html += '<div style="font-size:10px;color:var(--text-system);text-align:center;margin-bottom:8px;">图片：' + formatBytes(stats.imagesBytes) + ' | 头像：' + formatBytes(stats.avatarsBytes) + ' | 文字：' + formatBytes(stats.lsBytes) + '</div>';
         if (stats.usagePercent > 80) html += '<div style="text-align:center;color:var(--danger);font-size:12px;margin-bottom:8px;">存储空间紧张，建议清理</div>';
         html += '<div class="backup-options">';
-        html += '<button onclick="exportFull()">全量备份 <span class="small-hint">（复制JSON到剪贴板-粘贴到备忘录）</span></button>';
+        html += '<button onclick="exportFullAsFile()">全量备份下载 <span class="small-hint">（直接下载 .json 文件）</span></button>';
+        html += '<button onclick="exportFull()">全量备份复制 <span class="small-hint">（JSON复制到剪贴板）</span></button>';
         html += '<button onclick="exportChat()">聊天记录备份</button>';
         html += '<button onclick="exportLibs()">词库备份</button>';
         html += '</div>';
@@ -727,6 +728,40 @@ function openBackupModal() {
         openSubModal(html);
     });
 }
+
+function downloadJSONFile(filename, jsonData) {
+    var blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function exportFullAsFile() {
+    var backupData = {
+        myName: appData.myName,
+        myAvatarId: appData.myAvatarId,
+        myAvatar: appData.myAvatar || '',
+        otherName: appData.otherName,
+        otherAvatarId: appData.otherAvatarId,
+        otherAvatar: appData.otherAvatar || '',
+        replyGroups: appData.replyGroups,
+        emojiIds: appData.emojiIds,
+        theme: appData.theme,
+        chatHistory: appData.chatHistory,
+        letters: appData.letters
+    };
+    var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    var filename = 'chat_app_backup_' + timestamp + '.json';
+    downloadJSONFile(filename, backupData);
+    closeModal('subOverlay');
+    showToast('备份文件已下载');
+}
+
 function copyToClipboard(text, label) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function() {
@@ -916,6 +951,18 @@ window.addEventListener('storage', function(e) {
         console.log('检测到其他标签页的数据更新');
     }
 });
+
+// ========== 视频弹幕聊天接口 ==========
+function vdAddMessage(content, type) {
+    if (type === 'other') {
+        addMessage(content, 'other', false);
+        appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
+    } else {
+        addMessage(content, 'me', false);
+        appData.chatHistory.push({ type: 'me', content: content, time: Date.now() });
+    }
+    saveData();
+}
 
 // ========== 启动 ==========
 initApp().then(function() {
