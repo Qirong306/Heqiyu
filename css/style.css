@@ -1334,6 +1334,12 @@ body {
     cursor: pointer;
 }
 
+.chapter-text mark sup {
+    font-size: 10px;
+    color: var(--accent-dark);
+    margin-left: 2px;
+}
+
 /* ========== 19. 滚动条 ========== */
 ::-webkit-scrollbar {
     width: 3px;
