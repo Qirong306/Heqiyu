@@ -142,6 +142,18 @@ function changeFloatingBallImage() {
     input.click();
 }
 
+// ========== 下拉菜单 ==========
+function toggleMusicDropdown() {
+    var menu = document.getElementById('musicDropdownMenu');
+    if (!menu) return;
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+function closeMusicDropdown() {
+    var menu = document.getElementById('musicDropdownMenu');
+    if (menu) menu.style.display = 'none';
+}
+
 // ========== 播放器弹窗 ==========
 function openMusicPlayer() {
     hideFloatingBall();
@@ -150,46 +162,49 @@ function openMusicPlayer() {
         var overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         overlay.id = 'musicOverlay';
-        overlay.onclick = function(e) { if (e.target === overlay) closeMusicPlayer(); };
+        overlay.onclick = function(e) {
+            if (e.target === overlay) closeMusicPlayer();
+            closeMusicDropdown();
+        };
 
-        overlay.innerHTML = '<div class="modal" style="text-align:center;max-width:420px;padding:16px;">' +
-            // 标题栏
-            '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px;">' +
+        overlay.innerHTML = '<div class="modal" style="text-align:center;max-width:400px;padding:16px;">' +
+            // 标题栏 + 菜单按钮
+            '<div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:4px;">' +
             '<h3 style="margin:0;">音乐小憩</h3>' +
-            '<button class="btn-sm outline" onclick="toggleMusicMenu()" style="font-size:18px;padding:2px 10px;" title="歌单管理">&#9776;</button>' +
+            '<div style="position:absolute;right:0;">' +
+            '<span onclick="event.stopPropagation();toggleMusicDropdown()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;letter-spacing:2px;">&#9776;</span>' +
+            '<div id="musicDropdownMenu" style="display:none;position:absolute;top:32px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">' +
+            '<div onclick="importMusicJSON();closeMusicDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入歌单</div>' +
+            '<div onclick="exportMusicJSON();closeMusicDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出歌单</div>' +
+            '<div onclick="addSongPrompt();closeMusicDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">添加歌曲</div>' +
+            '<div onclick="changeFloatingBallImage();closeMusicDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">更换球图</div>' +
+            '</div>' +
+            '</div>' +
             '</div>' +
             // 歌曲信息
             '<div id="musicNowPlaying" style="font-size:14px;color:var(--text);margin:6px 0;font-weight:bold;min-height:20px;">未在播放</div>' +
             '<div id="musicPlayerContainer" style="margin:4px 0;min-height:40px;"></div>' +
             // 进度条
             '<div style="display:flex;align-items:center;gap:8px;padding:0 4px;margin:4px 0;">' +
-            '<span id="musicCurTime" style="font-size:10px;color:var(--text-system);width:32px;">00:00</span>' +
+            '<span id="musicCurTime" style="font-size:11px;color:var(--text-system);width:34px;">00:00</span>' +
             '<input type="range" id="musicProgress" min="0" max="100" value="0" oninput="seekMusic(this.value)" style="flex:1;height:4px;accent-color:var(--accent);cursor:pointer;">' +
-            '<span id="musicDurTime" style="font-size:10px;color:var(--text-system);width:32px;">00:00</span>' +
+            '<span id="musicDurTime" style="font-size:11px;color:var(--text-system);width:34px;">00:00</span>' +
             '</div>' +
-            // 播放控制按钮（横排三个圆形按钮）
+            // 播放控制按钮
             '<div style="display:flex;align-items:center;justify-content:center;gap:24px;margin:10px 0;">' +
-            '<span onclick="prevSong()" style="font-size:24px;cursor:pointer;color:var(--text);padding:4px;" title="上一曲">&#9198;</span>' +
-            '<span id="btnPlayPause" onclick="togglePlayPause()" style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--text);font-size:22px;cursor:pointer;transition:all 0.2s;" title="播放/暂停">&#9654;</span>' +
-            '<span onclick="nextSong()" style="font-size:24px;cursor:pointer;color:var(--text);padding:4px;" title="下一曲">&#9197;</span>' +
+            '<span onclick="prevSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="上一曲">|&lt;&lt;</span>' +
+            '<span id="btnPlayPause" onclick="togglePlayPause()" style="display:flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:var(--accent);color:var(--text);font-size:20px;cursor:pointer;transition:all 0.2s;" title="播放/暂停">&gt;</span>' +
+            '<span onclick="nextSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="下一曲">&gt;&gt;|</span>' +
             '</div>' +
-            // 播放模式（三个图标按钮）
-            '<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0;">' +
-            '<span id="btnModeLoop" onclick="setPlayMode(\'loop\')" style="font-size:18px;cursor:pointer;color:var(--text-system);padding:2px;" title="单曲循环">&#128260;</span>' +
-            '<span id="btnModeOrder" onclick="setPlayMode(\'order\')" style="font-size:18px;cursor:pointer;color:var(--accent);padding:2px;" title="顺序播放">&#128259;</span>' +
-            '<span id="btnModeRandom" onclick="setPlayMode(\'random\')" style="font-size:18px;cursor:pointer;color:var(--text-system);padding:2px;" title="随机播放">&#128256;</span>' +
+            // 播放模式（图标符号）
+            '<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:6px 0;font-size:18px;">' +
+            '<span id="btnModeLoop" onclick="setPlayMode(\'loop\')" style="cursor:pointer;color:var(--text-system);" title="单曲循环">&#8635;</span>' +
+            '<span id="btnModeOrder" onclick="setPlayMode(\'order\')" style="cursor:pointer;color:var(--accent);" title="顺序播放">&#8801;</span>' +
+            '<span id="btnModeRandom" onclick="setPlayMode(\'random\')" style="cursor:pointer;color:var(--text-system);" title="随机播放">&#8644;</span>' +
             '</div>' +
-            // 歌单区域（可折叠）
-            '<div id="musicMenuArea" style="display:none;margin-top:8px;">' +
-            '<div style="max-height:150px;overflow-y:auto;text-align:left;margin-bottom:6px;" id="musicPlaylistEl"></div>' +
-            '<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;">' +
-            '<button class="btn-sm outline" onclick="importMusicJSON()">导入</button>' +
-            '<button class="btn-sm outline" onclick="exportMusicJSON()">导出</button>' +
-            '<button class="btn-sm outline" onclick="addSongPrompt()">添加</button>' +
-            '<button class="btn-sm outline" onclick="changeFloatingBallImage()">换球</button>' +
-            '</div>' +
-            '</div>' +
-            '<button class="btn-close" onclick="closeMusicPlayer()" style="margin-top:10px;">收起</button>' +
+            // 歌单列表
+            '<div style="max-height:140px;overflow-y:auto;text-align:left;margin-top:4px;" id="musicPlaylistEl"></div>' +
+            '<button class="btn-close" onclick="closeMusicPlayer()" style="margin-top:8px;">收起</button>' +
             '</div>';
 
         document.body.appendChild(overlay);
@@ -201,15 +216,6 @@ function openMusicPlayer() {
     openModal('musicOverlay');
 }
 
-// ========== 菜单折叠 ==========
-function toggleMusicMenu() {
-    var area = document.getElementById('musicMenuArea');
-    if (area) {
-        area.style.display = area.style.display === 'none' ? 'block' : 'none';
-    }
-}
-
-// ========== 关闭 ==========
 function closeMusicPlayer() {
     closeModal('musicOverlay');
     showFloatingBall();
@@ -231,9 +237,9 @@ function updatePlayPauseButton() {
     var btn = document.getElementById('btnPlayPause');
     if (!btn) return;
     if (musicAudio && !musicAudio.paused) {
-        btn.innerHTML = '&#10074;&#10074;';
+        btn.innerHTML = '||';
     } else {
-        btn.innerHTML = '&#9654;';
+        btn.innerHTML = '&gt;';
     }
 }
 
@@ -343,11 +349,9 @@ function updateModeIcons() {
     var loop = document.getElementById('btnModeLoop');
     var order = document.getElementById('btnModeOrder');
     var random = document.getElementById('btnModeRandom');
-    var activeColor = 'var(--accent)';
-    var inactiveColor = 'var(--text-system)';
-    if (loop) loop.style.color = musicPlayMode === 'loop' ? activeColor : inactiveColor;
-    if (order) order.style.color = musicPlayMode === 'order' ? activeColor : inactiveColor;
-    if (random) random.style.color = musicPlayMode === 'random' ? activeColor : inactiveColor;
+    if (loop) loop.style.color = musicPlayMode === 'loop' ? 'var(--accent)' : 'var(--text-system)';
+    if (order) order.style.color = musicPlayMode === 'order' ? 'var(--accent)' : 'var(--text-system)';
+    if (random) random.style.color = musicPlayMode === 'random' ? 'var(--accent)' : 'var(--text-system)';
 }
 
 // ========== 歌单渲染 ==========
@@ -355,7 +359,7 @@ function renderPlaylist() {
     var el = document.getElementById('musicPlaylistEl');
     if (!el) return;
     if (musicPlaylist.length === 0) {
-        el.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:12px;">歌单空空</div>';
+        el.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:12px;font-size:13px;">歌单空空</div>';
         return;
     }
     var html = '';
@@ -463,13 +467,15 @@ function importMusicJSON() {
         '#musicPlayerContainer iframe { width:100%; max-width:330px; height:66px; border:none; margin:0 auto; border-radius:var(--radius-sm); }' +
         '#musicPlayerContainer audio { width:100%; max-width:330px; height:36px; margin:0 auto; outline:none; }' +
         '#btnPlayPause:active { transform:scale(0.9); }' +
-        '.music-song-item { display:flex; justify-content:space-between; align-items:center; padding:5px 8px; margin:1px 0; background:var(--item-bg); border-radius:6px; cursor:pointer; font-size:12px; color:var(--text); transition:all 0.2s; }' +
+        '#musicDropdownMenu div:hover { background:var(--item-bg); }' +
+        '#musicDropdownMenu div:active { background:var(--accent); }' +
+        '.music-song-item { display:flex; justify-content:space-between; align-items:center; padding:6px 8px; margin:1px 0; background:var(--item-bg); border-radius:6px; cursor:pointer; font-size:12px; color:var(--text); transition:all 0.2s; }' +
         '.music-song-item.playing { border-left:3px solid var(--accent); font-weight:bold; background:var(--bubble-me); }' +
         '.music-song-item .song-index { width:20px; text-align:center; color:var(--text-system); font-size:10px; }' +
         '.music-song-item .song-info { flex:1; margin:0 6px; }' +
-        '.music-song-item .song-title { font-size:12px; }' +
+        '.music-song-item .song-title { font-size:13px; }' +
         '.music-song-item .song-artist { font-size:10px; color:var(--text-system); }' +
-        '.music-song-item .song-del { color:var(--danger); cursor:pointer; padding:2px 4px; font-size:14px; }' +
+        '.music-song-item .song-del { color:var(--danger); cursor:pointer; padding:2px 4px; font-size:15px; }' +
         '#musicFloatingBall { transition:transform 0.3s; }' +
         '#musicFloatingBall:active { transform:scale(1.2); }' +
         '#musicProgress { cursor:pointer; }';
