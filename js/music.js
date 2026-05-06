@@ -28,10 +28,13 @@ function createFloatingBall() {
     if (document.getElementById('musicFloatingBall')) return;
     var ball = document.createElement('div');
     ball.id = 'musicFloatingBall';
-    ball.style.cssText = 'position:fixed;bottom:100px;right:12px;width:44px;height:44px;border-radius:50%;background:var(--accent);z-index:150;display:none;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.15);animation:musicSpin 4s linear infinite;overflow:hidden;border:2px solid var(--border);';
+    ball.style.cssText = 'position:fixed;bottom:100px;right:12px;width:44px;height:44px;border-radius:50%;background:var(--accent);z-index:150;display:none;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.15);animation:musicSpin 4s linear infinite;overflow:hidden;border:2px solid var(--border);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;';
+    
+    // 关键：阻止图片被系统拖拽
+    ball.setAttribute('draggable', 'false');
     
     // 默认音符图标
-    ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);">&#9835;</div>';
+    ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
     
     document.body.appendChild(ball);
     
@@ -52,6 +55,9 @@ function createFloatingBall() {
     ball.addEventListener('mousedown', onStart);
     
     function onStart(e) {
+        // 阻止图片拖拽
+        e.preventDefault();
+        
         if (e.type === 'touchstart') {
             var touch = e.touches[0];
             startX = touch.clientX;
@@ -74,8 +80,6 @@ function createFloatingBall() {
         document.addEventListener('touchend', onEnd);
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onEnd);
-        
-        e.preventDefault();
     }
     
     function onMove(e) {
@@ -84,6 +88,7 @@ function createFloatingBall() {
         if (e.type === 'touchmove') {
             clientX = e.touches[0].clientX;
             clientY = e.touches[0].clientY;
+            e.preventDefault(); // 阻止页面滚动
         } else {
             clientX = e.clientX;
             clientY = e.clientY;
@@ -108,8 +113,6 @@ function createFloatingBall() {
         ball.style.top = newTop + 'px';
         ball.style.right = 'auto';
         ball.style.bottom = 'auto';
-        
-        e.preventDefault();
     }
     
     function onEnd() {
@@ -127,41 +130,6 @@ function createFloatingBall() {
             openMusicPlayer();
         }
     }
-}
-
-function showFloatingBall() {
-    var ball = document.getElementById('musicFloatingBall');
-    if (ball) {
-        if (musicFloatingImg) {
-            ball.innerHTML = '<img src="' + musicFloatingImg + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-        } else {
-            ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);">&#9835;</div>';
-        }
-        ball.style.display = 'block';
-    }
-}
-
-function hideFloatingBall() {
-    var ball = document.getElementById('musicFloatingBall');
-    if (ball) ball.style.display = 'none';
-}
-
-function changeFloatingBallImage() {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = function() {
-        var file = input.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            musicFloatingImg = e.target.result;
-            showFloatingBall();
-            showToast('浮动球图片已更新');
-        };
-        reader.readAsDataURL(file);
-    };
-    input.click();
 }
 
 // ========== 播放器弹窗 ==========
