@@ -55,6 +55,7 @@
         <div class="more-item-text" onclick="openLetterModal()">写信</div>
         <div class="more-item-text" onclick="toggleMorePanel();openSettings();">设置</div>
         <div class="more-item-text" onclick="toggleMorePanel();openTarotModal();">塔罗</div>
+        <div class="more-item-text" onclick="toggleMorePanel();VideoDanmaku.open()">视频弹幕</div>
         <!-- 数独、五子棋、剧本杀由 games.js 动态添加 -->
     </div>
     <div class="more-panel-upload-row">
@@ -109,10 +110,50 @@
 <!-- Toast 提示 -->
 <div class="toast" id="toast"></div>
 
+<!-- ==================== 视频弹幕模块 ==================== -->
+<div id="video-danmaku-container" class="vd-container">
+    <div class="vd-header">
+        <span class="vd-title">一起看</span>
+        <div class="vd-header-actions">
+            <button class="vd-btn-icon" id="vd-btn-close" title="关闭">x</button>
+        </div>
+    </div>
+    <div class="vd-main">
+        <div class="vd-video-section">
+            <div class="vd-video-wrapper" id="vd-video-container">
+                <video id="vd-video" class="vd-video" playsinline controls></video>
+                <canvas id="vd-canvas" class="vd-canvas"></canvas>
+                <div class="vd-video-placeholder" id="vd-placeholder">
+                    <div class="vd-placeholder-content">
+                        <span class="vd-placeholder-icon">播放</span>
+                        <p>输入视频链接或上传文件开始播放</p>
+                        <p class="vd-placeholder-hint">支持 .mp4 格式 | 可拖拽文件到此处</p>
+                    </div>
+                </div>
+                <div class="vd-source-label" id="vd-source-label"></div>
+            </div>
+            <div class="vd-input-bar">
+                <input type="text" id="vd-url-input" class="vd-url-input" placeholder="输入视频直链（.mp4）...">
+                <button class="vd-btn vd-btn-primary" id="vd-btn-load-url">加载链接</button>
+                <button class="vd-btn" id="vd-btn-example">示例视频</button>
+                <label class="vd-btn vd-btn-upload">
+                    本地上传
+                    <input type="file" id="vd-file-input" accept="video/mp4,.mp4" hidden>
+                </label>
+            </div>
+        </div>
+        <div class="vd-send-bar">
+            <input type="text" id="vd-chat-input" class="vd-send-input" placeholder="说点什么..." maxlength="200">
+            <button class="vd-btn vd-btn-send" id="vd-btn-send">发送</button>
+        </div>
+    </div>
+</div>
+
 <!-- ==================== JavaScript 文件（按顺序加载） ==================== -->
 <script src="js/core.js"></script>
 <script src="js/modules.js"></script>
 <script src="js/games.js"></script>
+<script src="js/video-danmaku.js"></script>
 
 </body>
 </html>
