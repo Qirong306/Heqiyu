@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>甜心助手</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ==================== 头部 ==================== -->
+<div class="header">
+    <span class="header-title" id="headerTitle">甜心助手</span>
+    <span class="letter-badge" id="letterBadge" style="display:none;" onclick="checkAndShowLetterReply()">新回信</span>
+</div>
+
+<!-- ==================== 聊天区域 ==================== -->
+<div class="chat" id="chat"></div>
+
+<!-- ==================== 输入区域 ==================== -->
+<div class="input-area" id="inputArea">
+    <div class="input-row">
+        <button class="text-btn" onclick="openPhotoMenu()">照片</button>
+        <input type="text" id="msgInput" placeholder="说点什么吧..." onkeypress="if(event.key==='Enter')sendMsg()">
+        <button class="plus-btn" onclick="toggleMorePanel()">+</button>
+        <button class="send-btn" onclick="sendMsg()">发送</button>
+    </div>
+</div>
+
+<!-- ==================== 弹窗系统 ==================== -->
+
+<!-- 照片选择 -->
+<div class="modal-overlay" id="photoOverlay">
+    <div class="modal" style="text-align:center;">
+        <h3>选择照片</h3>
+        <div class="subtitle">拍照或从相册选择，直接发送到聊天</div>
+        <div class="photo-menu-btns">
+            <button onclick="takePhoto()">拍照</button>
+            <button onclick="pickLocalPhoto()">从相册选择</button>
+        </div>
+        <button class="btn-close" onclick="closeModal('photoOverlay')">取消</button>
+    </div>
+</div>
+
+<!-- 更多面板 -->
+<div class="more-panel" id="morePanel">
+    <div class="more-panel-header">
+        <span>更多功能</span>
+        <button onclick="toggleMorePanel()">x</button>
+    </div>
+    <div class="more-panel-grid-top">
+        <div class="more-item-text" onclick="openEmojiTabInMore()">表情包</div>
+        <div class="more-item-text" onclick="openLetterModal()">写信</div>
+        <div class="more-item-text" onclick="toggleMorePanel();openSettings();">设置</div>
+        <div class="more-item-text" onclick="toggleMorePanel();openTarotModal();">塔罗</div>
+        <!-- 数独、五子棋、剧本杀由 games.js 动态添加 -->
+    </div>
+    <div class="more-panel-upload-row">
+        <input type="file" id="moreFileInput" accept="image/*" style="display:none" onchange="uploadToMorePanel()">
+        <button onclick="document.getElementById('moreFileInput').click()">上传表情包</button>
+    </div>
+    <div class="more-panel-images" id="morePanelImages"></div>
+    <div class="more-panel-hint" id="morePanelHint">当前：表情包</div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal-overlay" id="settingsOverlay">
+    <div class="modal">
+        <h3>小窝设置</h3>
+        <div class="subtitle">按需调整，随心所欲</div>
+        <div class="grid-3">
+            <div class="card" onclick="openNicknameModal()">昵称头像</div>
+            <div class="card" onclick="openReplyModal()">自定义回复</div>
+            <div class="card" onclick="openEmojiManageModal()">表情包</div>
+            <div class="card" onclick="openThemeModal()">主题模式</div>
+            <div class="card" onclick="openBackupModal()">数据管理</div>
+            <div class="card" onclick="openLetterManageModal()">往来信件</div>
+            <!-- 书籍阅读将由 modules.js 动态添加 -->
+        </div>
+        <button class="btn-close" onclick="closeModal('settingsOverlay')">关闭</button>
+    </div>
+</div>
+
+<!-- 通用子弹窗 -->
+<div class="modal-overlay" id="subOverlay">
+    <div class="sub-modal" id="subModal"></div>
+</div>
+
+<!-- 写信弹窗 -->
+<div class="modal-overlay" id="letterOverlay">
+    <div class="modal" style="text-align:center;">
+        <h3>写一封信</h3>
+        <div class="subtitle">写给 <span id="letterRecipient">甜心助手</span></div>
+        <div class="form-row">
+            <textarea id="letterContent" placeholder="写下你想说的话...&#10;信件不会直接发送到聊天，对方会在半天到一天半内回信哦~" style="min-height:140px;"></textarea>
+        </div>
+        <div class="btn-row" style="justify-content:center;">
+            <button class="btn-sm" onclick="sendLetter()">寄出信件</button>
+        </div>
+        <button class="btn-close" onclick="closeModal('letterOverlay')" style="margin-top:10px;">取消</button>
+    </div>
+</div>
+
+<!-- 线索笔记本弹窗 -->
+<div class="clue-notebook-overlay" id="clueNotebookOverlay"></div>
+
+<!-- Toast 提示 -->
+<div class="toast" id="toast"></div>
+
+<!-- ==================== JavaScript 文件（按顺序加载） ==================== -->
+<script src="js/core.js"></script>
+<script src="js/modules.js"></script>
+<script src="js/games.js"></script>
+
+</body>
+</html>
