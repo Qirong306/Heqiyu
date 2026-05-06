@@ -299,16 +299,26 @@ function openBookReader(index) {
     
     // 底部工具条
     html += '<div style="margin-top:10px; display:flex; gap:8px; align-items:center;">';
-    html += '<button class="btn-sm outline" onclick="toggleHighlightMode()">划线模式</button>';
+    html += '<button class="btn-sm outline" id="toggleHighlightBtn" onclick="toggleHighlightMode()">划线模式</button>';
     html += '<button class="btn-sm outline" onclick="clearAllAnnotations(' + index + ')">清除所有划线</button>';
     html += '<span id="highlightStatus" style="font-size:12px; color:var(--text-system);">点击按钮开启划线模式</span>';
     html += '</div>';
     
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">关闭</button>';
+    html += '<button class="btn-close" onclick="exitBookReader()" style="margin-top:10px;">关闭</button>';
     openSubModal(html);
     
     window._currentBookIndex = index;
     window._highlightMode = false;
+}
+
+// 退出阅读器时清理事件
+function exitBookReader() {
+    var contentArea = document.getElementById('bookTextInner');
+    if (contentArea) {
+        contentArea.removeEventListener('touchend', handleTextSelection);
+        contentArea.removeEventListener('mouseup', handleTextSelection);
+    }
+    closeModal('subOverlay');
 }
 
 // 渲染带划线的文本
@@ -327,7 +337,12 @@ function renderAnnotatedText(text, annotations, chapterIndex) {
             var lastIdx = 0;
             lineAnnotations.forEach(function(ann) {
                 htmlLine += escapeHTML(line.substring(lastIdx, ann.startOffset));
-                htmlLine += '<mark style="background-color: #ffeaa7; cursor:pointer;" title="' + escapeHTML(ann.text) + '">' + escapeHTML(line.substring(ann.startOffset, ann.endOffset)) + '</mark>';
+                var hasNote = ann.note && ann.note.trim().length > 0;
+                var escapedText = escapeHTML(ann.text).replace(/'/g, "&#39;");
+                var escapedNote = escapeHTML(ann.note || '').replace(/'/g, "&#39;");
+                var titleAttr = hasNote ? escapedNote : escapedText;
+                var supIcon = hasNote ? ' <sup style="font-size:10px;color:var(--accent-dark);">[笔记]</sup>' : '';
+                htmlLine += '<mark style="background-color: #ffeaa7; cursor:pointer; position:relative;" title="' + titleAttr + '" onclick="showAnnotationDetail(\'' + escapedText + '\', \'' + escapedNote + '\')">' + escapeHTML(line.substring(ann.startOffset, ann.endOffset)) + supIcon + '</mark>';
                 lastIdx = ann.endOffset;
             });
             htmlLine += escapeHTML(line.substring(lastIdx));
@@ -345,58 +360,127 @@ function jumpToChapter(chapterIndex) {
     }
 }
 
-// 划线模式
+// 划线模式切换
 function toggleHighlightMode() {
     window._highlightMode = !window._highlightMode;
     var status = document.getElementById('highlightStatus');
+    var btn = document.getElementById('toggleHighlightBtn');
     if (status) {
-        status.textContent = window._highlightMode ? '划线模式已开启，选中文字后自动高亮' : '点击按钮开启划线模式';
+        status.textContent = window._highlightMode ? '划线模式已开启，选中文字后添加笔记' : '点击按钮开启划线模式';
+    }
+    if (btn) {
+        btn.textContent = window._highlightMode ? '退出划线' : '划线模式';
+        if (window._highlightMode) {
+            btn.style.background = 'var(--accent)';
+            btn.style.borderColor = 'var(--accent)';
+            btn.style.color = 'var(--text)';
+        } else {
+            btn.style.background = 'transparent';
+            btn.style.borderColor = 'var(--border)';
+            btn.style.color = 'var(--text-secondary)';
+        }
     }
     var contentArea = document.getElementById('bookTextInner');
     if (contentArea) {
         if (window._highlightMode) {
             contentArea.style.cursor = 'text';
-            contentArea.onmouseup = handleTextSelection;
+            contentArea.addEventListener('touchend', handleTextSelection);
+            contentArea.addEventListener('mouseup', handleTextSelection);
         } else {
-            contentArea.onmouseup = null;
+            contentArea.removeEventListener('touchend', handleTextSelection);
+            contentArea.removeEventListener('mouseup', handleTextSelection);
             contentArea.style.cursor = 'default';
         }
     }
 }
 
-function handleTextSelection() {
+// 处理文本选择
+function handleTextSelection(e) {
     if (!window._highlightMode) return;
-    var sel = window.getSelection();
-    if (!sel || sel.isCollapsed) return;
-    var range = sel.getRangeAt(0);
-    var selectedText = sel.toString().trim();
-    if (!selectedText) return;
     
-    var container = range.commonAncestorContainer;
-    var chapterDiv = container.parentNode;
-    while (chapterDiv && !chapterDiv.classList.contains('chapter-text')) {
-        chapterDiv = chapterDiv.parentNode;
-    }
-    if (!chapterDiv) return;
-    var chapterId = chapterDiv.id;
-    var chapterIndex = parseInt(chapterId.split('_')[2]);
+    setTimeout(function() {
+        var sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+        
+        var selectedText = sel.toString().trim();
+        if (!selectedText || selectedText.length < 2) return;
+        
+        var range = sel.getRangeAt(0);
+        var container = range.commonAncestorContainer;
+        var chapterDiv = container.parentNode;
+        while (chapterDiv && !chapterDiv.classList.contains('chapter-text')) {
+            chapterDiv = chapterDiv.parentNode;
+        }
+        if (!chapterDiv) return;
+        
+        var chapterId = chapterDiv.id;
+        var chapterIndex = parseInt(chapterId.split('_')[2]);
+        
+        var offsetStart = getTextOffset(chapterDiv, range.startContainer, range.startOffset);
+        var offsetEnd = getTextOffset(chapterDiv, range.endContainer, range.endOffset);
+        
+        // 弹出笔记输入框
+        showAnnotationInput(selectedText, chapterIndex, offsetStart, offsetEnd);
+        
+        // 清除选区
+        sel.removeAllRanges();
+    }, 100);
+}
+
+// 显示笔记输入弹窗
+function showAnnotationInput(selectedText, chapterIndex, startOffset, endOffset) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;';
+    overlay.id = 'annotationInputOverlay';
     
-    var offsetStart = getTextOffset(chapterDiv, range.startContainer, range.startOffset);
-    var offsetEnd = getTextOffset(chapterDiv, range.endContainer, range.endOffset);
+    var box = document.createElement('div');
+    box.style.cssText = 'background:var(--panel-bg);border-radius:var(--radius-lg);padding:18px;width:85%;max-width:350px;box-shadow:0 8px 30px rgba(0,0,0,0.2);';
+    box.innerHTML = '<h4 style="margin-bottom:8px;color:var(--text);">添加笔记</h4>' +
+        '<div style="background:var(--item-bg);padding:8px 12px;border-radius:8px;margin-bottom:10px;font-size:13px;color:var(--text-secondary);max-height:60px;overflow-y:auto;">"' + escapeHTML(selectedText) + '"</div>' +
+        '<textarea id="annotationNoteInput" placeholder="写点笔记..." style="width:100%;padding:10px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-main);font-size:14px;color:var(--text);background:var(--input-box);min-height:80px;resize:vertical;outline:none;"></textarea>' +
+        '<div class="btn-row" style="margin-top:10px;justify-content:flex-end;">' +
+        '<button class="btn-sm outline" id="cancelAnnotationBtn">取消</button>' +
+        '<button class="btn-sm" id="saveAnnotationBtn">保存</button>' +
+        '</div>';
     
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    
+    document.getElementById('saveAnnotationBtn').onclick = function() {
+        var note = document.getElementById('annotationNoteInput').value.trim();
+        saveAnnotation(selectedText, chapterIndex, startOffset, endOffset, note);
+        document.body.removeChild(overlay);
+    };
+    document.getElementById('cancelAnnotationBtn').onclick = function() {
+        document.body.removeChild(overlay);
+    };
+    overlay.onclick = function(e) {
+        if (e.target === overlay) document.body.removeChild(overlay);
+    };
+    
+    // 自动聚焦到输入框
+    setTimeout(function() {
+        var input = document.getElementById('annotationNoteInput');
+        if (input) input.focus();
+    }, 200);
+}
+
+// 保存标注
+function saveAnnotation(text, chapterIndex, startOffset, endOffset, note) {
     var books = getBooks();
     var book = books[window._currentBookIndex];
     if (!book.annotations) book.annotations = [];
     book.annotations.push({
         chapterIndex: chapterIndex,
-        startOffset: offsetStart,
-        endOffset: offsetEnd,
-        text: selectedText,
+        startOffset: startOffset,
+        endOffset: endOffset,
+        text: text,
+        note: note || '',
         color: '#ffeaa7',
         lineIndex: 0
     });
     saveBookData();
-    showToast('划线已保存');
+    showToast(note ? '笔记已保存' : '划线已保存');
     openBookReader(window._currentBookIndex);
 }
 
@@ -414,15 +498,32 @@ function getTextOffset(root, node, offset) {
     return 0;
 }
 
+// 查看笔记详情
+function showAnnotationDetail(text, note) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function(e) { if (e.target === overlay) document.body.removeChild(overlay); };
+    
+    var box = document.createElement('div');
+    box.style.cssText = 'background:var(--panel-bg);border-radius:var(--radius-lg);padding:18px;width:85%;max-width:350px;box-shadow:0 8px 30px rgba(0,0,0,0.2);text-align:center;';
+    box.innerHTML = '<h4 style="margin-bottom:8px;color:var(--text);">笔记详情</h4>' +
+        '<div style="background:var(--item-bg);padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:14px;color:var(--text);line-height:1.6;">"' + escapeHTML(text) + '"</div>' +
+        '<div style="background:var(--item-bg);padding:10px 14px;border-radius:8px;font-size:13px;color:var(--text-secondary);min-height:50px;line-height:1.6;text-align:left;">' + (note ? escapeHTML(note) : '<span style="color:var(--text-system);">没有笔记内容</span>') + '</div>' +
+        '<button class="btn-close" onclick="this.parentElement.parentElement.remove()" style="margin-top:12px;">关闭</button>';
+    
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+}
+
 // 清除所有划线
 function clearAllAnnotations(index) {
-    if (!confirm('确定要清除本书所有划线吗？')) return;
+    if (!confirm('确定要清除本书所有划线和笔记吗？')) return;
     var books = getBooks();
     if (books[index]) {
         books[index].annotations = [];
         saveBookData();
         openBookReader(index);
-        showToast('划线已清除');
+        showToast('所有划线和笔记已清除');
     }
 }
 
