@@ -23,25 +23,109 @@ document.addEventListener('DOMContentLoaded', function() {
     createFloatingBall();
 });
 
-// ========== 浮动小球 ==========
+// ========== 浮动小球（可拖动） ==========
 function createFloatingBall() {
     if (document.getElementById('musicFloatingBall')) return;
     var ball = document.createElement('div');
     ball.id = 'musicFloatingBall';
-    ball.style.cssText = 'position:fixed;bottom:100px;right:12px;width:44px;height:44px;border-radius:50%;background:var(--accent);z-index:150;display:none;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.15);animation:musicSpin 4s linear infinite;overflow:hidden;border:2px solid var(--border);';
-    ball.onclick = function() { openMusicPlayer(); };
+    ball.style.cssText = 'position:fixed;bottom:100px;right:12px;width:44px;height:44px;border-radius:50%;background:var(--accent);z-index:150;display:none;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.15);animation:musicSpin 4s linear infinite;overflow:hidden;border:2px solid var(--border);';
     
     // 默认音符图标
     ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);">&#9835;</div>';
     
     document.body.appendChild(ball);
     
-    // 旋转动画样式
+    // 旋转动画
     if (!document.getElementById('musicSpinStyle')) {
         var style = document.createElement('style');
         style.id = 'musicSpinStyle';
         style.textContent = '@keyframes musicSpin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }';
         document.head.appendChild(style);
+    }
+    
+    // ========== 拖动逻辑 ==========
+    var isDragging = false;
+    var startX, startY, startLeft, startTop;
+    var hasMoved = false;
+    
+    ball.addEventListener('touchstart', onStart, { passive: false });
+    ball.addEventListener('mousedown', onStart);
+    
+    function onStart(e) {
+        if (e.type === 'touchstart') {
+            var touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        } else {
+            startX = e.clientX;
+            startY = e.clientY;
+        }
+        var rect = ball.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+        hasMoved = false;
+        isDragging = true;
+        
+        ball.style.animation = 'none';
+        ball.style.cursor = 'grabbing';
+        ball.style.transition = 'none';
+        
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        
+        e.preventDefault();
+    }
+    
+    function onMove(e) {
+        if (!isDragging) return;
+        var clientX, clientY;
+        if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        var dx = clientX - startX;
+        var dy = clientY - startY;
+        
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            hasMoved = true;
+        }
+        
+        var newLeft = startLeft + dx;
+        var newTop = startTop + dy;
+        
+        var maxLeft = window.innerWidth - ball.offsetWidth;
+        var maxTop = window.innerHeight - ball.offsetHeight;
+        
+        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+        newTop = Math.max(0, Math.min(newTop, maxTop));
+        
+        ball.style.left = newLeft + 'px';
+        ball.style.top = newTop + 'px';
+        ball.style.right = 'auto';
+        ball.style.bottom = 'auto';
+        
+        e.preventDefault();
+    }
+    
+    function onEnd() {
+        isDragging = false;
+        ball.style.animation = 'musicSpin 4s linear infinite';
+        ball.style.cursor = 'grab';
+        
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+        
+        // 如果没拖动，视为点击
+        if (!hasMoved) {
+            openMusicPlayer();
+        }
     }
 }
 
