@@ -894,6 +894,29 @@ body {
     to { opacity: 1; transform: translate(-50%,-50%) scale(1); }
 }
 
+/* ========== 表情包消息 - 无气泡无时间 ========== */
+.msg.is-sticker {
+    margin-bottom: 2px;
+}
+.msg.is-sticker .avatar-wrap {
+    display: none;
+}
+.msg.is-sticker .bubble {
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 85% !important;
+}
+.msg.is-sticker .bubble .msg-time {
+    display: none !important;
+}
+.msg.is-sticker img.msg-image {
+    max-width: 80px;
+    max-height: 80px;
+    border-radius: 6px;
+}
+
 /* ========== 13. 塔罗 ========== */
 .tarot-cards-row {
     display: flex;
