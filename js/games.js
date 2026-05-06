@@ -577,6 +577,65 @@ function proceedMurderScene() {
         return;
     }
     var chapter = script.chapters[ch];
+    
+    // 如果你的 JSON 有 scenes 数组就用 scenes，没有就直接用 chapter 本身
+    var scene = chapter.scenes ? chapter.scenes[sc] : chapter;
+    
+    // 如果没有 scenes 数组，直接处理章节
+    if (!chapter.scenes) {
+        if (scene.scene) {
+            addSystemMsg(scene.scene);
+        }
+        if (scene.narration) {
+            addSystemMsg(scene.narration);
+        }
+        if (scene.dialogue || scene.dialogues) {
+            var dialogues = scene.dialogues || scene.dialogue;
+            dialogues.forEach(function(line) {
+                var role = line.role || '???';
+                var cls = line.roleClass || line.class || 'role-a';
+                addMessageWithRole(line.text, role, cls);
+            });
+        }
+        if (scene.clues) {
+            scene.clues.forEach(function(clue) {
+                if (clue.id && murderGameState.collectedClues.indexOf(clue.id) === -1) {
+                    murderGameState.collectedClues.push(clue.id);
+                }
+            });
+            var clueText = scene.clues.map(function(c) { return c.text || c.description || ''; }).join('  ');
+            if (clueText) addSystemMsg('[线索] ' + clueText);
+        }
+        if (scene.choices && scene.choices.length > 0) {
+            showMurderChoices(scene.choices);
+        } else if (scene.nextSceneId) {
+            var next = findSceneById(script, scene.nextSceneId);
+            if (next) {
+                murderGameState.currentChapter = next.chapter;
+                murderGameState.currentScene = next.sceneIndex;
+                proceedMurderScene();
+            } else {
+                murderGameState.currentChapter++;
+                murderGameState.currentScene = 0;
+                proceedMurderScene();
+            }
+        } else if (scene.nextChapter) {
+            // 你的 JSON 用的是 nextChapter
+            var nextCh = script.chapters.findIndex(function(c) { return c.id === scene.nextChapter; });
+            if (nextCh !== -1) {
+                murderGameState.currentChapter = nextCh;
+                murderGameState.currentScene = 0;
+                proceedMurderScene();
+            } else {
+                endMurderGame();
+            }
+        } else {
+            endMurderGame();
+        }
+        return;
+    }
+    
+    // 下面是原本 scenes 数组的逻辑（兼容老格式）
     if (sc >= chapter.scenes.length) {
         murderGameState.currentChapter++;
         murderGameState.currentScene = 0;
@@ -588,28 +647,29 @@ function proceedMurderScene() {
         }
         return;
     }
-    var scene = chapter.scenes[sc];
+    scene = chapter.scenes[sc];
 
-    if (scene.narration) {
-        addSystemMsg(scene.narration);
+    if (scene.narration || scene.scene) {
+        addSystemMsg(scene.narration || scene.scene);
     }
 
-    if (scene.dialogues) {
-        scene.dialogues.forEach(function(line) {
+    if (scene.dialogues || scene.dialogue) {
+        var dialogues = scene.dialogues || scene.dialogue;
+        dialogues.forEach(function(line) {
             var role = line.role || '???';
-            var cls = line.roleClass || 'role-a';
+            var cls = line.roleClass || line.class || 'role-a';
             addMessageWithRole(line.text, role, cls);
         });
     }
 
     if (scene.clues) {
         scene.clues.forEach(function(clue) {
-            if (murderGameState.collectedClues.indexOf(clue.id) === -1) {
+            if (clue.id && murderGameState.collectedClues.indexOf(clue.id) === -1) {
                 murderGameState.collectedClues.push(clue.id);
             }
         });
-        var clueText = scene.clues.map(function(c) { return c.description; }).join('  ');
-        addSystemMsg('[线索] ' + clueText);
+        var clueText = scene.clues.map(function(c) { return c.text || c.description || ''; }).join('  ');
+        if (clueText) addSystemMsg('[线索] ' + clueText);
     }
 
     if (scene.choices && scene.choices.length > 0) {
@@ -623,6 +683,15 @@ function proceedMurderScene() {
         } else {
             murderGameState.currentScene++;
             proceedMurderScene();
+        }
+    } else if (scene.nextChapter) {
+        var nextCh = script.chapters.findIndex(function(c) { return c.id === scene.nextChapter; });
+        if (nextCh !== -1) {
+            murderGameState.currentChapter = nextCh;
+            murderGameState.currentScene = 0;
+            proceedMurderScene();
+        } else {
+            endMurderGame();
         }
     } else {
         murderGameState.currentScene++;
@@ -672,8 +741,21 @@ function selectMurderChoice(nextSceneId) {
 function endMurderGame() {
     setInputMode('normal');
     addSystemMsg('【剧本杀】游戏结束。回顾你收集的线索，看看真相是否如你所想。');
-    if (murderGameState && murderGameState.script && murderGameState.script.truth) {
-        addSystemMsg('真相：' + murderGameState.script.truth);
+    if (murderGameState && murderGameState.script) {
+        // 查找最终线索中的真相
+        var script = murderGameState.script;
+        script.chapters.forEach(function(ch) {
+            var scene = ch.scenes ? ch.scenes[0] : ch;
+            var clues = scene.clues || [];
+            clues.forEach(function(clue) {
+                if (clue.final && (clue.text || clue.description)) {
+                    addSystemMsg('真相：' + (clue.text || clue.description));
+                }
+            });
+        });
+        if (script.truth) {
+            addSystemMsg('真相：' + script.truth);
+        }
     }
     murderGameState = null;
     gameInProgress = false;
