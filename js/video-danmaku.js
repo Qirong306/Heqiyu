@@ -1,23 +1,19 @@
 /**
  * video-danmaku.js
  * 视频弹幕聊天模块
- * 功能：视频播放 + Canvas弹幕 + 聊天消息同步 + 自动评论
- * 角色：使用主应用当前聊天对象（appData.otherName + appData.otherAvatar）
+ * 功能：视频播放 + Canvas弹幕 + 聊天消息同步 + 自动评论 + 词库管理
  */
-
 const VideoDanmaku = (function() {
     'use strict';
 
-    // ==================== 自动评论词库 ====================
-    const COMMENT_LINES = [
+    // ==================== 默认弹幕词库 ====================
+    const DEFAULT_LINES = [
         '这个画面绝了',
         '哈哈哈哈笑死',
-        '不是吧这也太离谱了',
         '好甜好甜',
         '等等我错过了什么',
         '再来一遍',
         '前方高能',
-        '这个转场我可以',
         '名场面来了',
         '已上线，陪你一起看',
         '信号满格',
@@ -29,8 +25,126 @@ const VideoDanmaku = (function() {
         '深夜档在此',
         '再看亿遍',
         '此处应有掌声',
-        '我笑了'
+        '我笑了',
+        '太真实了',
+        '这是什么神仙'
     ];
+
+    const WORD_BANK_KEY = 'vd_comment_lines';
+
+    // ==================== 词库管理 ====================
+    function loadWordBank() {
+        try {
+            const saved = localStorage.getItem(WORD_BANK_KEY);
+            if (saved) {
+                const arr = JSON.parse(saved);
+                if (Array.isArray(arr) && arr.length > 0) return arr;
+            }
+        } catch(e) {}
+        return DEFAULT_LINES.slice();
+    }
+
+    function saveWordBank(lines) {
+        try {
+            localStorage.setItem(WORD_BANK_KEY, JSON.stringify(lines));
+        } catch(e) {}
+    }
+
+    function getWordBank() {
+        if (!getWordBank._cache) {
+            getWordBank._cache = loadWordBank();
+        }
+        return getWordBank._cache;
+    }
+
+    function refreshWordBankCache() {
+        getWordBank._cache = loadWordBank();
+    }
+
+    function randomLine() {
+        const lines = getWordBank();
+        return lines[Math.floor(Math.random() * lines.length)];
+    }
+
+    function openWordBankModal() {
+        const lines = getWordBank();
+        let listHtml = '';
+        lines.forEach(function(line, i) {
+            listHtml += '<div class="vd-wb-item"><span>' + line + '</span><button class="vd-wb-del" data-idx="' + i + '">x</button></div>';
+        });
+
+        const html =
+            '<div class="vd-wb-overlay" id="vd-wb-overlay">' +
+            '<div class="vd-wb-modal">' +
+            '<div class="vd-wb-header">' +
+            '<span>弹幕词库 (' + lines.length + '条)</span>' +
+            '<button class="vd-wb-close" id="vd-wb-close">x</button>' +
+            '</div>' +
+            '<div class="vd-wb-add-row">' +
+            '<input type="text" id="vd-wb-new-word" placeholder="添加新词条..." maxlength="30">' +
+            '<button id="vd-wb-add-btn">添加</button>' +
+            '</div>' +
+            '<div class="vd-wb-list">' + (listHtml || '<div class="vd-wb-empty">还没有词条</div>') + '</div>' +
+            '<div class="vd-wb-footer">' +
+            '<button id="vd-wb-reset">恢复默认</button>' +
+            '<button id="vd-wb-done">完成</button>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+
+        document.body.insertAdjacentHTML('beforeend', html);
+
+        document.getElementById('vd-wb-close').onclick = closeWordBankModal;
+        document.getElementById('vd-wb-done').onclick = closeWordBankModal;
+        document.getElementById('vd-wb-overlay').onclick = function(e) {
+            if (e.target === this) closeWordBankModal();
+        };
+
+        document.getElementById('vd-wb-add-btn').onclick = function() {
+            const input = document.getElementById('vd-wb-new-word');
+            const word = input.value.trim();
+            if (!word) return;
+            if (word.length > 30) { showToast('词条不能超过30个字'); return; }
+            const lines = getWordBank();
+            lines.push(word);
+            saveWordBank(lines);
+            refreshWordBankCache();
+            input.value = '';
+            closeWordBankModal();
+            openWordBankModal();
+        };
+
+        document.getElementById('vd-wb-new-word').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('vd-wb-add-btn').click();
+        });
+
+        document.getElementById('vd-wb-reset').onclick = function() {
+            if (!confirm('恢复默认词库？当前词库将被覆盖。')) return;
+            saveWordBank(DEFAULT_LINES.slice());
+            refreshWordBankCache();
+            closeWordBankModal();
+            openWordBankModal();
+            showToast('已恢复默认词库');
+        };
+
+        document.querySelectorAll('.vd-wb-del').forEach(function(btn) {
+            btn.onclick = function() {
+                const idx = parseInt(this.getAttribute('data-idx'));
+                const lines = getWordBank();
+                if (lines.length <= 1) { showToast('至少保留一条'); return; }
+                lines.splice(idx, 1);
+                saveWordBank(lines);
+                refreshWordBankCache();
+                closeWordBankModal();
+                openWordBankModal();
+            };
+        });
+    }
+
+    function closeWordBankModal() {
+        const overlay = document.getElementById('vd-wb-overlay');
+        if (overlay) overlay.remove();
+    }
 
     // ==================== 状态管理 ====================
     let state = {
@@ -49,14 +163,10 @@ const VideoDanmaku = (function() {
         isPlaying: false
     };
 
-    // ==================== DOM 元素缓存 ====================
     let els = {};
 
     // ==================== 工具函数 ====================
-    function $(sel) { return document.querySelector(sel); }
-    function $$(sel) { return document.querySelectorAll(sel); }
     function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
     // ==================== 弹幕引擎 ====================
     function initCanvas() {
@@ -67,7 +177,7 @@ const VideoDanmaku = (function() {
 
     function resizeCanvas() {
         if (!state.canvas || !els.videoContainer) return;
-        const rect = els.videoContainer.getBoundingClientRect();
+        var rect = els.videoContainer.getBoundingClientRect();
         state.canvas.width = rect.width;
         state.canvas.height = rect.height;
         state.canvas.style.width = rect.width + 'px';
@@ -76,7 +186,7 @@ const VideoDanmaku = (function() {
 
     function createDanmaku(text, color) {
         if (!state.canvas) return;
-        const colors = ['#ffffff', '#ff6b9d', '#4ecdc4', '#ffe66d', '#a8d8ea', '#ffd3b6'];
+        var colors = ['#ffffff', '#ff6b9d', '#4ecdc4', '#ffe66d', '#a8d8ea', '#ffd3b6'];
         return {
             text: text,
             x: state.canvas.width,
@@ -93,17 +203,16 @@ const VideoDanmaku = (function() {
         if (state.danmakuList.length >= state.maxDanmaku) {
             state.danmakuList.shift();
         }
-        const dm = createDanmaku(text, color);
+        var dm = createDanmaku(text, color);
         state.danmakuList.push(dm);
     }
 
     function updateDanmaku() {
         if (!state.ctx || !state.canvas) return;
-
         state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
 
-        for (let i = state.danmakuList.length - 1; i >= 0; i--) {
-            const dm = state.danmakuList[i];
+        for (var i = state.danmakuList.length - 1; i >= 0; i--) {
+            var dm = state.danmakuList[i];
             dm.x -= dm.speed;
 
             state.ctx.save();
@@ -116,7 +225,7 @@ const VideoDanmaku = (function() {
             state.ctx.fillText(dm.text, dm.x, dm.y);
             state.ctx.restore();
 
-            const textWidth = state.ctx.measureText(dm.text).width;
+            var textWidth = state.ctx.measureText(dm.text).width;
             if (dm.x + textWidth < 0) {
                 state.danmakuList.splice(i, 1);
             }
@@ -148,7 +257,7 @@ const VideoDanmaku = (function() {
     function loadVideo(source) {
         if (!state.video) return;
         state.video.pause();
-        if (state.video.src && state.video.src.startsWith('blob:')) {
+        if (state.video.src && state.video.src.indexOf('blob:') === 0) {
             URL.revokeObjectURL(state.video.src);
         }
         state.video.src = source;
@@ -172,58 +281,45 @@ const VideoDanmaku = (function() {
     }
 
     function handleUrlLoad() {
-        const url = els.urlInput.value.trim();
-        if (!url) {
-            showToast('请输入视频链接');
-            return;
-        }
-        if (url.indexOf('.mp4') === -1 && url.indexOf('mp4') === -1) {
-            showToast('请输入 .mp4 格式的视频链接');
-            return;
-        }
+        var url = els.urlInput.value.trim();
+        if (!url) { showToast('请输入视频链接'); return; }
+        if (url.indexOf('.mp4') === -1) { showToast('请输入 .mp4 格式的视频链接'); return; }
         loadVideo(url);
     }
 
     function handleFileUpload(file) {
         if (!file) return;
         if (file.type.indexOf('mp4') === -1 && file.name.indexOf('.mp4') === -1) {
-            showToast('请选择 .mp4 格式的视频');
-            return;
+            showToast('请选择 .mp4 格式的视频'); return;
         }
-        const url = URL.createObjectURL(file);
-        loadVideo(url);
+        loadVideo(URL.createObjectURL(file));
     }
 
     function handleExampleVideo() {
-        const exampleUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-        loadVideo(exampleUrl);
+        loadVideo('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
     }
 
-    // ==================== 聊天消息（写入主聊天） ====================
+    // ==================== 聊天消息 ====================
     function sendUserMessage(text) {
         if (!text.trim()) return;
-        // 写入主聊天
         if (typeof vdAddMessage === 'function') {
             vdAddMessage(text.trim(), 'me');
         }
-        // 发弹幕
         addDanmaku(text.trim(), '#ffffff');
     }
 
     function sendOtherMessage(text) {
-        // 写入主聊天
         if (typeof vdAddMessage === 'function') {
             vdAddMessage(text, 'other');
         }
-        // 发弹幕
         addDanmaku(text, '#ff6b9d');
     }
 
     // ==================== 自动评论 ====================
     function handleVideoTimeUpdate() {
         if (!state.video || !state.isPlaying) return;
-        const currentSecond = Math.floor(state.video.currentTime);
-        const intervalIndex = Math.floor(currentSecond / state.commentInterval);
+        var currentSecond = Math.floor(state.video.currentTime);
+        var intervalIndex = Math.floor(currentSecond / state.commentInterval);
         if (intervalIndex > state.lastCommentSecond) {
             state.lastCommentSecond = intervalIndex;
             autoComment();
@@ -231,10 +327,9 @@ const VideoDanmaku = (function() {
     }
 
     function autoComment() {
-        const line = randomItem(COMMENT_LINES);
-        const otherName = (typeof appData !== 'undefined' && appData.otherName) ? appData.otherName : 'TA';
-        const fullText = otherName + ': ' + line;
-        sendOtherMessage(fullText);
+        var line = randomLine();
+        var otherName = (typeof appData !== 'undefined' && appData.otherName) ? appData.otherName : 'TA';
+        sendOtherMessage(otherName + ': ' + line);
     }
 
     // ==================== Toast ====================
@@ -243,97 +338,58 @@ const VideoDanmaku = (function() {
             window.showToast(message);
             return;
         }
-        let toast = document.getElementById('vd-toast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'vd-toast';
-            toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:10px 20px;border-radius:20px;z-index:10000;font-size:14px;pointer-events:none;transition:opacity 0.3s;';
-            document.body.appendChild(toast);
+        var t = document.getElementById('vd-toast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'vd-toast';
+            t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:10px 20px;border-radius:20px;z-index:10000;font-size:14px;pointer-events:none;transition:opacity 0.3s;';
+            document.body.appendChild(t);
         }
-        toast.textContent = message;
-        toast.style.opacity = '1';
-        clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(function() { toast.style.opacity = '0'; }, 2000);
+        t.textContent = message;
+        t.style.opacity = '1';
+        clearTimeout(t._timeout);
+        t._timeout = setTimeout(function() { t.style.opacity = '0'; }, 2000);
     }
 
-    // ==================== 视频事件绑定 ====================
+    // ==================== 视频事件 ====================
     function bindVideoEvents() {
         if (!state.video) return;
-
-        state.video.addEventListener('play', function() {
-            state.isPlaying = true;
-            startDanmakuLoop();
-        });
-
-        state.video.addEventListener('pause', function() {
-            state.isPlaying = false;
-            stopDanmakuLoop();
-        });
-
+        state.video.addEventListener('play', function() { state.isPlaying = true; startDanmakuLoop(); });
+        state.video.addEventListener('pause', function() { state.isPlaying = false; stopDanmakuLoop(); });
         state.video.addEventListener('ended', function() {
-            state.isPlaying = false;
-            stopDanmakuLoop();
+            state.isPlaying = false; stopDanmakuLoop();
             if (typeof vdAddMessage === 'function') {
                 vdAddMessage('(视频播放完毕)', 'other');
             }
         });
-
         state.video.addEventListener('timeupdate', handleVideoTimeUpdate);
-
         state.video.addEventListener('seeked', function() {
             state.lastCommentSecond = Math.floor(state.video.currentTime / state.commentInterval);
         });
-
-        state.video.addEventListener('error', function() {
-            showToast('视频加载失败，请检查链接或文件');
-        });
+        state.video.addEventListener('error', function() { showToast('视频加载失败'); });
     }
 
-    // ==================== 文件拖拽 ====================
     function setupDragDrop() {
         if (!els.videoContainer) return;
-        els.videoContainer.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            els.videoContainer.classList.add('vd-dragover');
-        });
-        els.videoContainer.addEventListener('dragleave', function() {
-            els.videoContainer.classList.remove('vd-dragover');
-        });
+        els.videoContainer.addEventListener('dragover', function(e) { e.preventDefault(); els.videoContainer.classList.add('vd-dragover'); });
+        els.videoContainer.addEventListener('dragleave', function() { els.videoContainer.classList.remove('vd-dragover'); });
         els.videoContainer.addEventListener('drop', function(e) {
-            e.preventDefault();
-            els.videoContainer.classList.remove('vd-dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) handleFileUpload(file);
+            e.preventDefault(); els.videoContainer.classList.remove('vd-dragover');
+            if (e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]);
         });
     }
 
-    // ==================== UI 事件绑定 ====================
     function bindUIEvents() {
         els.btnClose.addEventListener('click', close);
-
         els.btnLoadUrl.addEventListener('click', handleUrlLoad);
-        els.urlInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') handleUrlLoad();
-        });
-
+        els.urlInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleUrlLoad(); });
         els.btnExample.addEventListener('click', handleExampleVideo);
-
-        els.fileInput.addEventListener('change', function(e) {
-            if (e.target.files[0]) handleFileUpload(e.target.files[0]);
-        });
-
-        els.btnSend.addEventListener('click', function() {
-            sendUserMessage(els.chatInput.value);
-            els.chatInput.value = '';
-        });
+        els.fileInput.addEventListener('change', function(e) { if (e.target.files[0]) handleFileUpload(e.target.files[0]); });
+        els.btnSend.addEventListener('click', function() { sendUserMessage(els.chatInput.value); els.chatInput.value = ''; });
         els.chatInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendUserMessage(els.chatInput.value);
-                els.chatInput.value = '';
-            }
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendUserMessage(els.chatInput.value); els.chatInput.value = ''; }
         });
-
+        els.btnWordBank.addEventListener('click', openWordBankModal);
         document.addEventListener('keydown', handleKeyboard);
         window.addEventListener('resize', function() { resizeCanvas(); });
     }
@@ -344,16 +400,12 @@ const VideoDanmaku = (function() {
         if (e.key === ' ' && document.activeElement !== els.chatInput && document.activeElement !== els.urlInput) {
             e.preventDefault();
             if (state.video && state.video.src && state.video.src !== window.location.href) {
-                if (state.video.paused) {
-                    state.video.play().catch(function() {});
-                } else {
-                    state.video.pause();
-                }
+                if (state.video.paused) state.video.play().catch(function() {});
+                else state.video.pause();
             }
         }
     }
 
-    // ==================== 缓存 DOM 元素 ====================
     function cacheElements() {
         els.container = document.getElementById('video-danmaku-container');
         els.videoContainer = document.getElementById('vd-video-container');
@@ -368,12 +420,12 @@ const VideoDanmaku = (function() {
         els.btnExample = document.getElementById('vd-btn-example');
         els.btnSend = document.getElementById('vd-btn-send');
         els.fileInput = document.getElementById('vd-file-input');
+        els.btnWordBank = document.getElementById('vd-btn-wordbank');
     }
 
-    // ==================== 视频占位切换 ====================
     function setupVideoObserver() {
         if (!state.video || !els.placeholder) return;
-        const observer = new MutationObserver(function() {
+        var observer = new MutationObserver(function() {
             if (state.video.src && state.video.src !== window.location.href) {
                 els.placeholder.style.display = 'none';
             } else {
@@ -386,13 +438,11 @@ const VideoDanmaku = (function() {
     // ==================== 公开接口 ====================
     function open() {
         if (state.isOpen) return;
-
         if (!document.getElementById('video-danmaku-container')) return;
 
         cacheElements();
         state.video = els.video;
         state.container = els.container;
-
         initCanvas();
         bindVideoEvents();
         bindUIEvents();
@@ -402,25 +452,24 @@ const VideoDanmaku = (function() {
         state.isOpen = true;
         els.container.classList.add('vd-open');
         document.body.style.overflow = 'hidden';
-
         setTimeout(resizeCanvas, 100);
 
-        if (state.video && !state.video.paused) {
-            startDanmakuLoop();
+        if (state.video && !state.video.paused) startDanmakuLoop();
+
+        // 在主聊天发一条系统消息
+        var otherName = (typeof appData !== 'undefined' && appData.otherName) ? appData.otherName : 'TA';
+        if (typeof addSystemMsg === 'function') {
+            addSystemMsg('你和 ' + otherName + ' 开始一起看视频了');
         }
     }
 
     function close() {
         if (!state.isOpen) return;
         state.isOpen = false;
-        if (els.container) {
-            els.container.classList.remove('vd-open');
-        }
+        if (els.container) els.container.classList.remove('vd-open');
         document.body.style.overflow = '';
         stopDanmakuLoop();
-        if (state.video && !state.video.paused) {
-            state.video.pause();
-        }
+        if (state.video && !state.video.paused) state.video.pause();
     }
 
     function destroy() {
@@ -429,14 +478,11 @@ const VideoDanmaku = (function() {
         clearDanmaku();
         if (state.video) {
             state.video.pause();
-            if (state.video.src && state.video.src.startsWith('blob:')) {
-                URL.revokeObjectURL(state.video.src);
-            }
+            if (state.video.src && state.video.src.indexOf('blob:') === 0) URL.revokeObjectURL(state.video.src);
             state.video.src = '';
         }
     }
 
-    // ==================== 暴露 API ====================
     return {
         open: open,
         close: close,
