@@ -578,10 +578,9 @@ function proceedMurderScene() {
     }
     var chapter = script.chapters[ch];
     
-    // 如果你的 JSON 有 scenes 数组就用 scenes，没有就直接用 chapter 本身
+    // 兼容无 scenes 数组的 JSON（你的咖啡店疑案格式）
     var scene = chapter.scenes ? chapter.scenes[sc] : chapter;
     
-    // 如果没有 scenes 数组，直接处理章节
     if (!chapter.scenes) {
         if (scene.scene) {
             addSystemMsg(scene.scene);
@@ -620,15 +619,17 @@ function proceedMurderScene() {
                 proceedMurderScene();
             }
         } else if (scene.nextChapter) {
-            // 你的 JSON 用的是 nextChapter
             var nextCh = script.chapters.findIndex(function(c) { return c.id === scene.nextChapter; });
             if (nextCh !== -1) {
-                murderGameState.currentChapter = nextCh;
-                murderGameState.currentScene = 0;
-                proceedMurderScene();
+                showMurderChoices([{
+                    text: '继续调查',
+                    nextSceneId: '__nextChapter__'
+                }]);
+                murderGameState._pendingNextChapter = nextCh;
             } else {
                 endMurderGame();
             }
+            return;
         } else {
             endMurderGame();
         }
@@ -654,8 +655,8 @@ function proceedMurderScene() {
     }
 
     if (scene.dialogues || scene.dialogue) {
-        var dialogues = scene.dialogues || scene.dialogue;
-        dialogues.forEach(function(line) {
+        var dialogues2 = scene.dialogues || scene.dialogue;
+        dialogues2.forEach(function(line) {
             var role = line.role || '???';
             var cls = line.roleClass || line.class || 'role-a';
             addMessageWithRole(line.text, role, cls);
@@ -668,31 +669,34 @@ function proceedMurderScene() {
                 murderGameState.collectedClues.push(clue.id);
             }
         });
-        var clueText = scene.clues.map(function(c) { return c.text || c.description || ''; }).join('  ');
-        if (clueText) addSystemMsg('[线索] ' + clueText);
+        var clueText2 = scene.clues.map(function(c) { return c.text || c.description || ''; }).join('  ');
+        if (clueText2) addSystemMsg('[线索] ' + clueText2);
     }
 
     if (scene.choices && scene.choices.length > 0) {
         showMurderChoices(scene.choices);
     } else if (scene.nextSceneId) {
-        var next = findSceneById(script, scene.nextSceneId);
-        if (next) {
-            murderGameState.currentChapter = next.chapter;
-            murderGameState.currentScene = next.sceneIndex;
+        var next2 = findSceneById(script, scene.nextSceneId);
+        if (next2) {
+            murderGameState.currentChapter = next2.chapter;
+            murderGameState.currentScene = next2.sceneIndex;
             proceedMurderScene();
         } else {
             murderGameState.currentScene++;
             proceedMurderScene();
         }
     } else if (scene.nextChapter) {
-        var nextCh = script.chapters.findIndex(function(c) { return c.id === scene.nextChapter; });
-        if (nextCh !== -1) {
-            murderGameState.currentChapter = nextCh;
-            murderGameState.currentScene = 0;
-            proceedMurderScene();
+        var nextCh2 = script.chapters.findIndex(function(c) { return c.id === scene.nextChapter; });
+        if (nextCh2 !== -1) {
+            showMurderChoices([{
+                text: '继续调查',
+                nextSceneId: '__nextChapter__'
+            }]);
+            murderGameState._pendingNextChapter = nextCh2;
         } else {
             endMurderGame();
         }
+        return;
     } else {
         murderGameState.currentScene++;
         proceedMurderScene();
@@ -727,6 +731,17 @@ function showMurderChoices(choices) {
 function selectMurderChoice(nextSceneId) {
     var btns = document.querySelectorAll('#murderChoices .script-choice-btn');
     btns.forEach(function(b) { b.disabled = true; });
+    
+    if (nextSceneId === '__nextChapter__') {
+        if (murderGameState._pendingNextChapter !== undefined) {
+            murderGameState.currentChapter = murderGameState._pendingNextChapter;
+            murderGameState.currentScene = 0;
+            murderGameState._pendingNextChapter = undefined;
+            proceedMurderScene();
+        }
+        return;
+    }
+    
     var next = findSceneById(murderGameState.script, nextSceneId);
     if (next) {
         murderGameState.currentChapter = next.chapter;
