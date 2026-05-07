@@ -894,3 +894,41 @@ function deleteForumTopic(index) {
     renderForumTopicList();
     showToast('话题已删除');
 }
+function openForumTemplateLib() {
+    closeModal('forumOverlay');
+    var templates = appData.forumTopicTemplates || [];
+    var words = appData.forumTopicWords || [];
+    
+    var html = '<h4>模板词库</h4>';
+    
+    // 话题模板
+    html += '<div class="group-block"><div class="group-header">话题模板 (' + templates.length + '条)</div>';
+    html += '<div class="form-row"><textarea id="forumTemplatesInput" placeholder="一行一个模板，用{词}代替主题词">' + templates.map(escapeHTML).join('\n') + '</textarea></div>';
+    html += '<div class="btn-row"><button class="btn-sm" onclick="saveForumTemplates()">保存模板</button></div>';
+    html += '</div>';
+    
+    // 主题词库
+    html += '<div class="group-block"><div class="group-header">主题词库 (' + words.length + '条)</div>';
+    html += '<div class="form-row"><textarea id="forumWordsInput" placeholder="一行一个主题词">' + words.map(escapeHTML).join('\n') + '</textarea></div>';
+    html += '<div class="btn-row"><button class="btn-sm" onclick="saveForumWords()">保存词库</button></div>';
+    html += '</div>';
+    
+    html += '<button class="btn-close" onclick="openForum()" style="margin-top:10px;">返回论坛</button>';
+    openSubModal(html);
+}
+
+function saveForumTemplates() {
+    var text = document.getElementById('forumTemplatesInput').value.trim();
+    appData.forumTopicTemplates = text ? text.split('\n').filter(function(l) { return l.trim(); }) : ['你觉得{词}怎么样？'];
+    saveData(true);
+    showToast('模板已保存');
+    openForumTemplateLib();
+}
+
+function saveForumWords() {
+    var text = document.getElementById('forumWordsInput').value.trim();
+    appData.forumTopicWords = text ? text.split('\n').filter(function(l) { return l.trim(); }) : ['生活'];
+    saveData(true);
+    showToast('词库已保存');
+    openForumTemplateLib();
+}
