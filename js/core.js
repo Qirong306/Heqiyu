@@ -217,6 +217,9 @@ function loadData() {
             if (Array.isArray(p.forumReplyLib)) appData.forumReplyLib = p.forumReplyLib;
             if (Array.isArray(p.forumTopicTemplates)) appData.forumTopicTemplates = p.forumTopicTemplates;
             if (Array.isArray(p.forumTopicWords)) appData.forumTopicWords = p.forumTopicWords;
+            // 转账字段加载
+            if (Array.isArray(p.transferAmounts)) appData.transferAmounts = p.transferAmounts;
+            if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
         }
     }
     if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
@@ -253,7 +256,9 @@ function saveData(immediate) {
             forumTopics: appData.forumTopics,
             forumReplyLib: appData.forumReplyLib,
             forumTopicTemplates: appData.forumTopicTemplates,
-            forumTopicWords: appData.forumTopicWords
+            forumTopicWords: appData.forumTopicWords,
+            transferAmounts: appData.transferAmounts,
+            transferNotes: appData.transferNotes
         };
         var jsonStr = JSON.stringify(saveObj);
         try {
@@ -595,7 +600,20 @@ function renderChatHistory() {
     }
     var promises = [];
     appData.chatHistory.forEach(function(m) {
-        if (m.type === 'system') {
+        if (m.type === 'transfer_me' || m.type === 'transfer_other') {
+    var d = document.createElement('div');
+    d.className = 'msg ' + (m.type === 'transfer_me' ? 'me' : 'other');
+    var av = getAvatarHTMLSync(m.type === 'transfer_me');
+    var handler = m.type === 'transfer_other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+    var cardHTML = '<div class="transfer-card ' + (m.type === 'transfer_me' ? 'transfer-me' : 'transfer-other') + '">';
+    cardHTML += '<div class="transfer-label">' + (m.type === 'transfer_me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
+    cardHTML += '<div class="transfer-amount">¥ ' + m.amount + '</div>';
+    if (m.note) cardHTML += '<div class="transfer-note">' + escapeHTML(m.note) + '</div>';
+    cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
+    cardHTML += '</div>';
+    d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+    chat.appendChild(d);
+} else if (m.type === 'system') {
             var d = document.createElement('div'); d.className = 'system-msg'; d.textContent = m.content; chat.appendChild(d);
         } else {
             var d = document.createElement('div');
