@@ -524,6 +524,16 @@ function triggerAutoReply() {
     function sendNext(index) {
         if (index >= replyCount) return;
         setTimeout(function() {
+            // 30% 概率发转账
+            if (Math.random() < 0.3 && appData.transferAmounts.length > 0 && appData.transferNotes.length > 0) {
+                var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
+                var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
+                addTransferCard(amt, note, 'other');
+                appData.chatHistory.push({ type: 'transfer_other', amount: amt, note: note, time: Date.now() });
+                saveData();
+                sendNext(index + 1);
+                return;
+            }
             sendRandomReply().then(function(sent) {
                 if (sent === false && index === 0) {
                     addMessage('（还没有设置回复词库哦，去设置里添加一些吧~）', 'other');
