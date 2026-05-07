@@ -199,6 +199,10 @@ function initScratchCanvas() {
     scratchCtx.textBaseline = 'middle';
     scratchCtx.fillText('刮开这里', w / 2, h / 2);
 
+    // 重要：初始化完成后再绑定事件
+    canvas._scratchReady = true;
+    canvas._scratchRecorded = false;
+    
     // 绑定事件
     bindScratchEvents(canvas);
 }
@@ -283,6 +287,8 @@ function bindScratchEvents(canvas) {
 // ==================== 检查刮开进度 ====================
 function checkScratchProgress(canvas) {
     if (!canvas) return;
+    // 关键修复：画布未初始化完成时不检测
+    if (!canvas._scratchReady) return;
     var ctx = canvas.getContext('2d');
 
     try {
@@ -382,6 +388,7 @@ function resetScratchCard() {
 
         // 重置记录标记
         canvas._scratchRecorded = false;
+        canvas._scratchReady = true;
     }
 
     var hint = document.getElementById('scratchHint');
