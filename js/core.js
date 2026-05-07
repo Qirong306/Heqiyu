@@ -1016,6 +1016,126 @@ function vdAddMessage(content, type) {
     }
     saveData();
 }
+// ==================== 转账系统 ====================
+
+// 默认金额和备注（如果 DEFAULT_DATA 里没加，这里补）
+if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) {
+    appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
+}
+if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) {
+    appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
+}
+
+// 转账卡片渲染
+function addTransferCard(amount, note, type) {
+    var chat = document.getElementById('chat');
+    var div = document.createElement('div');
+    div.className = 'msg ' + type;
+    var av = getAvatarHTMLSync(type === 'me');
+    var handler = type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+    var cardHTML = '<div class="transfer-card ' + (type === 'me' ? 'transfer-me' : 'transfer-other') + '">';
+    cardHTML += '<div class="transfer-label">' + (type === 'me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
+    cardHTML += '<div class="transfer-amount">¥ ' + amount + '</div>';
+    if (note) cardHTML += '<div class="transfer-note">' + escapeHTML(note) + '</div>';
+    cardHTML += '<div class="transfer-status">' + (type === 'me' ? '已转账' : '已收款') + '</div>';
+    cardHTML += '</div>';
+    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// 收转账（从弹窗触发）
+function receiveTransferFromOtherModal() {
+    if (!appData.transferAmounts.length) { showToast('请先设置对方转账金额'); return; }
+    if (!appData.transferNotes.length) { showToast('请先设置对方转账备注'); return; }
+    var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
+    var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
+    addTransferCard(amt, note, 'other');
+    appData.chatHistory.push({ type: 'transfer_other', amount: amt, note: note, time: Date.now() });
+    saveData();
+    showToast('收到 ' + appData.otherName + ' 的转账 ¥' + amt);
+}
+
+// 我向对方转账
+function sendTransferToOther() {
+    var amt = document.getElementById('transferAmountInput').value.trim();
+    var note = document.getElementById('transferNoteInput').value.trim();
+    if (!amt || isNaN(parseFloat(amt)) || parseFloat(amt) <= 0) { showToast('请输入有效金额'); return; }
+    var amount = parseFloat(amt).toFixed(2);
+    addTransferCard(amount, note || '', 'me');
+    appData.chatHistory.push({ type: 'transfer_me', amount: amount, note: note || '', time: Date.now() });
+    saveData();
+    openTransferModal();
+    showToast('已向 ' + appData.otherName + ' 转账 ¥' + amount);
+}
+
+// 转账弹窗
+function openTransferModal() {
+    var html = '<div style="display:flex;justify-content:center;align-items:center;position:relative;margin-bottom:12px;">';
+    html += '<h4 style="margin:0;">转账</h4>';
+    html += '<div style="position:absolute;right:0;">';
+    html += '<span onclick="event.stopPropagation();toggleTransferDropdown()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">&#8942;</span>';
+    html += '<div id="transferDropdownMenu" style="display:none;position:absolute;top:32px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:120px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">';
+    html += '<div onclick="receiveTransferFromOtherModal();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">收转账</div>';
+    html += '<div onclick="openTransferAmountSettings();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">对方转账金额</div>';
+    html += '<div onclick="openTransferNoteSettings();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">对方转账备注</div>';
+    html += '</div></div></div>';
+    html += '<div class="form-row"><label>向 ' + appData.otherName + ' 转账</label><input type="number" id="transferAmountInput" placeholder="输入金额" step="0.01" min="0.01"></div>';
+    html += '<div class="form-row"><label>备注</label><input type="text" id="transferNoteInput" placeholder="说点什么..."></div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px;">';
+    ['5.20','13.14','52.00','131.40','520.00'].forEach(function(a){ html += '<button class="btn-sm outline" onclick="document.getElementById(\'transferAmountInput\').value=\''+a+'\'" style="font-size:12px;padding:6px 10px;">¥'+a+'</button>'; });
+    html += '</div>';
+    html += '<div class="btn-row" style="justify-content:center;margin-top:10px;"><button class="btn-sm" onclick="sendTransferToOther()">确认转账</button></div>';
+    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">关闭</button>';
+    openSubModal(html);
+}
+
+// 金额设置弹窗
+function openTransferAmountSettings() {
+    var html = '<h4>对方转账金额</h4>';
+    html += '<div class="form-row"><input type="number" id="newTransferAmount" placeholder="输入金额，如 5.20" step="0.01" min="0.01"><button class="btn-sm" onclick="addTransferAmount()" style="margin-top:4px;">添加</button></div>';
+    html += '<div style="max-height:180px;overflow-y:auto;" id="transferAmountList">';
+    appData.transferAmounts.forEach(function(a,i){ html += '<div class="list-item"><span>¥ '+a+'</span><button class="del-sm" onclick="delTransferAmount('+i+')">删除</button></div>'; });
+    html += '</div>';
+    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">返回</button>';
+    openSubModal(html);
+}
+function addTransferAmount() {
+    var v = document.getElementById('newTransferAmount').value.trim();
+    if (!v || isNaN(parseFloat(v)) || parseFloat(v)<=0){ showToast('请输入有效金额'); return; }
+    appData.transferAmounts.push(parseFloat(v).toFixed(2)); saveData(); openTransferAmountSettings();
+}
+function delTransferAmount(i){ appData.transferAmounts.splice(i,1); saveData(); openTransferAmountSettings(); }
+
+// 备注设置弹窗
+function openTransferNoteSettings() {
+    var html = '<h4>对方转账备注</h4>';
+    html += '<div class="form-row"><input type="text" id="newTransferNote" placeholder="输入备注文案"><button class="btn-sm" onclick="addTransferNote()" style="margin-top:4px;">添加</button></div>';
+    html += '<div style="max-height:180px;overflow-y:auto;" id="transferNoteList">';
+    appData.transferNotes.forEach(function(n,i){ html += '<div class="list-item"><span>'+escapeHTML(n)+'</span><button class="del-sm" onclick="delTransferNote('+i+')">删除</button></div>'; });
+    html += '</div>';
+    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">返回</button>';
+    openSubModal(html);
+}
+function addTransferNote(){ var v=document.getElementById('newTransferNote').value.trim(); if(!v){showToast('请输入备注');return;} appData.transferNotes.push(v); saveData(); openTransferNoteSettings(); }
+function delTransferNote(i){ appData.transferNotes.splice(i,1); saveData(); openTransferNoteSettings(); }
+
+// 下拉菜单开关
+function toggleTransferDropdown() {
+    var menu = document.getElementById('transferDropdownMenu');
+    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+function closeTransferDropdown() {
+    var menu = document.getElementById('transferDropdownMenu');
+    if (menu) menu.style.display = 'none';
+}
+
+// 关闭下拉（点击其他地方）
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#transferDropdownMenu') && !e.target.closest('[onclick*="toggleTransferDropdown"]')) {
+        closeTransferDropdown();
+    }
+});
 
 // ========== 启动 ==========
 initApp().then(function() {
