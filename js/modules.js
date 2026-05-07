@@ -595,6 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function openBookFromSettings() {
     closeModal('settingsOverlay');
     openBookManageModal();
+}
 // ==================== 论坛模块 ====================
 
 // 默认数据
@@ -879,5 +880,4 @@ function exportForumJSON() {
     }
     copyToClipboard(JSON.stringify(appData.forumTopics, null, 2), '论坛话题');
     showToast('话题已复制到剪贴板');
-}
 }
