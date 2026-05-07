@@ -220,8 +220,7 @@ function loadData() {
             // 转账字段加载
             if (Array.isArray(p.transferAmounts)) appData.transferAmounts = p.transferAmounts;
             if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
-            //书籍音乐字段加载
-            if (Array.isArray(p.books)) appData.books = p.books;
+            //音乐加载
             if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
         }
     }
@@ -262,7 +261,6 @@ function saveData(immediate) {
             forumTopicWords: appData.forumTopicWords,
             transferAmounts: appData.transferAmounts,
             transferNotes: appData.transferNotes,
-            books: appData.books,
             playlist: appData.playlist
         };
         var jsonStr = JSON.stringify(saveObj);
@@ -821,9 +819,6 @@ function exportFullAsFile() {
             theme: appData.theme,
             chatHistory: appData.chatHistory,
             letters: appData.letters,
-            transferAmounts: appData.transferAmounts,
-            transferNotes: appData.transferNotes,
-            books: appData.books,
             playlist: appData.playlist
         };
         var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
@@ -870,9 +865,6 @@ function exportFull() {
             theme: appData.theme,
             chatHistory: appData.chatHistory,
             letters: appData.letters,
-            transferAmounts: appData.transferAmounts,
-            transferNotes: appData.transferNotes,
-            books: appData.books,
             playlist: appData.playlist
         };
         copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
@@ -907,14 +899,11 @@ function importDataFile() {
                 appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
             }
 
-            // 论坛转账书籍音乐字段
+            // 论坛音乐字段
             if (Array.isArray(data.forumTopics)) appData.forumTopics = data.forumTopics;
             if (Array.isArray(data.forumReplyLib)) appData.forumReplyLib = data.forumReplyLib;
             if (Array.isArray(data.forumTopicTemplates)) appData.forumTopicTemplates = data.forumTopicTemplates;
             if (Array.isArray(data.forumTopicWords)) appData.forumTopicWords = data.forumTopicWords;
-            if (Array.isArray(data.transferAmounts)) appData.transferAmounts = data.transferAmounts;
-            if (Array.isArray(data.transferNotes)) appData.transferNotes = data.transferNotes;
-            if (Array.isArray(data.books)) appData.books = data.books;
             if (Array.isArray(data.playlist)) appData.playlist = data.playlist;
 
             var promises = [];
