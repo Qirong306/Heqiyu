@@ -755,24 +755,31 @@ function downloadJSONFile(filename, jsonData) {
 }
 
 function exportFullAsFile() {
-    var backupData = {
-        myName: appData.myName,
-        myAvatarId: appData.myAvatarId,
-        myAvatar: appData.myAvatar || '',
-        otherName: appData.otherName,
-        otherAvatarId: appData.otherAvatarId,
-        otherAvatar: appData.otherAvatar || '',
-        replyGroups: appData.replyGroups,
-        emojiIds: appData.emojiIds,
-        theme: appData.theme,
-        chatHistory: appData.chatHistory,
-        letters: appData.letters
-    };
-    var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-    var filename = 'chat_app_backup_' + timestamp + '.json';
-    downloadJSONFile(filename, backupData);
-    closeModal('subOverlay');
-    showToast('备份文件已下载');
+    var emojiPromises = (appData.emojiIds || []).map(function(id) {
+        return getImageFromDB('images', id).then(function(data) {
+            return { id: id, data: data || '' };
+        });
+    });
+    Promise.all(emojiPromises).then(function(emojiData) {
+        var backupData = {
+            myName: appData.myName,
+            myAvatarId: appData.myAvatarId,
+            myAvatar: appData.myAvatar || '',
+            otherName: appData.otherName,
+            otherAvatarId: appData.otherAvatarId,
+            otherAvatar: appData.otherAvatar || '',
+            replyGroups: appData.replyGroups,
+            emojiIds: appData.emojiIds,
+            emojiData: emojiData,
+            theme: appData.theme,
+            chatHistory: appData.chatHistory,
+            letters: appData.letters
+        };
+        var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+        downloadJSONFile('chat_app_backup_' + timestamp + '.json', backupData);
+        closeModal('subOverlay');
+        showToast('备份文件已下载（含表情包图片）');
+    });
 }
 
 function copyToClipboard(text, label) {
@@ -793,21 +800,29 @@ function fallbackCopy(text, label) {
     document.body.removeChild(ta);
 }
 function exportFull() {
-    var backupData = {
-        myName: appData.myName,
-        myAvatarId: appData.myAvatarId,
-        myAvatar: appData.myAvatar || '',
-        otherName: appData.otherName,
-        otherAvatarId: appData.otherAvatarId,
-        otherAvatar: appData.otherAvatar || '',
-        replyGroups: appData.replyGroups,
-        emojiIds: appData.emojiIds,
-        theme: appData.theme,
-        chatHistory: appData.chatHistory,
-        letters: appData.letters
-    };
-    copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
-    closeModal('subOverlay');
+    var emojiPromises = (appData.emojiIds || []).map(function(id) {
+        return getImageFromDB('images', id).then(function(data) {
+            return { id: id, data: data || '' };
+        });
+    });
+    Promise.all(emojiPromises).then(function(emojiData) {
+        var backupData = {
+            myName: appData.myName,
+            myAvatarId: appData.myAvatarId,
+            myAvatar: appData.myAvatar || '',
+            otherName: appData.otherName,
+            otherAvatarId: appData.otherAvatarId,
+            otherAvatar: appData.otherAvatar || '',
+            replyGroups: appData.replyGroups,
+            emojiIds: appData.emojiIds,
+            emojiData: emojiData,
+            theme: appData.theme,
+            chatHistory: appData.chatHistory,
+            letters: appData.letters
+        };
+        copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
+        closeModal('subOverlay');
+    });
 }
 function exportChat() {
     copyToClipboard(JSON.stringify({ chatHistory: appData.chatHistory }, null, 2), '聊天记录');
@@ -829,7 +844,6 @@ function importDataFile() {
             if (typeof data.myName === 'string') appData.myName = data.myName;
             if (typeof data.otherName === 'string') appData.otherName = data.otherName;
             if (typeof data.theme === 'string') appData.theme = data.theme;
-            if (Array.isArray(data.emojiIds)) appData.emojiIds = data.emojiIds;
             if (Array.isArray(data.chatHistory)) appData.chatHistory = data.chatHistory;
             if (Array.isArray(data.letters)) appData.letters = data.letters;
             if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) {
@@ -839,6 +853,22 @@ function importDataFile() {
             }
 
             var promises = [];
+
+            // 表情包图片恢复
+            if (Array.isArray(data.emojiData) && data.emojiData.length > 0) {
+                appData.emojiIds = [];
+                data.emojiData.forEach(function(item) {
+                    if (item.data && item.data.length > 100) {
+                        appData.emojiIds.push(item.id);
+                        promises.push(
+                            saveImageToDB('images', item.id, item.data).catch(function() {})
+                        );
+                    }
+                });
+            } else {
+                appData.emojiIds = data.emojiIds || [];
+            }
+
             // 我的头像
             if (data.myAvatar && typeof data.myAvatar === 'string' && data.myAvatar.length > 100) {
                 var myId = data.myAvatarId || ('avatar_me_' + Date.now());
@@ -859,6 +889,7 @@ function importDataFile() {
                     );
                 }
             }
+
             // 对方头像
             if (data.otherAvatar && typeof data.otherAvatar === 'string' && data.otherAvatar.length > 100) {
                 var otherId = data.otherAvatarId || ('avatar_other_' + Date.now());
@@ -885,17 +916,19 @@ function importDataFile() {
                 applyTheme();
                 updateHeader();
                 renderChatHistory();
+                renderMoreImages();
                 updateLetterBadge();
                 closeModal('subOverlay');
-                showToastLong('数据已成功导入！\n头像、昵称、词库、聊天记录已恢复\n表情包图片需重新上传', 4000);
+                showToastLong('数据已成功导入！\n表情包、头像、昵称、词库、聊天记录已恢复', 4000);
             }).catch(function() {
                 saveData(true);
                 applyTheme();
                 updateHeader();
                 renderChatHistory();
+                renderMoreImages();
                 updateLetterBadge();
                 closeModal('subOverlay');
-                showToast('数据已导入，但头像恢复失败');
+                showToast('数据已导入，但部分图片恢复失败');
             });
         } catch(err) {
             showToast('导入失败，文件格式错误');
