@@ -435,9 +435,9 @@ function importMusicJSON() {
                 var raw = JSON.parse(e.target.result);
                 var data = Array.isArray(raw) ? raw : (raw.songs || []);
                 if (!data.length) throw new Error();
-                musicPlaylist.length = 0;
+                appData.playlist.length = 0;
                 data.forEach(function(s) {
-                    musicPlaylist.push({
+                    appData.playlist.push({
                         title: s.title || '',
                         artist: s.sub || s.artist || '',
                         sub: s.sub || s.artist || '',
@@ -446,6 +446,7 @@ function importMusicJSON() {
                         isCustom: s.isCustom !== undefined ? s.isCustom : true
                     });
                 });
+                musicPlaylist = appData.playlist;
                 musicCurrentIndex = -1;
                 if (musicAudio) { musicAudio.pause(); musicAudio = null; }
                 var container = document.getElementById('musicPlayerContainer');
