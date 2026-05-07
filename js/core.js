@@ -1013,6 +1013,15 @@ function showToastLong(msg, duration) {
 
 // ========== 事件监听 ==========
 document.addEventListener('click', function(e) {
+    if (e.target.id === 'forumDetailOverlay') {
+        e.stopPropagation();
+        if (typeof closeTopicDetail === 'function') closeTopicDetail();
+        return;
+    }
+    if (e.target.id === 'forumOverlay') {
+        if (typeof closeForum === 'function') closeForum();
+        return;
+    }
     if (e.target.id === 'settingsOverlay') closeModal('settingsOverlay');
     if (e.target.id === 'subOverlay') closeModal('subOverlay');
     if (e.target.id === 'photoOverlay') closeModal('photoOverlay');
