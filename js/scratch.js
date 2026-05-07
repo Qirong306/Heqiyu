@@ -35,7 +35,15 @@ var scratchTimer = null;
 
 // ==================== 打开刮刮乐 ====================
 function openScratchCard() {
-    closeAllModals();
+    // 关闭已有的弹窗
+    closeModal('settingsOverlay');
+    closeModal('subOverlay');
+    closeModal('photoOverlay');
+    closeModal('letterOverlay');
+    var morePanel = document.getElementById('morePanel');
+    if (morePanel) {
+        morePanel.style.display = 'none';
+    }
 
     // 检查今日次数
     var today = new Date().toDateString();
@@ -82,7 +90,7 @@ function openScratchCard() {
 
     html += '</div>';
 
-    openForumSubModal(html);
+    openSubModal(html);
 
     // 等弹窗渲染完成后再初始化画布
     clearTimeout(scratchTimer);
@@ -433,7 +441,7 @@ function openScratchManage() {
     html += '<button class="btn-sm outline" onclick="closeScratchManage()">关闭</button>';
     html += '</div>';
 
-    openForumSubModal(html);
+    openSubModal(html);
 }
 
 function addScratchPrizeItem() {
@@ -534,8 +542,8 @@ function addScratchToMorePanel() {
         btn.className = 'more-item-text';
         btn.id = 'scratchMoreBtn';
         btn.onclick = function() {
-            openScratchCard();
             toggleMorePanel();
+            openScratchCard();
         };
         btn.textContent = '刮刮乐';
         morePanel.appendChild(btn);
