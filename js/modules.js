@@ -773,7 +773,7 @@ function newForumTopic() {
     if (!title) return;
     var content = prompt('话题内容：') || '';
     var opts = prompt('选项（用逗号分隔，留空则无选项）：');
-    var options = opts ? opts.split(',').map(function(s) { return s.trim(); }) : [];
+    var options = opts ? opts.split(/[,，]/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; }) : [];
     appData.forumTopics.push({
         title: title,
         content: content,
