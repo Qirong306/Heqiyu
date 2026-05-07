@@ -1079,7 +1079,7 @@ function addTransferCard(amount, note, type, fromHistory) {
     cardHTML += '<div class="transfer-label">' + (type === 'me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
     cardHTML += '<div class="transfer-amount">¥ ' + amount + '</div>';
     if (note) cardHTML += '<div class="transfer-note">' + escapeHTML(note) + '</div>';
-    cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
+    cardHTML += '<div class="transfer-status">' + (type === 'me' ? '已转账' : (fromHistory ? '已收款' : '点击收款')) + '</div>';
     cardHTML += '</div>';
     div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     chat.appendChild(div);
