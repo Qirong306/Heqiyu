@@ -175,7 +175,7 @@ function showAddBookForm() {
     var html = '<h4>添加书籍</h4>';
     html += '<div class="form-row"><label>书名</label><input type="text" id="newBookTitle" placeholder="输入书名"></div>';
     html += '<div class="form-row"><label>内容（粘贴文本或选择文件）</label><textarea id="newBookContent" placeholder="在此粘贴文本内容..." style="min-height:120px;"></textarea></div>';
-    html += '<div class="btn-row"><button class="btn-sm outline" onclick="document.getElementById(\'bookFileInput\').click()">上传 txt 文件</button><input type="file" id="bookFileInput" accept=".txt" style="display:none" onchange="loadBookFile()"></div>';
+    html += '<div class="btn-row"><button class="btn-sm outline" onclick="document.getElementById(\'bookFileInput\').click()">上传文件 (txt/epub)</button><input type="file" id="bookFileInput" accept=".txt,.epub" style="display:none" onchange="loadBookFile()"></div>';
     html += '<div class="btn-row"><button class="btn-sm" onclick="saveNewBook()">保存</button><button class="btn-sm outline" onclick="openBookManageModal()">返回</button></div>';
     openSubModal(html);
 }
@@ -183,15 +183,64 @@ function showAddBookForm() {
 function loadBookFile() {
     var file = document.getElementById('bookFileInput').files[0];
     if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var content = e.target.result;
-        document.getElementById('newBookContent').value = content;
-        if (!document.getElementById('newBookTitle').value) {
-            document.getElementById('newBookTitle').value = file.name.replace(/\.txt$/i, '');
-        }
-    };
-    reader.readAsText(file);
+    var fileName = file.name;
+    var isEpub = fileName.toLowerCase().endsWith('.epub');
+    
+    if (isEpub) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var zipData = e.target.result;
+            JSZip.loadAsync(zipData).then(function(zip) {
+                return zip.file('META-INF/container.xml').async('text').then(function(containerXml) {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(containerXml, 'text/xml');
+                    var rootfile = doc.querySelector('rootfile');
+                    var fullPath = rootfile ? rootfile.getAttribute('full-path') : null;
+                    if (!fullPath) throw new Error('找不到内容文件');
+                    return zip.file(fullPath).async('text').then(function(htmlContent) {
+                        var htmlDoc = parser.parseFromString(htmlContent, 'text/html');
+                        var text = htmlDoc.body ? htmlDoc.body.textContent : htmlContent.replace(/<[^>]*>/g, '');
+                        text = text.replace(/\n{3,}/g, '\n\n').trim();
+                        document.getElementById('newBookContent').value = text;
+                        if (!document.getElementById('newBookTitle').value) {
+                            document.getElementById('newBookTitle').value = fileName.replace(/\.epub$/i, '');
+                        }
+                    });
+                });
+            }).catch(function(err) {
+                showToast('EPUB 解析失败：' + err.message);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var content = e.target.result;
+            document.getElementById('newBookContent').value = content;
+            if (!document.getElementById('newBookTitle').value) {
+                document.getElementById('newBookTitle').value = fileName.replace(/\.txt$/i, '');
+            }
+        };
+        var blob = file.slice(0, Math.min(file.size, 2000));
+        var testReader = new FileReader();
+        testReader.onload = function(e) {
+            var sample = e.target.result;
+            var weirdCount = (sample.match(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g) || []).length;
+            var fullReader = new FileReader();
+            fullReader.onload = function(ev) {
+                document.getElementById('newBookContent').value = ev.target.result;
+                if (!document.getElementById('newBookTitle').value) {
+                    document.getElementById('newBookTitle').value = fileName.replace(/\.txt$/i, '');
+                }
+            };
+            if (weirdCount > sample.length * 0.1) {
+                fullReader.readAsText(file, 'GBK');
+            } else {
+                fullReader.readAsText(file, 'UTF-8');
+            }
+        };
+        testReader.readAsText(blob);
+    }
 }
 
 function saveNewBook() {
