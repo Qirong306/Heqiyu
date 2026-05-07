@@ -1119,7 +1119,7 @@ function sendTransferToOther() {
     addTransferCard(amount, note || '', 'me');
     appData.chatHistory.push({ type: 'transfer_me', amount: amount, note: note || '', time: Date.now() });
     saveData();
-    openTransferModal();
+    closeModal('subOverlay');
     showToast('已向 ' + appData.otherName + ' 转账 ¥' + amount);
 }
 
