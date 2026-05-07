@@ -671,10 +671,15 @@ function renderForumTopicList() {
         var preview = (t.content || '').substring(0, 40);
         var optCount = (t.options || []).length;
         var commentCount = (t.comments || []).length;
-        html += '<div class="forum-topic-card" onclick="openForumDetail(' + i + ')">';
+        html += '<div class="forum-topic-card">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">';
+        html += '<div style="flex:1;" onclick="openForumDetail(' + i + ')">';
         html += '<div class="topic-title">' + escapeHTML(t.title) + '</div>';
         html += '<div class="topic-preview">' + escapeHTML(preview) + '</div>';
         html += '<div class="topic-meta">选项:' + optCount + ' | 评论:' + commentCount + '</div>';
+        html += '</div>';
+        html += '<span onclick="event.stopPropagation();deleteForumTopic(' + i + ')" style="cursor:pointer;color:var(--danger);font-size:16px;padding:4px;" title="删除话题">&times;</span>';
+        html += '</div>';
         html += '</div>';
     });
     el.innerHTML = html;
@@ -880,4 +885,12 @@ function exportForumJSON() {
     }
     copyToClipboard(JSON.stringify(appData.forumTopics, null, 2), '论坛话题');
     showToast('话题已复制到剪贴板');
+}
+
+function deleteForumTopic(index) {
+    if (!confirm('确定删除这个话题吗？')) return;
+    appData.forumTopics.splice(index, 1);
+    saveData(true);
+    renderForumTopicList();
+    showToast('话题已删除');
 }
