@@ -1065,21 +1065,37 @@ if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0)
 }
 
 // 转账卡片渲染
-function addTransferCard(amount, note, type) {
+function addTransferCard(amount, note, type, fromHistory) {
     var chat = document.getElementById('chat');
     var div = document.createElement('div');
     div.className = 'msg ' + type;
     var av = getAvatarHTMLSync(type === 'me');
     var handler = type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
-    var cardHTML = '<div class="transfer-card ' + (type === 'me' ? 'transfer-me' : 'transfer-other') + '">';
+    var cardHTML = '<div class="transfer-card ' + (type === 'me' ? 'transfer-me' : 'transfer-other') + '"';
+    if (type === 'other' && !fromHistory) {
+        cardHTML += ' onclick="collectTransfer(this, \'' + amount + '\', \'' + escapeHTML(note || '').replace(/'/g, "\\'") + '\')" style="cursor:pointer;"';
+    }
+    cardHTML += '>';
     cardHTML += '<div class="transfer-label">' + (type === 'me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
     cardHTML += '<div class="transfer-amount">¥ ' + amount + '</div>';
     if (note) cardHTML += '<div class="transfer-note">' + escapeHTML(note) + '</div>';
-    cardHTML += '<div class="transfer-status">' + (type === 'me' ? '已转账' : '已收款') + '</div>';
+    cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
     cardHTML += '</div>';
     div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
+}
+function collectTransfer(cardElement, amount, note) {
+    if (cardElement.querySelector('.transfer-status').textContent === '已收款') {
+        showToast('已经收过了');
+        return;
+    }
+    cardElement.querySelector('.transfer-status').textContent = '已收款';
+    cardElement.querySelector('.transfer-status').style.color = 'var(--success)';
+    cardElement.style.cursor = 'default';
+    cardElement.onclick = null;
+    showToast('已收款 ¥' + amount);
+    saveData();
 }
 
 // 收转账（从弹窗触发）
