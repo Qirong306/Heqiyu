@@ -1017,8 +1017,9 @@ function vdAddMessage(content, type) {
     saveData();
 }
 // ==================== 转账系统 ====================
+// ==================== 转账系统 ====================
 
-// 默认金额和备注（如果 DEFAULT_DATA 里没加，这里补）
+// 兜底初始化
 if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) {
     appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
 }
