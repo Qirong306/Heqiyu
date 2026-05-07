@@ -432,6 +432,12 @@ function openTopicDetail(topicId) {
     }
 }
 
+function closeTopicDetail() {
+    document.getElementById('forumDetailOverlay').classList.remove('show');
+    currentViewingTopicId = null;
+    openForum();
+}
+
 // ==================== 发送回复 ====================
 function sendTopicReply(topicId) {
     var input = document.getElementById('topicReplyInput');
