@@ -363,46 +363,48 @@ function openTopicDetail(topicId) {
     var replies = appData.forumReplies[topicId] || [];
 
     var html = '';
+    
+    // 可滚动内容区
+    html += '<div style="max-height:50vh;overflow-y:auto;padding-right:2px;">';
 
     html += '<h4>' + escapeHTML(topic.title || '') + '</h4>';
 
-    html += '<div style="font-size:11px;color:var(--text-system);margin-bottom:12px;">';
+    html += '<div style="font-size:11px;color:var(--text-system);margin-bottom:10px;">';
     html += escapeHTML(topic.author || '') + ' · ' + formatTime(topic.time);
     html += '</div>';
 
     if (topic.content) {
-        html += '<div style="background:var(--bubble-me);padding:12px;border-radius:var(--radius-sm);margin-bottom:12px;font-size:14px;">';
+        html += '<div style="background:var(--bubble-me);padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:10px;font-size:14px;">';
         html += escapeHTML(topic.content);
         html += '</div>';
     }
 
     if (topic.isOption && topic.options) {
-        html += '<div style="margin-bottom:12px;">';
-        html += '<div style="font-size:13px;color:var(--text);margin-bottom:6px;">选项：</div>';
+        html += '<div style="margin-bottom:10px;">';
+        html += '<div style="font-size:12px;color:var(--text);margin-bottom:4px;">选项：</div>';
         for (var o = 0; o < topic.options.length; o++) {
             var isSelected = topic.optionSelections && topic.optionSelections['ai'] === o;
-            html += '<div style="background:var(--item-bg);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;font-size:13px;border:2px solid ' + (isSelected ? 'var(--accent)' : 'transparent') + ';">';
+            html += '<div style="background:var(--item-bg);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:4px;font-size:13px;border:2px solid ' + (isSelected ? 'var(--accent)' : 'transparent') + ';">';
             html += escapeHTML(topic.options[o]);
             if (isSelected) {
-                html += '<div style="font-size:11px;color:var(--accent);margin-top:2px;">-- ' + escapeHTML(appData.otherName || '甜心助手') + '选了这项</div>';
+                html += '<div style="font-size:10px;color:var(--accent);margin-top:2px;">-- ' + escapeHTML(appData.otherName || '甜心助手') + '选了这项</div>';
             }
             html += '</div>';
         }
         html += '</div>';
     }
 
-    html += '<div style="font-size:13px;color:var(--text);margin-bottom:8px;">回复 (' + replies.length + ')</div>';
-    html += '<div style="max-height:200px;overflow-y:auto;margin-bottom:8px;">';
+    html += '<div style="font-size:12px;color:var(--text);margin-bottom:6px;">回复 (' + replies.length + ')</div>';
 
     if (replies.length === 0) {
-        html += '<div style="text-align:center;padding:10px;color:var(--text-system);font-size:12px;">暂无回复，来说点什么吧</div>';
+        html += '<div style="text-align:center;padding:8px;color:var(--text-system);font-size:12px;">暂无回复，来说点什么吧</div>';
     } else {
         for (var r = 0; r < replies.length; r++) {
             var reply = replies[r];
             var isMe = reply.author === appData.myName;
             var bubbleStyle = isMe ? 'var(--bubble-me)' : 'var(--bubble-other)';
 
-            html += '<div style="background:' + bubbleStyle + ';border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:6px;font-size:12px;">';
+            html += '<div style="background:' + bubbleStyle + ';border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:4px;font-size:12px;">';
             html += '<div style="color:var(--text-secondary);font-size:10px;margin-bottom:2px;">';
             html += escapeHTML(reply.author || '') + ' · ' + formatTimeShort(reply.time);
             html += '</div>';
@@ -410,11 +412,12 @@ function openTopicDetail(topicId) {
             html += '</div>';
         }
     }
-    html += '</div>';
+    
+    html += '</div>'; // 关闭滚动容器
 
-    // 底部栏
-    html += '<div style="display:flex;gap:6px;align-items:center;">';
-    html += '<input type="text" id="topicReplyInput" placeholder="说点什么吧..." style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:20px;background:var(--input-box);font-size:13px;font-family:var(--font-main);outline:none;color:var(--text);height:36px;" onkeypress="if(event.key==\'Enter\')sendTopicReply(\'' + safeId + '\')">';
+    // 底部固定栏
+    html += '<div style="display:flex;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);flex-shrink:0;">';
+    html += '<input type="text" id="topicReplyInput" placeholder="说点什么吧..." style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:20px;background:var(--input-box);font-size:13px;font-family:var(--font-main);outline:none;color:var(--text);height:36px;min-width:0;" onkeypress="if(event.key==\'Enter\')sendTopicReply(\'' + safeId + '\')">';
     html += '<button class="btn-sm" onclick="sendTopicReply(\'' + safeId + '\')" style="flex-shrink:0;">发送</button>';
     html += '<button class="btn-sm outline" onclick="quickReplyToTopic(\'' + safeId + '\')" style="flex-shrink:0;">快捷回复</button>';
     html += '<button class="btn-sm danger-sm" onclick="deleteTopicFromDetail(\'' + safeId + '\')" style="flex-shrink:0;">删除</button>';
@@ -427,12 +430,6 @@ function openTopicDetail(topicId) {
         detailContent.innerHTML = html;
         detailOverlay.classList.add('show');
     }
-}
-
-function closeTopicDetail() {
-    var overlay = document.getElementById('forumDetailOverlay');
-    if (overlay) overlay.classList.remove('show');
-    currentViewingTopicId = null;
 }
 
 // ==================== 发送回复 ====================
