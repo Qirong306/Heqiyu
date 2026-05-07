@@ -175,7 +175,11 @@ var DEFAULT_DATA = {
     myName: '我', myAvatar: '', myAvatarId: '', otherName: '甜心助手', otherAvatar: '', otherAvatarId: '',
     replyGroups: [{ name: '默认分组', replies: ['你好呀~','嗯嗯，我知道啦','哈哈哈哈好可爱','太有意思了吧','又学到了新东西','有空再聊哦','今天心情真好','你说得对呢','让我想想...','好的呢亲爱的','哈哈哈笑死我了','你真有趣','今天也要开心哦'] }],
     emojiIds: [], theme: 'light', morePanelTab: 'emoji',
-    chatHistory: [], letters: []
+    chatHistory: [], letters: [],
+    forumTopics: [],
+    forumReplyLib: [{ name: '默认话题词库', replies: ['有道理', '我也这么想', '没想过这个问题呢', '挺有意思的', '让我想想...'] }],
+    forumTopicTemplates: ['你觉得{词}怎么样？', '聊聊{词}吧', '最近{词}有什么新鲜事吗？', '你喜欢{词}吗？', '{词}这个话题你感兴趣吗？'],
+    forumTopicWords: ['夏天的夜晚', '一个人旅行', '养宠物', '下雨天', '深夜食堂', '童年的味道', '最喜欢的电影', '理想的生活', '咖啡还是茶']
 };
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -208,6 +212,11 @@ function loadData() {
             if (Array.isArray(p.letters)) appData.letters = p.letters;
             if (Array.isArray(p.replyGroups) && p.replyGroups.length > 0) appData.replyGroups = p.replyGroups;
             else if (Array.isArray(p.replies) && p.replies.length > 0) appData.replyGroups = [{ name: '默认分组', replies: p.replies }];
+            // 论坛字段加载
+            if (Array.isArray(p.forumTopics)) appData.forumTopics = p.forumTopics;
+            if (Array.isArray(p.forumReplyLib)) appData.forumReplyLib = p.forumReplyLib;
+            if (Array.isArray(p.forumTopicTemplates)) appData.forumTopicTemplates = p.forumTopicTemplates;
+            if (Array.isArray(p.forumTopicWords)) appData.forumTopicWords = p.forumTopicWords;
         }
     }
     if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
@@ -216,6 +225,10 @@ function loadData() {
     if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) {
         appData.replyGroups = [{ name: '默认分组', replies: ['你好呀~'] }];
     }
+    if (!Array.isArray(appData.forumTopics)) appData.forumTopics = [];
+    if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
+    if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
+    if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
     var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
     var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
     return Promise.all([p1, p2]).then(function() {
@@ -236,7 +249,11 @@ function saveData(immediate) {
             theme: appData.theme,
             morePanelTab: appData.morePanelTab,
             chatHistory: appData.chatHistory,
-            letters: appData.letters
+            letters: appData.letters,
+            forumTopics: appData.forumTopics,
+            forumReplyLib: appData.forumReplyLib,
+            forumTopicTemplates: appData.forumTopicTemplates,
+            forumTopicWords: appData.forumTopicWords
         };
         var jsonStr = JSON.stringify(saveObj);
         try {
@@ -542,7 +559,6 @@ function sendMsg() {
     input.value = ''; saveData();
     setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
 }
-// ========== addMessage（支持 isSticker）==========
 function addMessage(content, type, isImage, isSticker) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg ' + type + (isSticker ? ' is-sticker' : '');
@@ -571,7 +587,6 @@ function addSystemMsg(text) {
     appData.chatHistory.push({ type: 'system', content: text, time: Date.now() });
     saveData();
 }
-// ========== renderChatHistory（支持 isSticker）==========
 function renderChatHistory() {
     var chat = document.getElementById('chat'); chat.innerHTML = '';
     if (!appData.chatHistory || appData.chatHistory.length === 0) {
@@ -641,7 +656,6 @@ function uploadToMorePanel() {
     }).catch(function() { showToast('上传失败，请重试'); });
     document.getElementById('moreFileInput').value = '';
 }
-// ========== sendFromMorePanel（表情包 isSticker）==========
 function sendFromMorePanel(index) {
     if (!Array.isArray(appData.emojiIds) || index >= appData.emojiIds.length) return;
     getImageFromDB('images', appData.emojiIds[index]).then(function(url) {
@@ -852,62 +866,55 @@ function importDataFile() {
                 appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
             }
 
+            // 论坛字段
+            if (Array.isArray(data.forumTopics)) appData.forumTopics = data.forumTopics;
+            if (Array.isArray(data.forumReplyLib)) appData.forumReplyLib = data.forumReplyLib;
+            if (Array.isArray(data.forumTopicTemplates)) appData.forumTopicTemplates = data.forumTopicTemplates;
+            if (Array.isArray(data.forumTopicWords)) appData.forumTopicWords = data.forumTopicWords;
+
             var promises = [];
 
-            // 表情包图片恢复
             if (Array.isArray(data.emojiData) && data.emojiData.length > 0) {
                 appData.emojiIds = [];
                 data.emojiData.forEach(function(item) {
                     if (item.data && item.data.length > 100) {
                         appData.emojiIds.push(item.id);
-                        promises.push(
-                            saveImageToDB('images', item.id, item.data).catch(function() {})
-                        );
+                        promises.push(saveImageToDB('images', item.id, item.data).catch(function() {}));
                     }
                 });
             } else {
                 appData.emojiIds = data.emojiIds || [];
             }
 
-            // 我的头像
             if (data.myAvatar && typeof data.myAvatar === 'string' && data.myAvatar.length > 100) {
                 var myId = data.myAvatarId || ('avatar_me_' + Date.now());
-                promises.push(
-                    saveImageToDB('avatars', myId, data.myAvatar).then(function() {
-                        appData.myAvatarId = myId;
-                        appData.myAvatar = data.myAvatar;
-                    })
-                );
+                promises.push(saveImageToDB('avatars', myId, data.myAvatar).then(function() {
+                    appData.myAvatarId = myId;
+                    appData.myAvatar = data.myAvatar;
+                }));
             } else {
                 appData.myAvatarId = data.myAvatarId || '';
                 appData.myAvatar = '';
                 if (appData.myAvatarId) {
-                    promises.push(
-                        getImageFromDB('avatars', appData.myAvatarId).then(function(img) {
-                            appData.myAvatar = img || '';
-                        })
-                    );
+                    promises.push(getImageFromDB('avatars', appData.myAvatarId).then(function(img) {
+                        appData.myAvatar = img || '';
+                    }));
                 }
             }
 
-            // 对方头像
             if (data.otherAvatar && typeof data.otherAvatar === 'string' && data.otherAvatar.length > 100) {
                 var otherId = data.otherAvatarId || ('avatar_other_' + Date.now());
-                promises.push(
-                    saveImageToDB('avatars', otherId, data.otherAvatar).then(function() {
-                        appData.otherAvatarId = otherId;
-                        appData.otherAvatar = data.otherAvatar;
-                    })
-                );
+                promises.push(saveImageToDB('avatars', otherId, data.otherAvatar).then(function() {
+                    appData.otherAvatarId = otherId;
+                    appData.otherAvatar = data.otherAvatar;
+                }));
             } else {
                 appData.otherAvatarId = data.otherAvatarId || '';
                 appData.otherAvatar = '';
                 if (appData.otherAvatarId) {
-                    promises.push(
-                        getImageFromDB('avatars', appData.otherAvatarId).then(function(img) {
-                            appData.otherAvatar = img || '';
-                        })
-                    );
+                    promises.push(getImageFromDB('avatars', appData.otherAvatarId).then(function(img) {
+                        appData.otherAvatar = img || '';
+                    }));
                 }
             }
 
