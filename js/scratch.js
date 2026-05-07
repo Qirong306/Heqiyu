@@ -72,15 +72,8 @@ function openScratchCard() {
 
     // 刮刮乐画布区域
     html += '<div class="scratch-canvas-wrap" id="scratchCanvasWrap">';
-    html += '<div class="scratch-result" id="scratchResult">' + escapeHTML(scratchCurrentPrize.text) + '</div>';
+    html += '<div class="scratch-result" id="scratchResult" style="visibility:hidden;">' + escapeHTML(scratchCurrentPrize.text) + '</div>';
     html += '<canvas id="scratchCanvas"></canvas>';
-    html += '</div>';
-
-    html += '<div class="scratch-hint" id="scratchHint">用手指刮开涂层查看奖品</div>';
-
-    html += '<div class="btn-row" style="justify-content:center;margin-top:8px;">';
-    html += '<button class="btn-sm" onclick="resetScratchCard()">再刮一次</button>';
-    html += '<button class="btn-sm outline" onclick="closeScratchCard()">关闭</button>';
     html += '</div>';
 
     // 奖品管理入口
@@ -311,8 +304,13 @@ function checkScratchProgress(canvas) {
         if (progress > 0.35) {
             ctx.globalCompositeOperation = 'source-over';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 涂层清除后显示奖品文字
+            var result = document.getElementById('scratchResult');
+            if (result) result.style.visibility = 'visible';
             var hint = document.getElementById('scratchHint');
             if (hint) hint.textContent = '恭喜获得奖品！';
+
+            // 记录刮奖次数（只记录一次）
 
             // 记录刮奖次数（只记录一次）
             if (!canvas._scratchRecorded) {
@@ -390,7 +388,9 @@ function resetScratchCard() {
         canvas._scratchRecorded = false;
         canvas._scratchReady = true;
     }
-
+// 重新隐藏奖品
+    var resultEl = document.getElementById('scratchResult');
+    if (resultEl) resultEl.style.visibility = 'hidden';
     var hint = document.getElementById('scratchHint');
     if (hint) hint.textContent = '用手指刮开涂层查看奖品';
 
