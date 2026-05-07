@@ -2,7 +2,9 @@
 // 网易云外链播放器 + 歌单管理 + 浮动小球（可拖动）
 // 支持简单格式 { id, title, artist } 和外部歌单 { title, sub, url, isCustom }
 
-var musicPlaylist = [];
+// 使用 appData.playlist 持久化歌单
+if (!Array.isArray(appData.playlist)) appData.playlist = [];
+var musicPlaylist = appData.playlist;
 var musicCurrentIndex = -1;
 var musicPlayMode = 'order';
 var musicFloatingImg = '';
@@ -385,6 +387,7 @@ function addSongPrompt() {
     musicPlaylist.push({ id: id, title: title, artist: artist });
     renderPlaylist();
     if (musicPlaylist.length === 1) playSong(0);
+    if (typeof saveData === 'function') saveData();
     showToast('已添加：' + title);
 }
 
@@ -402,6 +405,7 @@ function deleteSong(index) {
         musicCurrentIndex--;
     }
     renderPlaylist();
+    if (typeof saveData === 'function') saveData();
     showToast('已删除：' + song.title);
 }
 
@@ -431,15 +435,16 @@ function importMusicJSON() {
                 var raw = JSON.parse(e.target.result);
                 var data = Array.isArray(raw) ? raw : (raw.songs || []);
                 if (!data.length) throw new Error();
-                musicPlaylist = data.map(function(s) {
-                    return {
+                musicPlaylist.length = 0;
+                data.forEach(function(s) {
+                    musicPlaylist.push({
                         title: s.title || '',
                         artist: s.sub || s.artist || '',
                         sub: s.sub || s.artist || '',
                         url: s.url || '',
                         id: s.id || getSongIdFromUrl(s.url || ''),
                         isCustom: s.isCustom !== undefined ? s.isCustom : true
-                    };
+                    });
                 });
                 musicCurrentIndex = -1;
                 if (musicAudio) { musicAudio.pause(); musicAudio = null; }
@@ -448,6 +453,7 @@ function importMusicJSON() {
                 var nowPlaying = document.getElementById('musicNowPlaying');
                 if (nowPlaying) nowPlaying.textContent = '未在播放';
                 renderPlaylist();
+                if (typeof saveData === 'function') saveData();
                 showToast('已导入 ' + musicPlaylist.length + ' 首歌');
             } catch(err) {
                 showToast('歌单格式错误');
