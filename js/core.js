@@ -561,7 +561,24 @@ function sendRandomReply() {
         var eid = appData.emojiIds[Math.floor(Math.random() * appData.emojiIds.length)];
         return getImageFromDB('images', eid).then(function(img) {
             if (!img) return false;
-            addMessage(img, 'other', true, true);
+            // 20%概率引用最近一条你的消息
+            var quoteChance = Math.random();
+            if (quoteChance < 0.2) {
+                var lastMyMsg = null;
+                for (var i = appData.chatHistory.length - 1; i >= 0; i--) {
+                    if (appData.chatHistory[i].type === 'me' && appData.chatHistory[i].content && appData.chatHistory[i].content.length > 0) {
+                        lastMyMsg = appData.chatHistory[i].content;
+                        break;
+                    }
+                }
+                if (lastMyMsg) {addQuoteMessage(lastMyMsg.substring(0, 50), content, 'other');
+                    appData.chatHistory.push({ type: 'other', content: content, quote: lastMyMsg.substring(0, 50), time: Date.now() });
+                    return saveData().then(function() { return true; });
+                }
+            }
+            addMessage(content, 'other', false);
+            appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
+            return saveData().then(function() { return true; });
             appData.chatHistory.push({ type: 'other', content: '', imageId: eid, time: Date.now(), isSticker: true });
             return saveData().then(function() { return true; });
         });
@@ -574,6 +591,20 @@ function sendRandomReply() {
 }
 function sendMsg() {
     var input = document.getElementById('msgInput'); var msg = input.value.trim();
+    // 检测引用：/引用 被引用的内容 | 我的回复
+    if (msg.indexOf('/引用') === 0 || msg.indexOf('/quote') === 0) {
+        var quoteContent = msg.replace(/^\/\S+\s*/, '');
+        var parts = quoteContent.split('|');
+        var quotedText = parts[0].trim();
+        var replyText = parts.length > 1 ? parts.slice(1).join('|').trim() : '';
+        if (!quotedText) { showToast('格式：/引用 被引用的内容 | 我的回复'); return; }
+        input.value = '';
+        addQuoteMessage(quotedText, replyText, 'me');
+        appData.chatHistory.push({ type: 'me', content: replyText, quote: quotedText, time: Date.now() });
+        saveData();
+        setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
+        return;
+    }
     if (!msg) return;
     addMessage(msg, 'me');
     appData.chatHistory.push({ type: 'me', content: msg, time: Date.now() });
@@ -591,6 +622,20 @@ function addMessage(content, type, isImage, isSticker) {
         div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImage ? '<img class="msg-image" src="' + content + '">' : content) + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     }
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
+}
+function addQuoteMessage(quotedText, replyText, type) {
+    var chat = document.getElementById('chat');
+    var div = document.createElement('div');
+    div.className = 'msg ' + type;
+    var handler = type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+    var av = getAvatarHTMLSync(type === 'me');
+    var quoteHTML = '<div class="bubble">';
+    quoteHTML += '<div style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:12px;color:var(--text-secondary);">' + escapeHTML(quotedText) + '</div>';
+    quoteHTML += '<div>' + escapeHTML(replyText) + '</div>';
+    quoteHTML += '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
+    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div>' + quoteHTML;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
 }
 function addMessageWithRole(content, role, roleClass) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
@@ -653,10 +698,24 @@ function renderChatHistory() {
             d.className = 'msg ' + m.type;
             var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
             var av = getAvatarHTMLSync(m.type === 'me');
-            var isImg = m.content && m.content.indexOf('data:image/') === 0;
-            d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-            chat.appendChild(d);
-        }
+            if (m.imageId) {
+                promises.push(getImageFromDB('images', m.imageId).then(function(img) {
+                    if (m.isSticker) {
+                        d.className = 'msg ' + m.type + ' is-sticker';
+                        d.innerHTML = '<div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]') + '</div>';
+                    } else {
+                        d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                    }
+                    chat.appendChild(d);
+                }));
+            } else if (m.quote) {
+                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble"><div style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:12px;color:var(--text-secondary);">' + escapeHTML(m.quote) + '</div><div>' + escapeHTML(m.content) + '</div><span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                chat.appendChild(d);
+            } else {
+                var isImg = m.content && m.content.indexOf('data:image/') === 0;
+                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                chat.appendChild(d);
+            }
     });
     return Promise.all(promises).then(function() { chat.scrollTop = chat.scrollHeight; });
 }
