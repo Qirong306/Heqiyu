@@ -1054,7 +1054,20 @@ function cleanOrphanImages() {
 }
 function openSettings() { openModal('settingsOverlay'); }
 function openSubModal(html) { document.getElementById('subModal').innerHTML = html; openModal('subOverlay'); }
-
+function closeAllModals() {
+    closeModal('settingsOverlay');
+    closeModal('subOverlay');
+    closeModal('photoOverlay');
+    closeModal('letterOverlay');
+    closeModal('forumOverlay');
+    closeModal('forumDetailOverlay');
+    var morePanel = document.getElementById('morePanel');
+    if (morePanel) morePanel.style.display = 'none';
+    var forumMenu = document.getElementById('forumDropdownMenu');
+    if (forumMenu) forumMenu.style.display = 'none';
+    var musicOverlay = document.getElementById('musicOverlay');
+    if (musicOverlay) musicOverlay.classList.remove('show');
+}
 // ========== Toast ==========
 function showToast(msg) {
     var t = document.getElementById('toast'); if (!t) return;
