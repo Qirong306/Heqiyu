@@ -1071,6 +1071,10 @@ function showToastLong(msg, duration) {
 
 // ========== 事件监听 ==========
 document.addEventListener('click', function(e) {
+    if (e.target.id === 'musicOverlay' && typeof closeMusicPlayer === 'function') {
+        closeMusicPlayer();
+        return;
+    }
     if (e.target.id === 'forumDetailOverlay') {
         e.stopPropagation();
         if (typeof closeTopicDetail === 'function') closeTopicDetail();
