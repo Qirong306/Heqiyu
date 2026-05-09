@@ -1,5 +1,5 @@
 // ==================== 核心系统 ====================
-// 存储、数据、聊天、UI、设置、信件、头像、回复管理
+// 存储、数据、聊天、UI、设置、信件、头像、回复管理、引用、转账
 
 // ========== 存储密钥 ==========
 var STORAGE_KEY = 'chat_app_v20';
@@ -10,6 +10,9 @@ var db = null;
 var MAX_STORAGE_MB = 50;
 var saveTimer = null;
 var saveDebounceMs = 500;
+
+// ========== 引用状态 ==========
+var quotedMessage = null; // { content, type, time }
 
 // ========== IndexedDB ==========
 function openDB() {
@@ -180,7 +183,11 @@ var DEFAULT_DATA = {
     forumReplyLib: [{ name: '默认话题词库', replies: ['有道理', '我也这么想', '没想过这个问题呢', '挺有意思的', '让我想想...'] }],
     forumTopicTemplates: ['你觉得{词}怎么样？', '聊聊{词}吧', '最近{词}有什么新鲜事吗？', '你喜欢{词}吗？', '{词}这个话题你感兴趣吗？'],
     forumTopicWords: ['夏天的夜晚', '一个人旅行', '养宠物', '下雨天', '深夜食堂', '童年的味道', '最喜欢的电影', '理想的生活', '咖啡还是茶'],
-    musicFloatingImg: ''
+    transferAmounts: ['5.20', '13.14', '52.00', '131.40', '520.00'],
+    transferNotes: ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'],
+    playlist: [],
+    musicFloatingImg: '',
+    books: []
 };
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -221,6 +228,7 @@ function loadData() {
             if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
             if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
             if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
+            if (Array.isArray(p.books)) appData.books = p.books;
         }
     }
     if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
@@ -233,12 +241,8 @@ function loadData() {
     if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
     if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
     if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
-    if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) {
-        appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
-    }
-    if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) {
-        appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
-    }
+    if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
+    if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
     if (!Array.isArray(appData.playlist)) appData.playlist = [];
     if (!Array.isArray(appData.books)) appData.books = [];
     var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
@@ -269,7 +273,8 @@ function saveData(immediate) {
             transferAmounts: appData.transferAmounts,
             transferNotes: appData.transferNotes,
             playlist: appData.playlist,
-            musicFloatingImg: appData.musicFloatingImg || ''
+            musicFloatingImg: appData.musicFloatingImg || '',
+            books: appData.books
         };
         var jsonStr = JSON.stringify(saveObj);
         try {
@@ -571,47 +576,30 @@ function sendRandomReply() {
         });
     } else {
         var content = allReplies[Math.floor(Math.random() * allReplies.length)];
-        // 20%概率引用最近一条用户消息
-        if (Math.random() < 0.2) {
-            var lastMyMsg = null;
-            for (var i = appData.chatHistory.length - 1; i >= 0; i--) {
-                if (appData.chatHistory[i].type === 'me' && appData.chatHistory[i].content && appData.chatHistory[i].content.length > 0) {
-                    lastMyMsg = appData.chatHistory[i].content;
-                    break;
-                }
-            }
-            if (lastMyMsg) {
-                addQuoteMessage(lastMyMsg.substring(0, 50), content, 'other');
-                appData.chatHistory.push({ type: 'other', content: content, quote: lastMyMsg.substring(0, 50), time: Date.now() });
-                return saveData().then(function() { return true; });
-            }
+        // 30%概率引用上一条消息
+        if (quotedMessage && Math.random() < 0.3) {
+            addMessageWithQuote(content, 'other', quotedMessage);
+            appData.chatHistory.push({ type: 'other', content: content, time: Date.now(), quote: quotedMessage });
+        } else {
+            addMessage(content, 'other', false);
+            appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
         }
-        addMessage(content, 'other', false);
-        appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
         return saveData().then(function() { return true; });
     }
 }
 function sendMsg() {
     var input = document.getElementById('msgInput'); var msg = input.value.trim();
     if (!msg) return;
-
-    // 检测引用命令：/引用 被引用内容 | 回复内容
-    if (msg.indexOf('/引用') === 0 || msg.indexOf('/quote') === 0) {
-        var quoteContent = msg.replace(/^\/\S+\s*/, '');
-        var parts = quoteContent.split('|');
-        var quotedText = parts[0].trim();
-        var replyText = parts.length > 1 ? parts.slice(1).join('|').trim() : '';
-        if (!quotedText) { showToast('格式：/引用 被引用的内容 | 我的回复'); return; }
-        input.value = '';
-        addQuoteMessage(quotedText, replyText, 'me');
-        appData.chatHistory.push({ type: 'me', content: replyText, quote: quotedText, time: Date.now() });
-        saveData();
-        setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
-        return;
+    var quote = quotedMessage;
+    if (quote) {
+        addMessageWithQuote(msg, 'me', quote);
+        appData.chatHistory.push({ type: 'me', content: msg, time: Date.now(), quote: quote });
+    } else {
+        addMessage(msg, 'me');
+        appData.chatHistory.push({ type: 'me', content: msg, time: Date.now() });
     }
-
-    addMessage(msg, 'me');
-    appData.chatHistory.push({ type: 'me', content: msg, time: Date.now() });
+    quotedMessage = null;
+    updateQuoteBar();
     input.value = ''; saveData();
     setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
 }
@@ -625,23 +613,30 @@ function addMessage(content, type, isImage, isSticker) {
     } else {
         div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImage ? '<img class="msg-image" src="' + content + '">' : content) + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     }
+    bindQuoteEvent(div, { content: content, type: type, time: Date.now(), isImage: isImage });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
 }
-function addQuoteMessage(quotedText, replyText, type) {
-    var chat = document.getElementById('chat');
-    var div = document.createElement('div');
+function addMessageWithQuote(content, type, quote) {
+    var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg ' + type;
     var handler = type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
     var av = getAvatarHTMLSync(type === 'me');
-    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble"><div style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:12px;color:var(--text-secondary);">' + escapeHTML(quotedText) + '</div><div>' + escapeHTML(replyText) + '</div><span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+    var quotePreview = (quote.content || '').substring(0, 50);
+    if (quote.isImage) quotePreview = '[图片]';
+    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' +
+        '<div class="quote-ref" style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:11px;color:var(--text-secondary);">' +
+        escapeHTML((quote.type === 'me' ? appData.myName : appData.otherName) + '：' + quotePreview) +
+        '</div>' + content +
+        '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
+    bindQuoteEvent(div, { content: content, type: type, time: Date.now() });
+    chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
 }
 function addMessageWithRole(content, role, roleClass) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg other';
     var av = '<div class="avatar-placeholder" style="background:var(--' + (roleClass || 'role-a') + ');color:var(--text);">' + (role ? role.charAt(0) : '?') + '</div>';
     div.innerHTML = '<div class="avatar-wrap">' + av + '</div><div class="bubble"><span class="role-tag ' + (roleClass || 'role-a') + '">' + role + '</span><br>' + content + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
+    bindQuoteEvent(div, { content: '[' + role + '] ' + content, type: 'other', time: Date.now() });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
     appData.chatHistory.push({ type: 'other', content: '[' + role + '] ' + content, time: Date.now() });
     saveData();
@@ -653,55 +648,127 @@ function addSystemMsg(text) {
     appData.chatHistory.push({ type: 'system', content: text, time: Date.now() });
     saveData();
 }
+
+// ========== 引用功能 ==========
+function bindQuoteEvent(div, msgData) {
+    var bubble = div.querySelector('.bubble');
+    if (!bubble) return;
+    bubble.addEventListener('click', function(e) {
+        e.stopPropagation();
+        quotedMessage = msgData;
+        updateQuoteBar();
+        showToast('已引用消息');
+    });
+    bubble.style.cursor = 'pointer';
+    bubble.title = '点击引用此消息';
+}
+
+function updateQuoteBar() {
+    var existingBar = document.getElementById('quoteBar');
+    if (existingBar) existingBar.remove();
+    if (!quotedMessage) return;
+    var inputArea = document.getElementById('inputArea');
+    if (!inputArea) return;
+    var bar = document.createElement('div');
+    bar.id = 'quoteBar';
+    bar.style.cssText = 'padding:6px 14px;background:var(--item-bg);border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary);flex-shrink:0;';
+    var preview = (quotedMessage.content || '').substring(0, 30);
+    if (quotedMessage.isImage) preview = '[图片]';
+    bar.innerHTML = '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">引用：' + escapeHTML(preview) + '</span><span onclick="cancelQuote()" style="cursor:pointer;color:var(--danger);font-size:16px;padding:0 4px;">x</span>';
+    inputArea.insertBefore(bar, inputArea.firstChild);
+}
+
+function cancelQuote() {
+    quotedMessage = null;
+    updateQuoteBar();
+}
+
 function renderChatHistory() {
     var chat = document.getElementById('chat'); chat.innerHTML = '';
     if (!appData.chatHistory || appData.chatHistory.length === 0) {
         chat.innerHTML = '<div class="system-msg">和' + appData.otherName + '开始聊天吧~</div>';
         return Promise.resolve();
     }
-    var promises = [];
-    appData.chatHistory.forEach(function(m) {
-        if (m.type === 'transfer_me' || m.type === 'transfer_other') {
-            var d = document.createElement('div');
-            d.className = 'msg ' + (m.type === 'transfer_me' ? 'me' : 'other');
-            var av = getAvatarHTMLSync(m.type === 'transfer_me');
-            var handler = m.type === 'transfer_other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
-            var cardHTML = '<div class="transfer-card ' + (m.type === 'transfer_me' ? 'transfer-me' : 'transfer-other') + '">';
-            cardHTML += '<div class="transfer-label">' + (m.type === 'transfer_me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
-            cardHTML += '<div class="transfer-amount">¥ ' + m.amount + '</div>';
-            if (m.note) cardHTML += '<div class="transfer-note">' + escapeHTML(m.note) + '</div>';
-            cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
-            cardHTML += '</div>';
-            d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-            chat.appendChild(d);
-        } else if (m.type === 'system') {
-            var d = document.createElement('div'); d.className = 'system-msg'; d.textContent = m.content; chat.appendChild(d);
-        } else {
-            var d = document.createElement('div');
-            d.className = 'msg ' + m.type;
-            var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
-            var av = getAvatarHTMLSync(m.type === 'me');
-            if (m.imageId) {
-                (function(dd, mm) {
-                    promises.push(getImageFromDB('images', mm.imageId).then(function(img) {
-                        if (mm.isSticker) {
-                            dd.className = 'msg ' + mm.type + ' is-sticker';
-                            dd.innerHTML = '<div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]') + '</div>';
+    var promises = appData.chatHistory.map(function(m) {
+        return new Promise(function(resolve) {
+            if (m.type === 'transfer_me' || m.type === 'transfer_other') {
+                var d = document.createElement('div');
+                d.className = 'msg ' + (m.type === 'transfer_me' ? 'me' : 'other');
+                var av = getAvatarHTMLSync(m.type === 'transfer_me');
+                var handler = m.type === 'transfer_other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+                var cardHTML = '<div class="transfer-card ' + (m.type === 'transfer_me' ? 'transfer-me' : 'transfer-other') + '">';
+                cardHTML += '<div class="transfer-label">' + (m.type === 'transfer_me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
+                cardHTML += '<div class="transfer-amount">¥ ' + m.amount + '</div>';
+                if (m.note) cardHTML += '<div class="transfer-note">' + escapeHTML(m.note) + '</div>';
+                cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
+                cardHTML += '</div>';
+                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                chat.appendChild(d);
+                resolve();
+            } else if (m.type === 'system') {
+                var d = document.createElement('div'); d.className = 'system-msg'; d.textContent = m.content; chat.appendChild(d);
+                resolve();
+            } else if (m.imageId) {
+                var d = document.createElement('div');
+                d.className = 'msg ' + m.type;
+                var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+                var av = getAvatarHTMLSync(m.type === 'me');
+                // 先创建占位DOM保持顺序
+                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">加载中...<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                if (m.quote) {
+                    var bubble = d.querySelector('.bubble');
+                    var quotePreview = (m.quote.content || '').substring(0, 50);
+                    if (m.quote.isImage) quotePreview = '[图片]';
+                    bubble.innerHTML = '<div class="quote-ref" style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:11px;color:var(--text-secondary);">' +
+                        escapeHTML((m.quote.type === 'me' ? appData.myName : appData.otherName) + '：' + quotePreview) + '</div>加载中...<span class="msg-time">' + formatTimeShort(m.time) + '</span>';
+                }
+                bindQuoteEvent(d, { content: m.content, type: m.type, time: m.time });
+                chat.appendChild(d);
+                // 异步加载图片
+                getImageFromDB('images', m.imageId).then(function(img) {
+                    var bubbleEl = d.querySelector('.bubble');
+                    var timeStr = '<span class="msg-time">' + formatTimeShort(m.time) + '</span>';
+                    if (m.isSticker) {
+                        d.className = 'msg ' + m.type + ' is-sticker';
+                        if (m.quote) {
+                            var qp2 = (m.quote.content || '').substring(0, 50);
+                            if (m.quote.isImage) qp2 = '[图片]';
+                            bubbleEl.innerHTML = '<div class="quote-ref" style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:11px;color:var(--text-secondary);">' +
+                                escapeHTML((m.quote.type === 'me' ? appData.myName : appData.otherName) + '：' + qp2) + '</div>' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]');
                         } else {
-                            dd.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(mm.time) + '</span></div>';
+                            bubbleEl.innerHTML = img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]';
                         }
-                        chat.appendChild(dd);
-                    }));
-                })(d, m);
-            } else if (m.quote) {
-                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble"><div style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:12px;color:var(--text-secondary);">' + escapeHTML(m.quote) + '</div><div>' + escapeHTML(m.content) + '</div><span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-                chat.appendChild(d);
+                    } else {
+                        var qHtml = '';
+                        if (m.quote) {
+                            var qp3 = (m.quote.content || '').substring(0, 50);
+                            if (m.quote.isImage) qp3 = '[图片]';
+                            qHtml = '<div class="quote-ref" style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:11px;color:var(--text-secondary);">' +
+                                escapeHTML((m.quote.type === 'me' ? appData.myName : appData.otherName) + '：' + qp3) + '</div>';
+                        }
+                        bubbleEl.innerHTML = qHtml + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + timeStr;
+                    }
+                    resolve();
+                }).catch(function() { resolve(); });
             } else {
+                var d = document.createElement('div');
+                d.className = 'msg ' + m.type;
+                var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+                var av = getAvatarHTMLSync(m.type === 'me');
                 var isImg = m.content && m.content.indexOf('data:image/') === 0;
-                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                var qHtml = '';
+                if (m.quote) {
+                    var qp = (m.quote.content || '').substring(0, 50);
+                    if (m.quote.isImage) qp = '[图片]';
+                    qHtml = '<div class="quote-ref" style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:11px;color:var(--text-secondary);">' +
+                        escapeHTML((m.quote.type === 'me' ? appData.myName : appData.otherName) + '：' + qp) + '</div>';
+                }
+                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + qHtml + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+                bindQuoteEvent(d, { content: m.content, type: m.type, time: m.time, isImage: isImg });
                 chat.appendChild(d);
+                resolve();
             }
-        }
+        });
     });
     return Promise.all(promises).then(function() { chat.scrollTop = chat.scrollHeight; });
 }
@@ -751,7 +818,7 @@ function sendFromMorePanel(index) {
     });
 }
 
-// ========== 回复管理 ==========
+// ========== 回复管理（含去重） ==========
 function openReplyModal() {
     closeModal('settingsOverlay');
     var groupsHtml = '';
@@ -760,14 +827,29 @@ function openReplyModal() {
         group.replies.forEach(function(reply, r) {
             replyItems += '<div class="list-item"><input type="checkbox" class="cb" id="cb_' + g + '_' + r + '" data-group="' + g + '" data-idx="' + r + '"><span>' + reply + '</span><button class="del-sm" onclick="delReplySingle(' + g + ',' + r + ')">删除</button></div>';
         });
-        groupsHtml += '<div class="group-block"><div class="group-header"><span>' + group.name + ' (' + group.replies.length + '条)</span><div><button onclick="renameGroup(' + g + ')">重命名</button><button onclick="delGroup(' + g + ')" style="color:var(--danger);">删除分组</button></div></div><div class="form-row"><textarea id="batchAdd_' + g + '" placeholder="批量添加回复（一行一个）"></textarea></div><div class="btn-row"><button class="btn-sm" onclick="addReplyBatchToGroup(' + g + ')">批量添加</button><button class="btn-sm outline" onclick="delSelectedReplies(' + g + ')">删除选中</button><button class="btn-sm outline" onclick="selectAllInGroup(' + g + ')">全选</button></div><div style="max-height:150px;overflow-y:auto;">' + (replyItems || '<div style="text-align:center;color:var(--text-system);padding:8px;">暂无回复</div>') + '</div></div>';
+        groupsHtml += '<div class="group-block"><div class="group-header"><span>' + group.name + ' (' + group.replies.length + '条)</span><div><button onclick="renameGroup(' + g + ')">重命名</button><button onclick="delGroup(' + g + ')" style="color:var(--danger);">删除分组</button></div></div><div class="form-row"><textarea id="batchAdd_' + g + '" placeholder="批量添加回复（一行一个，自动去重）"></textarea></div><div class="btn-row"><button class="btn-sm" onclick="addReplyBatchToGroup(' + g + ')">批量添加</button><button class="btn-sm outline" onclick="delSelectedReplies(' + g + ')">删除选中</button><button class="btn-sm outline" onclick="selectAllInGroup(' + g + ')">全选</button></div><div style="max-height:150px;overflow-y:auto;">' + (replyItems || '<div style="text-align:center;color:var(--text-system);padding:8px;">暂无回复</div>') + '</div></div>';
     });
     openSubModal('<h4>自定义回复</h4><button class="btn-sm" onclick="addNewGroup()" style="margin-bottom:10px;">+ 新建分组</button><div style="max-height:50vh;overflow-y:auto;">' + groupsHtml + '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>');
 }
 function addNewGroup() { var n = prompt('分组名称'); if (!n) return; appData.replyGroups.push({name:n,replies:[]}); saveData(); openReplyModal(); showToast('分组已创建'); }
 function renameGroup(g) { var n = prompt('新名称', appData.replyGroups[g].name); if (!n) return; appData.replyGroups[g].name = n; saveData(); openReplyModal(); showToast('已重命名'); }
 function delGroup(g) { if (!confirm('删除分组"' + appData.replyGroups[g].name + '"?') || appData.replyGroups.length <= 1) { if (appData.replyGroups.length <= 1) showToast('至少保留一个分组'); return; } appData.replyGroups.splice(g,1); saveData(); openReplyModal(); showToast('分组已删除'); }
-function addReplyBatchToGroup(g) { var t = document.getElementById('batchAdd_' + g).value.trim(); if (!t) return; var lines = t.split('\n').filter(function(l){return l.trim();}); if (!lines.length) return; appData.replyGroups[g].replies = appData.replyGroups[g].replies.concat(lines); saveData(); openReplyModal(); showToast('已添加 ' + lines.length + ' 条'); }
+function addReplyBatchToGroup(g) {
+    var t = document.getElementById('batchAdd_' + g).value.trim();
+    if (!t) return;
+    var lines = t.split('\n').filter(function(l){return l.trim();});
+    if (!lines.length) return;
+    // 去重：过滤掉已存在的
+    var existing = appData.replyGroups[g].replies || [];
+    var newLines = lines.filter(function(line) {
+        return existing.indexOf(line) === -1;
+    });
+    if (newLines.length === 0) { showToast('所有内容已存在，无新增'); return; }
+    appData.replyGroups[g].replies = existing.concat(newLines);
+    saveData(); openReplyModal();
+    var dupCount = lines.length - newLines.length;
+    showToast('已添加 ' + newLines.length + ' 条' + (dupCount > 0 ? '（跳过 ' + dupCount + ' 条重复）' : ''));
+}
 function delReplySingle(g, r) { var d = appData.replyGroups[g].replies[r]; appData.replyGroups[g].replies.splice(r,1); saveData(); openReplyModal(); showToast('已删除「' + d + '」'); }
 function selectAllInGroup(g) { var cbs = document.querySelectorAll('#subModal input.cb[data-group="' + g + '"]'); var all = true; for (var i=0;i<cbs.length;i++) if (!cbs[i].checked) { all=false; break; } for (var j=0;j<cbs.length;j++) cbs[j].checked = !all; }
 function delSelectedReplies(g) { var cbs = document.querySelectorAll('#subModal input.cb[data-group="' + g + '"]:checked'); if (!cbs.length) return showToast('请先勾选'); var idxs = []; for (var i=0;i<cbs.length;i++) idxs.push(parseInt(cbs[i].getAttribute('data-idx'))); idxs.sort(function(a,b){return b-a;}); for (var j=0;j<idxs.length;j++) appData.replyGroups[g].replies.splice(idxs[j],1); saveData(); openReplyModal(); showToast('已删除 ' + idxs.length + ' 条'); }
@@ -860,19 +942,12 @@ function exportFullAsFile() {
     });
     Promise.all(emojiPromises).then(function(emojiData) {
         var backupData = {
-            myName: appData.myName,
-            myAvatarId: appData.myAvatarId,
-            myAvatar: appData.myAvatar || '',
-            otherName: appData.otherName,
-            otherAvatarId: appData.otherAvatarId,
-            otherAvatar: appData.otherAvatar || '',
-            replyGroups: appData.replyGroups,
-            emojiIds: appData.emojiIds,
-            emojiData: emojiData,
-            theme: appData.theme,
-            chatHistory: appData.chatHistory,
-            letters: appData.letters,
-            playlist: appData.playlist
+            myName: appData.myName, myAvatarId: appData.myAvatarId, myAvatar: appData.myAvatar || '',
+            otherName: appData.otherName, otherAvatarId: appData.otherAvatarId, otherAvatar: appData.otherAvatar || '',
+            replyGroups: appData.replyGroups, emojiIds: appData.emojiIds, emojiData: emojiData,
+            theme: appData.theme, chatHistory: appData.chatHistory, letters: appData.letters,
+            playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
+            books: appData.books
         };
         var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
         downloadJSONFile('chat_app_backup_' + timestamp + '.json', backupData);
@@ -900,25 +975,16 @@ function fallbackCopy(text, label) {
 }
 function exportFull() {
     var emojiPromises = (appData.emojiIds || []).map(function(id) {
-        return getImageFromDB('images', id).then(function(data) {
-            return { id: id, data: data || '' };
-        });
+        return getImageFromDB('images', id).then(function(data) { return { id: id, data: data || '' }; });
     });
     Promise.all(emojiPromises).then(function(emojiData) {
         var backupData = {
-            myName: appData.myName,
-            myAvatarId: appData.myAvatarId,
-            myAvatar: appData.myAvatar || '',
-            otherName: appData.otherName,
-            otherAvatarId: appData.otherAvatarId,
-            otherAvatar: appData.otherAvatar || '',
-            replyGroups: appData.replyGroups,
-            emojiIds: appData.emojiIds,
-            emojiData: emojiData,
-            theme: appData.theme,
-            chatHistory: appData.chatHistory,
-            letters: appData.letters,
-            playlist: appData.playlist
+            myName: appData.myName, myAvatarId: appData.myAvatarId, myAvatar: appData.myAvatar || '',
+            otherName: appData.otherName, otherAvatarId: appData.otherAvatarId, otherAvatar: appData.otherAvatar || '',
+            replyGroups: appData.replyGroups, emojiIds: appData.emojiIds, emojiData: emojiData,
+            theme: appData.theme, chatHistory: appData.chatHistory, letters: appData.letters,
+            playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
+            books: appData.books
         };
         copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
         closeModal('subOverlay');
@@ -940,26 +1006,22 @@ function importDataFile() {
         try {
             var data = JSON.parse(e.target.result);
             if (!data || typeof data !== 'object') throw new Error('无效数据');
-
             if (typeof data.myName === 'string') appData.myName = data.myName;
             if (typeof data.otherName === 'string') appData.otherName = data.otherName;
             if (typeof data.theme === 'string') appData.theme = data.theme;
             if (Array.isArray(data.chatHistory)) appData.chatHistory = data.chatHistory;
             if (Array.isArray(data.letters)) appData.letters = data.letters;
-            if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) {
-                appData.replyGroups = data.replyGroups;
-            } else if (Array.isArray(data.replies)) {
-                appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
-            }
-
+            if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) appData.replyGroups = data.replyGroups;
+            else if (Array.isArray(data.replies)) appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
             if (Array.isArray(data.forumTopics)) appData.forumTopics = data.forumTopics;
             if (Array.isArray(data.forumReplyLib)) appData.forumReplyLib = data.forumReplyLib;
             if (Array.isArray(data.forumTopicTemplates)) appData.forumTopicTemplates = data.forumTopicTemplates;
             if (Array.isArray(data.forumTopicWords)) appData.forumTopicWords = data.forumTopicWords;
             if (Array.isArray(data.playlist)) appData.playlist = data.playlist;
+            if (typeof data.musicFloatingImg === 'string') appData.musicFloatingImg = data.musicFloatingImg;
+            if (Array.isArray(data.books)) appData.books = data.books;
 
             var promises = [];
-
             if (Array.isArray(data.emojiData) && data.emojiData.length > 0) {
                 appData.emojiIds = [];
                 data.emojiData.forEach(function(item) {
@@ -968,64 +1030,34 @@ function importDataFile() {
                         promises.push(saveImageToDB('images', item.id, item.data).catch(function() {}));
                     }
                 });
-            } else {
-                appData.emojiIds = data.emojiIds || [];
-            }
+            } else { appData.emojiIds = data.emojiIds || []; }
 
             if (data.myAvatar && typeof data.myAvatar === 'string' && data.myAvatar.length > 100) {
                 var myId = data.myAvatarId || ('avatar_me_' + Date.now());
-                promises.push(saveImageToDB('avatars', myId, data.myAvatar).then(function() {
-                    appData.myAvatarId = myId;
-                    appData.myAvatar = data.myAvatar;
-                }));
+                promises.push(saveImageToDB('avatars', myId, data.myAvatar).then(function() { appData.myAvatarId = myId; appData.myAvatar = data.myAvatar; }));
             } else {
-                appData.myAvatarId = data.myAvatarId || '';
-                appData.myAvatar = '';
-                if (appData.myAvatarId) {
-                    promises.push(getImageFromDB('avatars', appData.myAvatarId).then(function(img) {
-                        appData.myAvatar = img || '';
-                    }));
-                }
+                appData.myAvatarId = data.myAvatarId || ''; appData.myAvatar = '';
+                if (appData.myAvatarId) promises.push(getImageFromDB('avatars', appData.myAvatarId).then(function(img) { appData.myAvatar = img || ''; }));
             }
 
             if (data.otherAvatar && typeof data.otherAvatar === 'string' && data.otherAvatar.length > 100) {
                 var otherId = data.otherAvatarId || ('avatar_other_' + Date.now());
-                promises.push(saveImageToDB('avatars', otherId, data.otherAvatar).then(function() {
-                    appData.otherAvatarId = otherId;
-                    appData.otherAvatar = data.otherAvatar;
-                }));
+                promises.push(saveImageToDB('avatars', otherId, data.otherAvatar).then(function() { appData.otherAvatarId = otherId; appData.otherAvatar = data.otherAvatar; }));
             } else {
-                appData.otherAvatarId = data.otherAvatarId || '';
-                appData.otherAvatar = '';
-                if (appData.otherAvatarId) {
-                    promises.push(getImageFromDB('avatars', appData.otherAvatarId).then(function(img) {
-                        appData.otherAvatar = img || '';
-                    }));
-                }
+                appData.otherAvatarId = data.otherAvatarId || ''; appData.otherAvatar = '';
+                if (appData.otherAvatarId) promises.push(getImageFromDB('avatars', appData.otherAvatarId).then(function(img) { appData.otherAvatar = img || ''; }));
             }
 
             Promise.all(promises).then(function() {
-                saveData(true);
-                applyTheme();
-                updateHeader();
-                renderChatHistory();
-                renderMoreImages();
-                updateLetterBadge();
+                saveData(true); applyTheme(); updateHeader(); renderChatHistory(); renderMoreImages(); updateLetterBadge();
                 closeModal('subOverlay');
                 showToastLong('数据已成功导入！\n表情包、头像、昵称、词库、聊天记录已恢复', 4000);
             }).catch(function() {
-                saveData(true);
-                applyTheme();
-                updateHeader();
-                renderChatHistory();
-                renderMoreImages();
-                updateLetterBadge();
+                saveData(true); applyTheme(); updateHeader(); renderChatHistory(); renderMoreImages(); updateLetterBadge();
                 closeModal('subOverlay');
                 showToast('数据已导入，但部分图片恢复失败');
             });
-        } catch(err) {
-            showToast('导入失败，文件格式错误');
-        }
+        } catch(err) { showToast('导入失败，文件格式错误'); }
     };
     reader.readAsText(file);
     document.getElementById('importDataFile').value = '';
@@ -1038,13 +1070,8 @@ function clearChatHistory() {
     Promise.all(ps).then(function() {
         appData.chatHistory = [];
         return saveData(true);
-    }).then(function() {
-        return autoCleanOrphanImages();
-    }).then(function(cleaned) {
-        renderChatHistory();
-        closeModal('subOverlay');
-        showToast('聊天记录已清除' + (cleaned > 0 ? '，释放了 ' + cleaned + ' 张图片' : ''));
-    });
+    }).then(function() { return autoCleanOrphanImages(); })
+    .then(function(cleaned) { renderChatHistory(); closeModal('subOverlay'); showToast('聊天记录已清除' + (cleaned > 0 ? '，释放了 ' + cleaned + ' 张图片' : '')); });
 }
 function cleanOrphanImages() {
     autoCleanOrphanImages().then(function(cleaned) {
@@ -1054,20 +1081,7 @@ function cleanOrphanImages() {
 }
 function openSettings() { openModal('settingsOverlay'); }
 function openSubModal(html) { document.getElementById('subModal').innerHTML = html; openModal('subOverlay'); }
-function closeAllModals() {
-    closeModal('settingsOverlay');
-    closeModal('subOverlay');
-    closeModal('photoOverlay');
-    closeModal('letterOverlay');
-    closeModal('forumOverlay');
-    closeModal('forumDetailOverlay');
-    var morePanel = document.getElementById('morePanel');
-    if (morePanel) morePanel.style.display = 'none';
-    var forumMenu = document.getElementById('forumDropdownMenu');
-    if (forumMenu) forumMenu.style.display = 'none';
-    var musicOverlay = document.getElementById('musicOverlay');
-    if (musicOverlay) musicOverlay.classList.remove('show');
-}
+
 // ========== Toast ==========
 function showToast(msg) {
     var t = document.getElementById('toast'); if (!t) return;
@@ -1084,10 +1098,6 @@ function showToastLong(msg, duration) {
 
 // ========== 事件监听 ==========
 document.addEventListener('click', function(e) {
-    if (e.target.id === 'musicOverlay' && typeof closeMusicPlayer === 'function') {
-        closeMusicPlayer();
-        return;
-    }
     if (e.target.id === 'forumDetailOverlay') {
         e.stopPropagation();
         if (typeof closeTopicDetail === 'function') closeTopicDetail();
@@ -1112,9 +1122,7 @@ window.addEventListener('beforeunload', function() { saveData(true); });
 window.addEventListener('pagehide', function() { saveData(true); });
 setInterval(function() { saveData(true); }, 15000);
 window.addEventListener('storage', function(e) {
-    if (e.key === STORAGE_KEY && e.newValue) {
-        console.log('检测到其他标签页的数据更新');
-    }
+    if (e.key === STORAGE_KEY && e.newValue) { console.log('检测到其他标签页的数据更新'); }
 });
 
 // ========== 视频弹幕聊天接口 ==========
@@ -1136,8 +1144,6 @@ if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length ==
 if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) {
     appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
 }
-if (!Array.isArray(appData.books)) appData.books = [];
-if (!Array.isArray(appData.playlist)) appData.playlist = [];
 
 function addTransferCard(amount, note, type, fromHistory) {
     var chat = document.getElementById('chat');
@@ -1159,10 +1165,10 @@ function addTransferCard(amount, note, type, fromHistory) {
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
 }
+
 function collectTransfer(cardElement, amount, note) {
     if (cardElement.querySelector('.transfer-status').textContent === '已收款') {
-        showToast('已经收过了');
-        return;
+        showToast('已经收过了'); return;
     }
     cardElement.querySelector('.transfer-status').textContent = '已收款';
     cardElement.querySelector('.transfer-status').style.color = 'var(--success)';
@@ -1217,7 +1223,7 @@ function openTransferModal() {
 
 function openTransferAmountSettings() {
     var html = '<h4>对方转账金额</h4>';
-    html += '<div class="form-row"><input type="number" id="newTransferAmount" placeholder="输入金额，如 5.20" step="0.01" min="0.01"><button class="btn-sm" onclick="addTransferAmount()" style="margin-top:4px;">添加</button></div>';
+    html += '<div class="form-row"><input type="number" id="newTransferAmount" placeholder="输入金额" step="0.01" min="0.01"><button class="btn-sm" onclick="addTransferAmount()" style="margin-top:4px;">添加</button></div>';
     html += '<div style="max-height:180px;overflow-y:auto;" id="transferAmountList">';
     appData.transferAmounts.forEach(function(a,i){ html += '<div class="list-item"><span>¥ '+a+'</span><button class="del-sm" onclick="delTransferAmount('+i+')">删除</button></div>'; });
     html += '</div>';
