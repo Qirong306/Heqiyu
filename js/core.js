@@ -179,7 +179,8 @@ var DEFAULT_DATA = {
     forumTopics: [],
     forumReplyLib: [{ name: '默认话题词库', replies: ['有道理', '我也这么想', '没想过这个问题呢', '挺有意思的', '让我想想...'] }],
     forumTopicTemplates: ['你觉得{词}怎么样？', '聊聊{词}吧', '最近{词}有什么新鲜事吗？', '你喜欢{词}吗？', '{词}这个话题你感兴趣吗？'],
-    forumTopicWords: ['夏天的夜晚', '一个人旅行', '养宠物', '下雨天', '深夜食堂', '童年的味道', '最喜欢的电影', '理想的生活', '咖啡还是茶']
+    forumTopicWords: ['夏天的夜晚', '一个人旅行', '养宠物', '下雨天', '深夜食堂', '童年的味道', '最喜欢的电影', '理想的生活', '咖啡还是茶'],
+    musicFloatingImg: ''
 };
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -222,6 +223,7 @@ function loadData() {
             if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
             //音乐加载
             if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
+            if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
         }
     }
     if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
@@ -261,7 +263,8 @@ function saveData(immediate) {
             forumTopicWords: appData.forumTopicWords,
             transferAmounts: appData.transferAmounts,
             transferNotes: appData.transferNotes,
-            playlist: appData.playlist
+            playlist: appData.playlist,
+            musicFloatingImg: appData.musicFloatingImg || '',
         };
         var jsonStr = JSON.stringify(saveObj);
         try {
@@ -614,40 +617,45 @@ function renderChatHistory() {
     var promises = [];
     appData.chatHistory.forEach(function(m) {
         if (m.type === 'transfer_me' || m.type === 'transfer_other') {
-    var d = document.createElement('div');
-    d.className = 'msg ' + (m.type === 'transfer_me' ? 'me' : 'other');
-    var av = getAvatarHTMLSync(m.type === 'transfer_me');
-    var handler = m.type === 'transfer_other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
-    var cardHTML = '<div class="transfer-card ' + (m.type === 'transfer_me' ? 'transfer-me' : 'transfer-other') + '">';
-    cardHTML += '<div class="transfer-label">' + (m.type === 'transfer_me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
-    cardHTML += '<div class="transfer-amount">¥ ' + m.amount + '</div>';
-    if (m.note) cardHTML += '<div class="transfer-note">' + escapeHTML(m.note) + '</div>';
-    cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
-    cardHTML += '</div>';
-    d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-    chat.appendChild(d);
-} else if (m.type === 'system') {
+            var d = document.createElement('div');
+            d.className = 'msg ' + (m.type === 'transfer_me' ? 'me' : 'other');
+            var av = getAvatarHTMLSync(m.type === 'transfer_me');
+            var handler = m.type === 'transfer_other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+            var cardHTML = '<div class="transfer-card ' + (m.type === 'transfer_me' ? 'transfer-me' : 'transfer-other') + '">';
+            cardHTML += '<div class="transfer-label">' + (m.type === 'transfer_me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
+            cardHTML += '<div class="transfer-amount">¥ ' + m.amount + '</div>';
+            if (m.note) cardHTML += '<div class="transfer-note">' + escapeHTML(m.note) + '</div>';
+            cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : (m.fromHistory ? '已收款' : '点击收款')) + '</div>';
+            cardHTML += '</div>';
+            d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+            chat.appendChild(d);
+        } else if (m.type === 'system') {
             var d = document.createElement('div'); d.className = 'system-msg'; d.textContent = m.content; chat.appendChild(d);
+        } else if (m.imageId) {
+            var d = document.createElement('div');
+            d.className = 'msg ' + m.type;
+            var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+            var av = getAvatarHTMLSync(m.type === 'me');
+            d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">加载中...<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+            chat.appendChild(d);
+            (function(dd, mm) {
+                promises.push(getImageFromDB('images', mm.imageId).then(function(img) {
+                    if (mm.isSticker) {
+                        dd.className = 'msg ' + mm.type + ' is-sticker';
+                        dd.querySelector('.bubble').innerHTML = img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]';
+                    } else {
+                        dd.querySelector('.bubble').innerHTML = (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(mm.time) + '</span>';
+                    }
+                }));
+            })(d, m);
         } else {
             var d = document.createElement('div');
             d.className = 'msg ' + m.type;
             var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
             var av = getAvatarHTMLSync(m.type === 'me');
-            if (m.imageId) {
-                promises.push(getImageFromDB('images', m.imageId).then(function(img) {
-                    if (m.isSticker) {
-                        d.className = 'msg ' + m.type + ' is-sticker';
-                        d.innerHTML = '<div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]') + '</div>';
-                    } else {
-                        d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-                    }
-                    chat.appendChild(d);
-                }));
-            } else {
-                var isImg = m.content && m.content.indexOf('data:image/') === 0;
-                d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-                chat.appendChild(d);
-            }
+            var isImg = m.content && m.content.indexOf('data:image/') === 0;
+            d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
+            chat.appendChild(d);
         }
     });
     return Promise.all(promises).then(function() { chat.scrollTop = chat.scrollHeight; });
