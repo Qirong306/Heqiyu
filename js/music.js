@@ -138,6 +138,8 @@ function changeFloatingBallImage() {
             musicFloatingImg = e.target.result;
             showFloatingBall();
             showToast('浮动球图片已更新');
+            appData.musicFloatingImg = musicFloatingImg;
+            if (typeof saveData === 'function') saveData();
         };
         reader.readAsDataURL(file);
     };
@@ -227,8 +229,10 @@ function closeMusicPlayer() {
 function togglePlayPause() {
     if (musicAudio) {
         if (musicAudio.paused) {
+            musicAudio._manualPause = false;
             musicAudio.play();
         } else {
+            musicAudio._manualPause = true;
             musicAudio.pause();
         }
         updatePlayPauseButton();
@@ -282,10 +286,21 @@ function playSong(index) {
             }
             container.innerHTML = '';
             musicAudio = new Audio(song.url);
+            musicAudio._manualPause = false;
             musicAudio.addEventListener('timeupdate', updateProgress);
             musicAudio.addEventListener('play', updatePlayPauseButton);
             musicAudio.addEventListener('pause', updatePlayPauseButton);
             musicAudio.addEventListener('ended', onSongEnd);
+            musicAudio.addEventListener('pause', 
+            function() {
+                if (!musicAudio._manualPause && musicAudio.currentTime > 0 && !musicAudio.ended && document.getElementById('musicOverlay').classList.contains('show')) {
+                    setTimeout(function() {
+                        if (musicAudio && musicAudio.paused && !musicAudio._manualPause) {
+                musicAudio.play().catch(function() {});
+                        }
+                    }, 500);
+                }
+            });
             musicAudio.addEventListener('loadedmetadata', updateProgress);
             musicAudio.play().catch(function() {
                 showToast('播放失败，请手动点击播放');
