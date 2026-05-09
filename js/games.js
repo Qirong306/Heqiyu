@@ -288,8 +288,10 @@ function newGomokuGame() {
             if (gomokuGameOver || gomokuCurrentPlayer !== 'black') return;
             var rect = canvas.getBoundingClientRect();
             var cellSize = canvas.width / (gomokuSize + 1);
-            var x = e.clientX - rect.left;
-            var y = e.clientY - rect.top;
+            var scaleX = canvas.width / rect.width;
+            var scaleY = canvas.height / rect.height;
+            var x = (e.clientX - rect.left) * scaleX;
+            var y = (e.clientY - rect.top) * scaleY;
             var col = Math.round(x / cellSize - 1);
             var row = Math.round(y / cellSize - 1);
             if (row >= 0 && row < gomokuSize && col >= 0 && col < gomokuSize && !gomokuBoard[row][col]) {
