@@ -213,15 +213,12 @@ function loadData() {
             if (Array.isArray(p.letters)) appData.letters = p.letters;
             if (Array.isArray(p.replyGroups) && p.replyGroups.length > 0) appData.replyGroups = p.replyGroups;
             else if (Array.isArray(p.replies) && p.replies.length > 0) appData.replyGroups = [{ name: '默认分组', replies: p.replies }];
-            // 论坛字段加载
             if (Array.isArray(p.forumTopics)) appData.forumTopics = p.forumTopics;
             if (Array.isArray(p.forumReplyLib)) appData.forumReplyLib = p.forumReplyLib;
             if (Array.isArray(p.forumTopicTemplates)) appData.forumTopicTemplates = p.forumTopicTemplates;
             if (Array.isArray(p.forumTopicWords)) appData.forumTopicWords = p.forumTopicWords;
-            // 转账字段加载
             if (Array.isArray(p.transferAmounts)) appData.transferAmounts = p.transferAmounts;
             if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
-            //音乐加载
             if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
             if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
         }
@@ -236,6 +233,14 @@ function loadData() {
     if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
     if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
     if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
+    if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) {
+        appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
+    }
+    if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) {
+        appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
+    }
+    if (!Array.isArray(appData.playlist)) appData.playlist = [];
+    if (!Array.isArray(appData.books)) appData.books = [];
     var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
     var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
     return Promise.all([p1, p2]).then(function() {
@@ -264,7 +269,7 @@ function saveData(immediate) {
             transferAmounts: appData.transferAmounts,
             transferNotes: appData.transferNotes,
             playlist: appData.playlist,
-            musicFloatingImg: appData.musicFloatingImg || '',
+            musicFloatingImg: appData.musicFloatingImg || ''
         };
         var jsonStr = JSON.stringify(saveObj);
         try {
@@ -530,7 +535,6 @@ function triggerAutoReply() {
     function sendNext(index) {
         if (index >= replyCount) return;
         setTimeout(function() {
-            // 30% 概率发转账
             if (Math.random() < 0.3 && appData.transferAmounts.length > 0 && appData.transferNotes.length > 0) {
                 var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
                 var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
@@ -561,29 +565,27 @@ function sendRandomReply() {
         var eid = appData.emojiIds[Math.floor(Math.random() * appData.emojiIds.length)];
         return getImageFromDB('images', eid).then(function(img) {
             if (!img) return false;
-            // 20%概率引用最近一条你的消息
-            var quoteChance = Math.random();
-            if (quoteChance < 0.2) {
-                var lastMyMsg = null;
-                for (var i = appData.chatHistory.length - 1; i >= 0; i--) {
-                    if (appData.chatHistory[i].type === 'me' && appData.chatHistory[i].content && appData.chatHistory[i].content.length > 0) {
-                        lastMyMsg = appData.chatHistory[i].content;
-                        break;
-                    }
-                }
-                if (lastMyMsg) {addQuoteMessage(lastMyMsg.substring(0, 50), content, 'other');
-                    appData.chatHistory.push({ type: 'other', content: content, quote: lastMyMsg.substring(0, 50), time: Date.now() });
-                    return saveData().then(function() { return true; });
-                }
-            }
-            addMessage(content, 'other', false);
-            appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
-            return saveData().then(function() { return true; });
+            addMessage(img, 'other', true, true);
             appData.chatHistory.push({ type: 'other', content: '', imageId: eid, time: Date.now(), isSticker: true });
             return saveData().then(function() { return true; });
         });
     } else {
         var content = allReplies[Math.floor(Math.random() * allReplies.length)];
+        // 20%概率引用最近一条用户消息
+        if (Math.random() < 0.2) {
+            var lastMyMsg = null;
+            for (var i = appData.chatHistory.length - 1; i >= 0; i--) {
+                if (appData.chatHistory[i].type === 'me' && appData.chatHistory[i].content && appData.chatHistory[i].content.length > 0) {
+                    lastMyMsg = appData.chatHistory[i].content;
+                    break;
+                }
+            }
+            if (lastMyMsg) {
+                addQuoteMessage(lastMyMsg.substring(0, 50), content, 'other');
+                appData.chatHistory.push({ type: 'other', content: content, quote: lastMyMsg.substring(0, 50), time: Date.now() });
+                return saveData().then(function() { return true; });
+            }
+        }
         addMessage(content, 'other', false);
         appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
         return saveData().then(function() { return true; });
@@ -591,7 +593,9 @@ function sendRandomReply() {
 }
 function sendMsg() {
     var input = document.getElementById('msgInput'); var msg = input.value.trim();
-    // 检测引用：/引用 被引用的内容 | 我的回复
+    if (!msg) return;
+
+    // 检测引用命令：/引用 被引用内容 | 回复内容
     if (msg.indexOf('/引用') === 0 || msg.indexOf('/quote') === 0) {
         var quoteContent = msg.replace(/^\/\S+\s*/, '');
         var parts = quoteContent.split('|');
@@ -605,7 +609,7 @@ function sendMsg() {
         setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
         return;
     }
-    if (!msg) return;
+
     addMessage(msg, 'me');
     appData.chatHistory.push({ type: 'me', content: msg, time: Date.now() });
     input.value = ''; saveData();
@@ -629,11 +633,7 @@ function addQuoteMessage(quotedText, replyText, type) {
     div.className = 'msg ' + type;
     var handler = type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
     var av = getAvatarHTMLSync(type === 'me');
-    var quoteHTML = '<div class="bubble">';
-    quoteHTML += '<div style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:12px;color:var(--text-secondary);">' + escapeHTML(quotedText) + '</div>';
-    quoteHTML += '<div>' + escapeHTML(replyText) + '</div>';
-    quoteHTML += '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
-    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div>' + quoteHTML;
+    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble"><div style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:12px;color:var(--text-secondary);">' + escapeHTML(quotedText) + '</div><div>' + escapeHTML(replyText) + '</div><span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
 }
@@ -670,44 +670,29 @@ function renderChatHistory() {
             cardHTML += '<div class="transfer-label">' + (m.type === 'transfer_me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
             cardHTML += '<div class="transfer-amount">¥ ' + m.amount + '</div>';
             if (m.note) cardHTML += '<div class="transfer-note">' + escapeHTML(m.note) + '</div>';
-            cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : (m.fromHistory ? '已收款' : '点击收款')) + '</div>';
+            cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
             cardHTML += '</div>';
             d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
             chat.appendChild(d);
         } else if (m.type === 'system') {
             var d = document.createElement('div'); d.className = 'system-msg'; d.textContent = m.content; chat.appendChild(d);
-        } else if (m.imageId) {
-            var d = document.createElement('div');
-            d.className = 'msg ' + m.type;
-            var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
-            var av = getAvatarHTMLSync(m.type === 'me');
-            d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">加载中...<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-            chat.appendChild(d);
-            (function(dd, mm) {
-                promises.push(getImageFromDB('images', mm.imageId).then(function(img) {
-                    if (mm.isSticker) {
-                        dd.className = 'msg ' + mm.type + ' is-sticker';
-                        dd.querySelector('.bubble').innerHTML = img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]';
-                    } else {
-                        dd.querySelector('.bubble').innerHTML = (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(mm.time) + '</span>';
-                    }
-                }));
-            })(d, m);
         } else {
             var d = document.createElement('div');
             d.className = 'msg ' + m.type;
             var handler = m.type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
             var av = getAvatarHTMLSync(m.type === 'me');
             if (m.imageId) {
-                promises.push(getImageFromDB('images', m.imageId).then(function(img) {
-                    if (m.isSticker) {
-                        d.className = 'msg ' + m.type + ' is-sticker';
-                        d.innerHTML = '<div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]') + '</div>';
-                    } else {
-                        d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-                    }
-                    chat.appendChild(d);
-                }));
+                (function(dd, mm) {
+                    promises.push(getImageFromDB('images', mm.imageId).then(function(img) {
+                        if (mm.isSticker) {
+                            dd.className = 'msg ' + mm.type + ' is-sticker';
+                            dd.innerHTML = '<div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[已失效]\';">' : '[已过期]') + '</div>';
+                        } else {
+                            dd.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (img ? '<img class="msg-image" src="' + img + '" onerror="this.parentElement.textContent=\'[图片已失效]\';">' : '[图片已过期]') + '<span class="msg-time">' + formatTimeShort(mm.time) + '</span></div>';
+                        }
+                        chat.appendChild(dd);
+                    }));
+                })(d, m);
             } else if (m.quote) {
                 d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble"><div style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:12px;color:var(--text-secondary);">' + escapeHTML(m.quote) + '</div><div>' + escapeHTML(m.content) + '</div><span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
                 chat.appendChild(d);
@@ -716,6 +701,7 @@ function renderChatHistory() {
                 d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
                 chat.appendChild(d);
             }
+        }
     });
     return Promise.all(promises).then(function() { chat.scrollTop = chat.scrollHeight; });
 }
@@ -966,7 +952,6 @@ function importDataFile() {
                 appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
             }
 
-            // 论坛音乐字段
             if (Array.isArray(data.forumTopics)) appData.forumTopics = data.forumTopics;
             if (Array.isArray(data.forumReplyLib)) appData.forumReplyLib = data.forumReplyLib;
             if (Array.isArray(data.forumTopicTemplates)) appData.forumTopicTemplates = data.forumTopicTemplates;
@@ -1126,20 +1111,17 @@ function vdAddMessage(content, type) {
     }
     saveData();
 }
-// ==================== 转账系统 ====================
 
-// 兜底初始化
+// ==================== 转账系统 ====================
 if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) {
     appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
 }
 if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) {
     appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
 }
-// 书籍音乐字段
 if (!Array.isArray(appData.books)) appData.books = [];
 if (!Array.isArray(appData.playlist)) appData.playlist = [];
 
-// 转账卡片渲染
 function addTransferCard(amount, note, type, fromHistory) {
     var chat = document.getElementById('chat');
     var div = document.createElement('div');
@@ -1173,7 +1155,6 @@ function collectTransfer(cardElement, amount, note) {
     saveData();
 }
 
-// 收转账（从弹窗触发）
 function receiveTransferFromOtherModal() {
     if (!appData.transferAmounts.length) { showToast('请先设置对方转账金额'); return; }
     if (!appData.transferNotes.length) { showToast('请先设置对方转账备注'); return; }
@@ -1185,7 +1166,6 @@ function receiveTransferFromOtherModal() {
     showToast('收到 ' + appData.otherName + ' 的转账 ¥' + amt);
 }
 
-// 我向对方转账
 function sendTransferToOther() {
     var amt = document.getElementById('transferAmountInput').value.trim();
     var note = document.getElementById('transferNoteInput').value.trim();
@@ -1198,7 +1178,6 @@ function sendTransferToOther() {
     showToast('已向 ' + appData.otherName + ' 转账 ¥' + amount);
 }
 
-// 转账弹窗
 function openTransferModal() {
     var html = '<div style="display:flex;justify-content:center;align-items:center;position:relative;margin-bottom:12px;">';
     html += '<h4 style="margin:0;">转账</h4>';
@@ -1219,7 +1198,6 @@ function openTransferModal() {
     openSubModal(html);
 }
 
-// 金额设置弹窗
 function openTransferAmountSettings() {
     var html = '<h4>对方转账金额</h4>';
     html += '<div class="form-row"><input type="number" id="newTransferAmount" placeholder="输入金额，如 5.20" step="0.01" min="0.01"><button class="btn-sm" onclick="addTransferAmount()" style="margin-top:4px;">添加</button></div>';
@@ -1236,7 +1214,6 @@ function addTransferAmount() {
 }
 function delTransferAmount(i){ appData.transferAmounts.splice(i,1); saveData(); openTransferAmountSettings(); }
 
-// 备注设置弹窗
 function openTransferNoteSettings() {
     var html = '<h4>对方转账备注</h4>';
     html += '<div class="form-row"><input type="text" id="newTransferNote" placeholder="输入备注文案"><button class="btn-sm" onclick="addTransferNote()" style="margin-top:4px;">添加</button></div>';
@@ -1249,7 +1226,6 @@ function openTransferNoteSettings() {
 function addTransferNote(){ var v=document.getElementById('newTransferNote').value.trim(); if(!v){showToast('请输入备注');return;} appData.transferNotes.push(v); saveData(); openTransferNoteSettings(); }
 function delTransferNote(i){ appData.transferNotes.splice(i,1); saveData(); openTransferNoteSettings(); }
 
-// 下拉菜单开关
 function toggleTransferDropdown() {
     var menu = document.getElementById('transferDropdownMenu');
     if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
@@ -1259,7 +1235,6 @@ function closeTransferDropdown() {
     if (menu) menu.style.display = 'none';
 }
 
-// 关闭下拉（点击其他地方）
 document.addEventListener('click', function(e) {
     if (!e.target.closest('#transferDropdownMenu') && !e.target.closest('[onclick*="toggleTransferDropdown"]')) {
         closeTransferDropdown();
