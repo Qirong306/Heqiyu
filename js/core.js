@@ -824,7 +824,55 @@ function openReplyModal() {
         });
         groupsHtml += '<div class="group-block"><div class="group-header"><span>' + group.name + ' (' + group.replies.length + '条)</span><div><button onclick="renameGroup(' + g + ')">重命名</button><button onclick="delGroup(' + g + ')" style="color:var(--danger);">删除分组</button></div></div><div class="form-row"><textarea id="batchAdd_' + g + '" placeholder="批量添加回复（一行一个，自动去重）"></textarea></div><div class="btn-row"><button class="btn-sm" onclick="addReplyBatchToGroup(' + g + ')">批量添加</button><button class="btn-sm outline" onclick="delSelectedReplies(' + g + ')">删除选中</button><button class="btn-sm outline" onclick="selectAllInGroup(' + g + ')">全选</button></div><div style="max-height:150px;overflow-y:auto;">' + (replyItems || '<div style="text-align:center;color:var(--text-system);padding:8px;">暂无回复</div>') + '</div></div>';
     });
-    openSubModal('<h4>自定义回复</h4><button class="btn-sm" onclick="addNewGroup()" style="margin-bottom:10px;">+ 新建分组</button><div style="max-height:50vh;overflow-y:auto;">' + groupsHtml + '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>');
+    
+    var headerHtml = '<div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:10px;">';
+    headerHtml += '<h4 style="margin:0;">自定义回复</h4>';
+    headerHtml += '<div style="position:absolute;right:0;">';
+    headerHtml += '<span onclick="event.stopPropagation();toggleReplyLibMenu()" style="font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px;">&#9776;</span>';
+    headerHtml += '<div id="replyLibMenu" style="display:none;position:absolute;top:30px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">';
+    headerHtml += '<div onclick="exportReplyLib();closeReplyLibMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出回复</div>';
+    headerHtml += '<div onclick="importReplyLib();closeReplyLibMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">导入回复</div>';
+    headerHtml += '</div></div></div>';
+    
+    openSubModal(headerHtml + '<button class="btn-sm" onclick="addNewGroup()" style="margin-bottom:10px;">+ 新建分组</button><div style="max-height:50vh;overflow-y:auto;">' + groupsHtml + '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>');
+}
+function toggleReplyLibMenu() {
+    var m = document.getElementById('replyLibMenu');
+    if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block';
+}
+function closeReplyLibMenu() {
+    var m = document.getElementById('replyLibMenu');
+    if (m) m.style.display = 'none';
+}
+function exportReplyLib() {
+    copyToClipboard(JSON.stringify({ replyGroups: appData.replyGroups }, null, 2), '自定义回复');
+    showToast('回复词库已复制到剪贴板');
+}
+function importReplyLib() {
+    var input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json';
+    input.onchange = function() {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var data = JSON.parse(e.target.result);
+                if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) {
+                    appData.replyGroups = data.replyGroups;
+                } else if (Array.isArray(data) && data.length > 0) {
+                    appData.replyGroups = [{ name: '导入分组', replies: data }];
+                } else {
+                    throw new Error('格式错误');
+                }
+                saveData();
+                openReplyModal();
+                showToast('回复词库已导入');
+            } catch(err) { showToast('文件格式错误'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 }
 function addNewGroup() { var n = prompt('分组名称'); if (!n) return; appData.replyGroups.push({name:n,replies:[]}); saveData(); openReplyModal(); showToast('分组已创建'); }
 function renameGroup(g) { var n = prompt('新名称', appData.replyGroups[g].name); if (!n) return; appData.replyGroups[g].name = n; saveData(); openReplyModal(); showToast('已重命名'); }
@@ -1166,7 +1214,14 @@ function addTransferNote(){ var v=document.getElementById('newTransferNote').val
 function delTransferNote(i){ appData.transferNotes.splice(i,1);saveData();openTransferNoteSettings(); }
 function toggleTransferDropdown(){ var m=document.getElementById('transferDropdownMenu'); if(m)m.style.display=m.style.display==='block'?'none':'block'; }
 function closeTransferDropdown(){ var m=document.getElementById('transferDropdownMenu'); if(m)m.style.display='none'; }
-document.addEventListener('click',function(e){ if(!e.target.closest('#transferDropdownMenu')&&!e.target.closest('[onclick*="toggleTransferDropdown"]'))closeTransferDropdown(); });
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#transferDropdownMenu') && !e.target.closest('[onclick*="toggleTransferDropdown"]')) {
+        closeTransferDropdown();
+    }
+    if (!e.target.closest('#replyLibMenu') && !e.target.closest('[onclick*="toggleReplyLibMenu"]')) {
+        closeReplyLibMenu();
+    }
+});
 
 // ========== 启动 ==========
 initApp().then(function(){ console.log('甜心助手启动成功！'); }).catch(function(e){ console.error('启动失败:', e); });
