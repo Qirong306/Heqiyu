@@ -1,4 +1,4 @@
-// ==================== 论坛功能模块（修复版） ====================
+// ==================== 论坛功能模块（完整版·支持多选随机·支持删除话题） ====================
 
 // 论坛数据初始化
 if (!Array.isArray(appData.forumTopics)) {
@@ -42,7 +42,6 @@ var newTopicOptions = [];
 
 // ==================== 论坛面板管理 ====================
 function openForum() {
-    // 关闭其他弹窗
     if (typeof closeAllModals === 'function') {
         closeAllModals();
     }
@@ -118,7 +117,7 @@ function renderForumTopics() {
                     if (topic.optionSelections[key] !== undefined) selectedCount++;
                 }
             }
-            html += ' · ' + selectedCount + ' 人参与';
+            if (selectedCount > 0) html += ' · 已选' + selectedCount + '项';
         }
         html += '</div>';
         html += '</div>';
@@ -175,7 +174,7 @@ function renderNewTopicForm() {
         html += '</div>';
 
         html += '<div style="font-size:11px;color:var(--text-system);margin-bottom:8px;text-align:center;">';
-        html += '对方看到后会随机选择一个选项回复';
+        html += '对方看到后会随机选择1~3个选项回复';
         html += '</div>';
     }
 
@@ -254,10 +253,7 @@ function createNewTopic() {
 
     saveData();
     
-    // 关闭子弹窗
     closeModal('subOverlay');
-    
-    // 重新打开论坛
     openForum();
 
     if (topic.isOption) {
@@ -274,31 +270,41 @@ function cancelNewTopic() {
     openForum();
 }
 
-// ==================== AI 自动选择选项 ====================
+// ==================== AI 自动多选选项 ====================
 function autoSelectOption(topic) {
     if (!topic.isOption || !topic.options || topic.options.length === 0) return;
 
     var freshTopic = appData.forumTopics.find(function(t) { return t.id === topic.id; });
     if (!freshTopic) return;
 
-    var randomIndex = Math.floor(Math.random() * freshTopic.options.length);
-    var selectedOption = freshTopic.options[randomIndex];
-
     if (!freshTopic.optionSelections) freshTopic.optionSelections = {};
-    freshTopic.optionSelections['ai'] = randomIndex;
 
-    var replyContent = '我选「' + selectedOption + '」！';
+    // 随机选1~3个选项
+    var count = Math.min(Math.floor(Math.random() * 3) + 1, freshTopic.options.length);
+    var shuffled = freshTopic.options.slice().sort(function() { return Math.random() - 0.5; });
+    var selected = shuffled.slice(0, count);
 
     if (!appData.forumReplies[topic.id]) {
         appData.forumReplies[topic.id] = [];
     }
+
+    var selectedNames = [];
+    selected.forEach(function(opt) {
+        var idx = freshTopic.options.indexOf(opt);
+        if (idx >= 0) {
+            freshTopic.optionSelections['ai_' + idx] = idx;
+            selectedNames.push(opt);
+        }
+    });
+
+    var replyContent = '我选：' + selectedNames.join('、');
 
     appData.forumReplies[topic.id].push({
         author: appData.otherName || '甜心助手',
         content: replyContent,
         time: Date.now(),
         isOptionSelect: true,
-        selectedOptionIndex: randomIndex
+        selectedOptions: selectedNames
     });
 
     saveData();
@@ -364,7 +370,6 @@ function openTopicDetail(topicId) {
 
     var html = '';
     
-    // 可滚动内容区
     html += '<div style="max-height:50vh;overflow-y:auto;padding-right:2px;">';
 
     html += '<h4>' + escapeHTML(topic.title || '') + '</h4>';
@@ -383,11 +388,16 @@ function openTopicDetail(topicId) {
         html += '<div style="margin-bottom:10px;">';
         html += '<div style="font-size:12px;color:var(--text);margin-bottom:4px;">选项：</div>';
         for (var o = 0; o < topic.options.length; o++) {
-            var isSelected = topic.optionSelections && topic.optionSelections['ai'] === o;
+            var isSelected = false;
+            if (topic.optionSelections) {
+                for (var k in topic.optionSelections) {
+                    if (topic.optionSelections[k] === o) { isSelected = true; break; }
+                }
+            }
             html += '<div style="background:var(--item-bg);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:4px;font-size:13px;border:2px solid ' + (isSelected ? 'var(--accent)' : 'transparent') + ';">';
             html += escapeHTML(topic.options[o]);
             if (isSelected) {
-                html += '<div style="font-size:10px;color:var(--accent);margin-top:2px;">-- ' + escapeHTML(appData.otherName || '甜心助手') + '选了这项</div>';
+                html += '<span style="font-size:10px;color:var(--accent);margin-left:4px;">已选</span>';
             }
             html += '</div>';
         }
@@ -413,7 +423,7 @@ function openTopicDetail(topicId) {
         }
     }
     
-    html += '</div>'; // 关闭滚动容器
+    html += '</div>';
 
     // 底部固定栏
     html += '<div style="display:flex;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);flex-shrink:0;">';
@@ -432,8 +442,10 @@ function openTopicDetail(topicId) {
     }
 }
 
+// ==================== 关闭话题详情 ====================
 function closeTopicDetail() {
-    document.getElementById('forumDetailOverlay').classList.remove('show');
+    var overlay = document.getElementById('forumDetailOverlay');
+    if (overlay) overlay.classList.remove('show');
     currentViewingTopicId = null;
     openForum();
 }
@@ -549,7 +561,6 @@ function exportForumJSON() {
     if (typeof copyToClipboard === 'function') {
         copyToClipboard(jsonStr, '话题数据');
     } else {
-        // 兜底
         var ta = document.createElement('textarea');
         ta.value = jsonStr;
         ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
@@ -717,10 +728,15 @@ function addForumReplyBatch(g) {
         return;
     }
 
-    appData.forumReplyLib[g].replies = (appData.forumReplyLib[g].replies || []).concat(lines);
+    // 去重
+    var existing = appData.forumReplyLib[g].replies || [];
+    var newLines = lines.filter(function(line) { return existing.indexOf(line) === -1; });
+    if (newLines.length === 0) { showToast('所有内容已存在'); return; }
+
+    appData.forumReplyLib[g].replies = existing.concat(newLines);
     saveData();
     openForumReplyLib();
-    showToast('已添加 ' + lines.length + ' 条回复');
+    showToast('已添加 ' + newLines.length + ' 条' + (lines.length - newLines.length > 0 ? '（跳过' + (lines.length - newLines.length) + '条重复）' : ''));
 }
 
 function deleteForumReplyItem(g, r) {
@@ -736,10 +752,7 @@ function addForumReplyLibGroup() {
     var name = prompt('请输入分组名称', '新分组');
     if (!name) return;
 
-    appData.forumReplyLib.push({
-        name: name,
-        replies: []
-    });
+    appData.forumReplyLib.push({ name: name, replies: [] });
     saveData();
     openForumReplyLib();
     showToast('分组已创建');
@@ -835,16 +848,10 @@ function addForumTemplates() {
     if (!textarea) return;
 
     var text = textarea.value.trim();
-    if (!text) {
-        showToast('请输入模板内容');
-        return;
-    }
+    if (!text) { showToast('请输入模板内容'); return; }
 
     var lines = text.split('\n').filter(function(line) { return line.trim(); });
-    if (lines.length === 0) {
-        showToast('没有有效的模板');
-        return;
-    }
+    if (lines.length === 0) { showToast('没有有效的模板'); return; }
 
     appData.forumTopicTemplates = (appData.forumTopicTemplates || []).concat(lines);
     saveData();
@@ -866,16 +873,10 @@ function addForumWords() {
     if (!textarea) return;
 
     var text = textarea.value.trim();
-    if (!text) {
-        showToast('请输入词语');
-        return;
-    }
+    if (!text) { showToast('请输入词语'); return; }
 
     var lines = text.split('\n').filter(function(line) { return line.trim(); });
-    if (lines.length === 0) {
-        showToast('没有有效的词语');
-        return;
-    }
+    if (lines.length === 0) { showToast('没有有效的词语'); return; }
 
     appData.forumTopicWords = (appData.forumTopicWords || []).concat(lines);
     saveData();
@@ -896,7 +897,6 @@ function deleteForumWordItem(index) {
 function openForumSubModal(html) {
     var subModal = document.getElementById('subModal');
     var subOverlay = document.getElementById('subOverlay');
-    
     if (subModal && subOverlay) {
         subModal.innerHTML = html;
         subOverlay.classList.add('show');
@@ -908,17 +908,6 @@ function cancelForumSubAction() {
     openForum();
 }
 
-// ==================== 事件监听 ====================
-document.addEventListener('click', function(e) {
-    if (e.target.id === 'forumOverlay') closeForum();
-    if (e.target.id === 'forumDetailOverlay') closeTopicDetail();
-    
-    var menu = document.getElementById('forumDropdownMenu');
-    if (menu && !e.target.closest('#forumDropdownMenu') && !e.target.closest('[onclick*="toggleForumMenu"]')) {
-        menu.style.display = 'none';
-    }
-});
-
 // ==================== 更多面板入口 ====================
 function addForumToMorePanel() {
     var morePanel = document.querySelector('.more-panel-grid-top');
@@ -927,9 +916,7 @@ function addForumToMorePanel() {
         forumBtn.className = 'more-item-text';
         forumBtn.id = 'forumMoreBtn';
         forumBtn.onclick = function() {
-            if (typeof toggleMorePanel === 'function') {
-                toggleMorePanel();
-            }
+            if (typeof toggleMorePanel === 'function') toggleMorePanel();
             openForum();
         };
         forumBtn.textContent = '论坛';
@@ -937,7 +924,6 @@ function addForumToMorePanel() {
     }
 }
 
-// 页面加载时添加入口
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(addForumToMorePanel, 200);
