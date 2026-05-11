@@ -1,4 +1,4 @@
-// ==================== 论坛功能模块（完整版·支持多选随机·支持删除话题） ====================
+// ==================== 论坛功能模块（完整版·单选/多选·删除话题·全量备份兼容） ====================
 
 // 论坛数据初始化
 if (!Array.isArray(appData.forumTopics)) {
@@ -39,6 +39,7 @@ if (!Array.isArray(appData.forumTopicWords)) {
 var currentViewingTopicId = null;
 var newTopicType = 'normal';
 var newTopicOptions = [];
+var newTopicSelectMode = 'multi'; // 'single' 或 'multi'
 
 // ==================== 论坛面板管理 ====================
 function openForum() {
@@ -100,7 +101,7 @@ function renderForumTopics() {
         var topic = appData.forumTopics[i];
         var safeId = (topic.id || '').replace(/'/g, "\\'");
         var replyCount = (appData.forumReplies[topic.id] || []).length;
-        var typeLabel = topic.isOption ? '选项' : '讨论';
+        var typeLabel = topic.isOption ? (topic.selectMode === 'single' ? '单选' : '多选') : '讨论';
 
         html += '<div class="list-item" onclick="openTopicDetail(\'' + safeId + '\')" style="cursor:pointer;flex-direction:column;align-items:flex-start;">';
         html += '<div style="display:flex;align-items:center;gap:6px;width:100%;">';
@@ -134,6 +135,7 @@ function newForumTopic() {
 
     newTopicType = 'normal';
     newTopicOptions = [];
+    newTopicSelectMode = 'multi';
     renderNewTopicForm();
 }
 
@@ -173,8 +175,15 @@ function renderNewTopicForm() {
         html += '</div>';
         html += '</div>';
 
+        // 单选/多选切换
+        html += '<div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px;">';
+        html += '<span style="font-size:11px;color:var(--text-secondary);">选择模式：</span>';
+        html += '<button class="btn-sm ' + (newTopicSelectMode === 'single' ? '' : 'outline') + '" onclick="setSelectMode(\'single\')" style="font-size:11px;padding:4px 10px;">单选</button>';
+        html += '<button class="btn-sm ' + (newTopicSelectMode === 'multi' ? '' : 'outline') + '" onclick="setSelectMode(\'multi\')" style="font-size:11px;padding:4px 10px;">多选</button>';
+        html += '</div>';
+
         html += '<div style="font-size:11px;color:var(--text-system);margin-bottom:8px;text-align:center;">';
-        html += '对方看到后会随机选择1~3个选项回复';
+        html += '对方看到后会' + (newTopicSelectMode === 'single' ? '随机选择1个选项回复' : '随机选择1~3个选项回复');
         html += '</div>';
     }
 
@@ -195,7 +204,13 @@ function setTopicType(type) {
     newTopicType = type;
     if (type === 'option') {
         newTopicOptions = [];
+        newTopicSelectMode = 'multi';
     }
+    renderNewTopicForm();
+}
+
+function setSelectMode(mode) {
+    newTopicSelectMode = mode;
     renderNewTopicForm();
 }
 
@@ -245,7 +260,8 @@ function createNewTopic() {
         time: Date.now(),
         isOption: newTopicType === 'option',
         options: newTopicType === 'option' ? newTopicOptions.slice() : null,
-        optionSelections: newTopicType === 'option' ? {} : null
+        optionSelections: newTopicType === 'option' ? {} : null,
+        selectMode: newTopicType === 'option' ? newTopicSelectMode : null
     };
 
     appData.forumTopics.push(topic);
@@ -270,7 +286,7 @@ function cancelNewTopic() {
     openForum();
 }
 
-// ==================== AI 自动多选选项 ====================
+// ==================== AI 自动选择选项（支持单选/多选） ====================
 function autoSelectOption(topic) {
     if (!topic.isOption || !topic.options || topic.options.length === 0) return;
 
@@ -279,8 +295,14 @@ function autoSelectOption(topic) {
 
     if (!freshTopic.optionSelections) freshTopic.optionSelections = {};
 
-    // 随机选1~3个选项
-    var count = Math.min(Math.floor(Math.random() * 3) + 1, freshTopic.options.length);
+    // 根据模式决定选几个
+    var count;
+    if (freshTopic.selectMode === 'single') {
+        count = 1;
+    } else {
+        count = Math.min(Math.floor(Math.random() * 3) + 1, freshTopic.options.length);
+    }
+
     var shuffled = freshTopic.options.slice().sort(function() { return Math.random() - 0.5; });
     var selected = shuffled.slice(0, count);
 
@@ -376,6 +398,9 @@ function openTopicDetail(topicId) {
 
     html += '<div style="font-size:11px;color:var(--text-system);margin-bottom:10px;">';
     html += escapeHTML(topic.author || '') + ' · ' + formatTime(topic.time);
+    if (topic.isOption) {
+        html += ' · ' + (topic.selectMode === 'single' ? '单选' : '多选');
+    }
     html += '</div>';
 
     if (topic.content) {
@@ -520,7 +545,8 @@ function autoGenerateTopic() {
         time: Date.now(),
         isOption: false,
         options: null,
-        optionSelections: null
+        optionSelections: null,
+        selectMode: null
     };
 
     appData.forumTopics.push(topic);
@@ -550,6 +576,7 @@ function exportForumJSON() {
             author: topic.author,
             time: topic.time,
             isOption: topic.isOption,
+            selectMode: topic.selectMode,
             options: topic.options,
             optionSelections: topic.optionSelections,
             replies: replies
@@ -622,6 +649,7 @@ function doImportForumJSON() {
                     author: item.author || appData.myName || '我',
                     time: Date.now(),
                     isOption: item.isOption || false,
+                    selectMode: item.selectMode || 'multi',
                     options: item.options || null,
                     optionSelections: item.optionSelections || null
                 };
@@ -687,7 +715,7 @@ function openForumReplyLib() {
         html += '</div></div>';
 
         html += '<div class="form-row">';
-        html += '<textarea id="batchAddForumReply_' + g + '" placeholder="批量添加回复（一行一个）"></textarea>';
+        html += '<textarea id="batchAddForumReply_' + g + '" placeholder="批量添加回复（一行一个，自动去重）"></textarea>';
         html += '</div>';
         html += '<button class="btn-sm" onclick="addForumReplyBatch(' + g + ')">批量添加</button>';
 
@@ -717,26 +745,20 @@ function addForumReplyBatch(g) {
     if (!textarea) return;
 
     var text = textarea.value.trim();
-    if (!text) {
-        showToast('请输入回复内容');
-        return;
-    }
+    if (!text) { showToast('请输入回复内容'); return; }
 
     var lines = text.split('\n').filter(function(line) { return line.trim(); });
-    if (lines.length === 0) {
-        showToast('没有有效的回复内容');
-        return;
-    }
+    if (lines.length === 0) { showToast('没有有效的回复内容'); return; }
 
-    // 去重
     var existing = appData.forumReplyLib[g].replies || [];
     var newLines = lines.filter(function(line) { return existing.indexOf(line) === -1; });
-    if (newLines.length === 0) { showToast('所有内容已存在'); return; }
+    if (newLines.length === 0) { showToast('所有内容已存在，无新增'); return; }
 
     appData.forumReplyLib[g].replies = existing.concat(newLines);
     saveData();
     openForumReplyLib();
-    showToast('已添加 ' + newLines.length + ' 条' + (lines.length - newLines.length > 0 ? '（跳过' + (lines.length - newLines.length) + '条重复）' : ''));
+    var dupCount = lines.length - newLines.length;
+    showToast('已添加 ' + newLines.length + ' 条' + (dupCount > 0 ? '（跳过 ' + dupCount + ' 条重复）' : ''));
 }
 
 function deleteForumReplyItem(g, r) {
@@ -751,7 +773,6 @@ function deleteForumReplyItem(g, r) {
 function addForumReplyLibGroup() {
     var name = prompt('请输入分组名称', '新分组');
     if (!name) return;
-
     appData.forumReplyLib.push({ name: name, replies: [] });
     saveData();
     openForumReplyLib();
@@ -761,7 +782,6 @@ function addForumReplyLibGroup() {
 function renameForumReplyLib(g) {
     var name = prompt('请输入新名称', appData.forumReplyLib[g].name);
     if (!name) return;
-
     appData.forumReplyLib[g].name = name;
     saveData();
     openForumReplyLib();
@@ -769,11 +789,7 @@ function renameForumReplyLib(g) {
 }
 
 function deleteForumReplyLib(g) {
-    if (appData.forumReplyLib.length <= 1) {
-        showToast('至少保留一个分组');
-        return;
-    }
-
+    if (appData.forumReplyLib.length <= 1) { showToast('至少保留一个分组'); return; }
     if (confirm('确定删除分组"' + appData.forumReplyLib[g].name + '"？')) {
         appData.forumReplyLib.splice(g, 1);
         saveData();
@@ -795,64 +811,42 @@ function openForumTemplateLib() {
     html += '<div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">用于"自动生成话题"的素材库</div>';
 
     html += '<div class="group-block" style="margin-bottom:8px;">';
-    html += '<div class="group-header">';
-    html += '<span>句子模板 (' + templates.length + '条)</span>';
-    html += '</div>';
-    html += '<div class="form-row">';
-    html += '<textarea id="batchAddTemplates" placeholder="批量添加模板（一行一个）&#10;使用 {词} 作为占位符"></textarea>';
-    html += '</div>';
+    html += '<div class="group-header"><span>句子模板 (' + templates.length + '条)</span></div>';
+    html += '<div class="form-row"><textarea id="batchAddTemplates" placeholder="批量添加模板（一行一个）&#10;使用 {词} 作为占位符"></textarea></div>';
     html += '<button class="btn-sm" onclick="addForumTemplates()">批量添加</button>';
-
     if (templates.length > 0) {
         html += '<div style="max-height:120px;overflow-y:auto;margin-top:8px;">';
         for (var t = 0; t < templates.length; t++) {
-            html += '<div class="list-item">';
-            html += '<span style="font-size:11px;flex:1;">' + escapeHTML(templates[t]) + '</span>';
-            html += '<button class="del-sm" onclick="deleteForumTemplateItem(' + t + ')">删除</button>';
-            html += '</div>';
+            html += '<div class="list-item"><span style="font-size:11px;flex:1;">' + escapeHTML(templates[t]) + '</span><button class="del-sm" onclick="deleteForumTemplateItem(' + t + ')">删除</button></div>';
         }
         html += '</div>';
     }
     html += '</div>';
 
     html += '<div class="group-block" style="margin-bottom:8px;">';
-    html += '<div class="group-header">';
-    html += '<span>词语库 (' + words.length + '个)</span>';
-    html += '</div>';
-    html += '<div class="form-row">';
-    html += '<textarea id="batchAddWords" placeholder="批量添加词语（一行一个）"></textarea>';
-    html += '</div>';
+    html += '<div class="group-header"><span>词语库 (' + words.length + '个)</span></div>';
+    html += '<div class="form-row"><textarea id="batchAddWords" placeholder="批量添加词语（一行一个）"></textarea></div>';
     html += '<button class="btn-sm" onclick="addForumWords()">批量添加</button>';
-
     if (words.length > 0) {
         html += '<div style="max-height:120px;overflow-y:auto;margin-top:8px;">';
         for (var w = 0; w < words.length; w++) {
-            html += '<div class="list-item">';
-            html += '<span style="font-size:11px;flex:1;">' + escapeHTML(words[w]) + '</span>';
-            html += '<button class="del-sm" onclick="deleteForumWordItem(' + w + ')">删除</button>';
-            html += '</div>';
+            html += '<div class="list-item"><span style="font-size:11px;flex:1;">' + escapeHTML(words[w]) + '</span><button class="del-sm" onclick="deleteForumWordItem(' + w + ')">删除</button></div>';
         }
         html += '</div>';
     }
     html += '</div>';
 
-    html += '<div class="btn-row">';
-    html += '<button class="btn-sm outline" onclick="cancelForumSubAction()">关闭</button>';
-    html += '</div>';
-
+    html += '<div class="btn-row"><button class="btn-sm outline" onclick="cancelForumSubAction()">关闭</button></div>';
     openForumSubModal(html);
 }
 
 function addForumTemplates() {
     var textarea = document.getElementById('batchAddTemplates');
     if (!textarea) return;
-
     var text = textarea.value.trim();
     if (!text) { showToast('请输入模板内容'); return; }
-
     var lines = text.split('\n').filter(function(line) { return line.trim(); });
     if (lines.length === 0) { showToast('没有有效的模板'); return; }
-
     appData.forumTopicTemplates = (appData.forumTopicTemplates || []).concat(lines);
     saveData();
     openForumTemplateLib();
@@ -871,13 +865,10 @@ function deleteForumTemplateItem(index) {
 function addForumWords() {
     var textarea = document.getElementById('batchAddWords');
     if (!textarea) return;
-
     var text = textarea.value.trim();
     if (!text) { showToast('请输入词语'); return; }
-
     var lines = text.split('\n').filter(function(line) { return line.trim(); });
     if (lines.length === 0) { showToast('没有有效的词语'); return; }
-
     appData.forumTopicWords = (appData.forumTopicWords || []).concat(lines);
     saveData();
     openForumTemplateLib();
