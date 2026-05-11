@@ -267,6 +267,7 @@ function saveData(immediate) {
             chatHistory: appData.chatHistory,
             letters: appData.letters,
             forumTopics: appData.forumTopics,
+            forumReplies: appData.forumReplies,
             forumReplyLib: appData.forumReplyLib,
             forumTopicTemplates: appData.forumTopicTemplates,
             forumTopicWords: appData.forumTopicWords,
@@ -274,6 +275,8 @@ function saveData(immediate) {
             transferNotes: appData.transferNotes,
             playlist: appData.playlist,
             musicFloatingImg: appData.musicFloatingImg || '',
+            scratchPrizes: appData.scratchPrizes,
+            scratchMaxPerDay: appData.scratchMaxPerDay,
             books: appData.books
         };
         var jsonStr = JSON.stringify(saveObj);
@@ -947,6 +950,14 @@ function exportFullAsFile() {
             replyGroups: appData.replyGroups, emojiIds: appData.emojiIds, emojiData: emojiData,
             theme: appData.theme, chatHistory: appData.chatHistory, letters: appData.letters,
             playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
+            forumReplies: appData.forumReplies,
+            forumReplyLib: appData.forumReplyLib,
+            forumTopicTemplates: appData.forumTopicTemplates,
+            forumTopicWords: appData.forumTopicWords,
+            transferAmounts: appData.transferAmounts,
+            transferNotes: appData.transferNotes,
+            scratchPrizes: appData.scratchPrizes,
+            scratchMaxPerDay: appData.scratchMaxPerDay,
             books: appData.books
         };
         var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
@@ -984,6 +995,14 @@ function exportFull() {
             replyGroups: appData.replyGroups, emojiIds: appData.emojiIds, emojiData: emojiData,
             theme: appData.theme, chatHistory: appData.chatHistory, letters: appData.letters,
             playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
+            forumReplies: appData.forumReplies,
+            forumReplyLib: appData.forumReplyLib,
+            forumTopicTemplates: appData.forumTopicTemplates,
+            forumTopicWords: appData.forumTopicWords,
+            transferAmounts: appData.transferAmounts,
+            transferNotes: appData.transferNotes,
+            scratchPrizes: appData.scratchPrizes,
+            scratchMaxPerDay: appData.scratchMaxPerDay,
             books: appData.books
         };
         copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
@@ -1017,6 +1036,11 @@ function importDataFile() {
             if (Array.isArray(data.forumReplyLib)) appData.forumReplyLib = data.forumReplyLib;
             if (Array.isArray(data.forumTopicTemplates)) appData.forumTopicTemplates = data.forumTopicTemplates;
             if (Array.isArray(data.forumTopicWords)) appData.forumTopicWords = data.forumTopicWords;
+            if (typeof data.forumReplies === 'object' && data.forumReplies !== null) appData.forumReplies = data.forumReplies;
+            if (Array.isArray(data.scratchPrizes)) appData.scratchPrizes = data.scratchPrizes;
+            if (typeof data.scratchMaxPerDay === 'number') appData.scratchMaxPerDay = data.scratchMaxPerDay;
+            if (Array.isArray(data.transferAmounts)) appData.transferAmounts = data.transferAmounts;
+            if (Array.isArray(data.transferNotes)) appData.transferNotes = data.transferNotes;
             if (Array.isArray(data.playlist)) appData.playlist = data.playlist;
             if (typeof data.musicFloatingImg === 'string') appData.musicFloatingImg = data.musicFloatingImg;
             if (Array.isArray(data.books)) appData.books = data.books;
