@@ -190,6 +190,10 @@ var DEFAULT_DATA = {
     playlist: [],
     musicFloatingImg: '',
     books: [],
+    wheelItems: [
+    '和朋友一起看日落', '收到一封手写信', '下雨天窝在被子里', '吃到想吃的蛋糕',
+    '陌生人的微笑', '听到喜欢的歌', '完成一项挑战', '闻到咖啡香'],
+    wheelHistory: [],
     vdWordBank: []
 };
 
@@ -240,6 +244,9 @@ function loadData() {
             if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
             // 书籍
             if (Array.isArray(p.books)) appData.books = p.books;
+            //转盘
+            if (Array.isArray(p.wheelItems)) appData.wheelItems = p.wheelItems;
+            if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
             // 视频弹幕词库
             if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
         }
@@ -262,6 +269,8 @@ function loadData() {
     if (typeof appData.scratchMaxPerDay !== 'number') appData.scratchMaxPerDay = 3;
     if (!Array.isArray(appData.playlist)) appData.playlist = [];
     if (!Array.isArray(appData.books)) appData.books = [];
+    if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = ['一起看日落', '收到手写信'];
+    if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
     if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
     var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
     var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
@@ -296,6 +305,8 @@ function saveData(immediate) {
             playlist: appData.playlist,
             musicFloatingImg: appData.musicFloatingImg || '',
             books: appData.books,
+            wheelItems: appData.wheelItems,
+            wheelHistory: appData.wheelHistory,
             vdWordBank: appData.vdWordBank
         };
         var jsonStr = JSON.stringify(saveObj);
@@ -984,7 +995,10 @@ function exportFullAsFile() {
             transferAmounts: appData.transferAmounts, transferNotes: appData.transferNotes,
             scratchPrizes: appData.scratchPrizes, scratchMaxPerDay: appData.scratchMaxPerDay,
             playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
-            books: appData.books, vdWordBank: appData.vdWordBank
+            books: appData.books, vdWordBank: appData.vdWordBank,
+            wheelItems: appData.wheelItems,
+            wheelHistory: appData.wheelHistory,
+            vdWordBank: appData.vdWordBank
         };
         var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
         downloadJSONFile('chat_app_backup_' + timestamp + '.json', backupData);
@@ -1021,7 +1035,10 @@ function exportFull() {
             transferAmounts: appData.transferAmounts, transferNotes: appData.transferNotes,
             scratchPrizes: appData.scratchPrizes, scratchMaxPerDay: appData.scratchMaxPerDay,
             playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
-            books: appData.books, vdWordBank: appData.vdWordBank
+            books: appData.books, vdWordBank: appData.vdWordBank,
+            wheelItems: appData.wheelItems,
+            wheelHistory: appData.wheelHistory,
+            vdWordBank: appData.vdWordBank
         };
         copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
         closeModal('subOverlay');
@@ -1056,6 +1073,8 @@ function importDataFile() {
             if (Array.isArray(data.playlist)) appData.playlist = data.playlist;
             if (typeof data.musicFloatingImg === 'string') appData.musicFloatingImg = data.musicFloatingImg;
             if (Array.isArray(data.books)) appData.books = data.books;
+            if (Array.isArray(data.wheelItems)) appData.wheelItems = data.wheelItems;
+            if (Array.isArray(data.wheelHistory)) appData.wheelHistory = data.wheelHistory;
             if (Array.isArray(data.vdWordBank)) appData.vdWordBank = data.vdWordBank;
             var promises = [];
             if (Array.isArray(data.emojiData) && data.emojiData.length > 0) {
