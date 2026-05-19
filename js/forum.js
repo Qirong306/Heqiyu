@@ -922,5 +922,11 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(addForumToMorePanel, 200);
 }
+// 修复：点击话题详情背景关闭
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'forumDetailOverlay') {
+        closeTopicDetail();
+    }
+});
 
 console.log('论坛模块已加载');
