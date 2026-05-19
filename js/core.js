@@ -4,13 +4,11 @@
 // ========== 存储密钥 ==========
 var STORAGE_KEY = 'chat_app_v20';
 var STORAGE_BACKUP_KEY = 'chat_app_v20_backup';
-var STORAGE_EMERGENCY_KEY = 'chat_app_v20_emergency';  // 新增紧急备份
+var STORAGE_EMERGENCY_KEY = 'chat_app_v20_emergency';
 var DB_NAME = 'ChatAppDB';
-var DB_VERSION = 2;  // 升级版本，增加备份存储
+var DB_VERSION = 2;
 var db = null;
 var MAX_STORAGE_MB = 50;
-var saveTimer = null;
-var saveDebounceMs = 0;  // 改为立即保存
 
 // ========== 引用状态 ==========
 var quotedMessage = null;
@@ -27,7 +25,6 @@ function openDB() {
             if (!database.objectStoreNames.contains('images')) database.createObjectStore('images', { keyPath: 'id' });
             if (!database.objectStoreNames.contains('avatars')) database.createObjectStore('avatars', { keyPath: 'id' });
             if (!database.objectStoreNames.contains('scripts')) database.createObjectStore('scripts', { keyPath: 'id' });
-            // 新增：备份存储区
             if (!database.objectStoreNames.contains('backup')) database.createObjectStore('backup', { keyPath: 'id' });
         };
     });
@@ -41,7 +38,7 @@ function saveImageToDB(storeName, id, dataUrl) {
                 var store = tx.objectStore(storeName);
                 store.put({ id: id, data: dataUrl, time: Date.now(), size: dataUrl.length });
                 tx.oncomplete = function() { resolve(); };
-                tx.onerror = function(e) { console.error('saveImage error:', e); reject(e); };
+                tx.onerror = function(e) { reject(e); };
             } catch(e) { reject(e); }
         });
     });
@@ -202,7 +199,7 @@ var DEFAULT_DATA = {
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// ========== 数据保存（强化版） ==========
+// ========== 数据保存（强化版 - 同步优先） ==========
 function saveData(immediate) {
     var doSave = function() {
         var saveObj = {
@@ -231,119 +228,91 @@ function saveData(immediate) {
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
             vdWordBank: appData.vdWordBank,
-            _savedAt: Date.now(),
-            _version: 2
+            _savedAt: Date.now()
         };
         var jsonStr = JSON.stringify(saveObj);
         
-        // 1. localStorage 主存储
+        // 1. localStorage 主存储（同步，最重要）
         try {
             localStorage.setItem(STORAGE_KEY, jsonStr);
         } catch(e) {
+            console.error('localStorage 写入失败', e);
             if (e.name === 'QuotaExceededError') {
                 autoCleanOrphanImages().then(function() {
-                    try { localStorage.setItem(STORAGE_KEY, jsonStr); } catch(e2) { console.error('localStorage 写入失败', e2); }
+                    try { localStorage.setItem(STORAGE_KEY, jsonStr); } catch(e2) {}
                 });
             }
         }
         
-        // 2. sessionStorage 二级备份
+        // 2. 紧急备份（另一个 key）
+        try { localStorage.setItem(STORAGE_EMERGENCY_KEY, jsonStr); } catch(e) {}
+        
+        // 3. sessionStorage 备份
         try { sessionStorage.setItem(STORAGE_BACKUP_KEY, jsonStr); } catch(e) {}
         
-        // 3. 紧急备份（单独 key，防止主 key 被清理）
-        try { localStorage.setItem(STORAGE_EMERGENCY_KEY, jsonStr.substring(0, 5000000)); } catch(e) {}
-        
-        // 4. IndexedDB 三级备份（最稳定）
+        // 4. IndexedDB 异步备份（不阻塞）
         openDB().then(function(database) {
             try {
                 var tx = database.transaction('backup', 'readwrite');
                 var store = tx.objectStore('backup');
                 store.put({ id: 'appData_backup', data: jsonStr, time: Date.now() });
-                tx.oncomplete = function() { console.log('IndexedDB 备份成功'); };
-                tx.onerror = function(e) { console.error('IndexedDB 备份失败', e); };
-            } catch(e) { console.error('IndexedDB 备份异常', e); }
+            } catch(e) {}
         }).catch(function() {});
         
-        // 5. 保存成功后记录时间戳
+        // 记录最后保存时间
         localStorage.setItem(STORAGE_KEY + '_last_save', Date.now().toString());
     };
     
-    if (immediate === true || saveDebounceMs === 0) {
-        doSave();
-    } else {
-        if (saveTimer) clearTimeout(saveTimer);
-        saveTimer = setTimeout(doSave, saveDebounceMs);
-    }
+    doSave(); // 始终立即保存，不再 debounce
 }
 
-// ========== 数据加载（强化版，支持多级恢复） ==========
+// ========== 数据加载 ==========
 function safeParseJSON(str) {
     if (!str) return null;
     try { return JSON.parse(str); } catch(e) { return null; }
 }
 
 function loadData() {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
         var saved = null;
         var source = 'none';
         
-        // 1. 尝试主存储
-        try { saved = localStorage.getItem(STORAGE_KEY); if (saved) source = 'localStorage'; } catch(e) { saved = null; }
+        // 尝试多个存储源
+        try { saved = localStorage.getItem(STORAGE_KEY); if (saved) source = 'localStorage'; } catch(e) {}
         
-        // 2. 如果主存储为空，尝试紧急备份
         if (!saved) {
-            try { saved = localStorage.getItem(STORAGE_EMERGENCY_KEY); if (saved) source = 'emergency'; } catch(e) { saved = null; }
-            if (saved) console.log('从紧急备份恢复数据');
+            try { saved = localStorage.getItem(STORAGE_EMERGENCY_KEY); if (saved) source = 'emergency'; } catch(e) {}
         }
         
-        // 3. 如果还没有，尝试 sessionStorage
         if (!saved) {
-            try { saved = sessionStorage.getItem(STORAGE_BACKUP_KEY); if (saved) source = 'sessionStorage'; } catch(e) { saved = null; }
-            if (saved) console.log('从 sessionStorage 备份恢复数据');
+            try { saved = sessionStorage.getItem(STORAGE_BACKUP_KEY); if (saved) source = 'sessionStorage'; } catch(e) {}
         }
         
-        // 4. 最后尝试 IndexedDB
         if (!saved) {
+            // 尝试 IndexedDB
             openDB().then(function(database) {
-                return new Promise(function(resolveIdb) {
-                    try {
-                        var tx = database.transaction('backup', 'readonly');
-                        var store = tx.objectStore('backup');
-                        var req = store.get('appData_backup');
-                        req.onsuccess = function() {
-                            if (req.result && req.result.data) {
-                                saved = req.result.data;
-                                source = 'indexedDB';
-                                console.log('从 IndexedDB 备份恢复数据');
-                                resolveIdb(saved);
-                            } else {
-                                resolveIdb(null);
-                            }
-                        };
-                        req.onerror = function() { resolveIdb(null); };
-                    } catch(e) { resolveIdb(null); }
-                });
-            }).then(function(idbData) {
-                if (idbData) {
-                    processLoadedData(idbData, source);
-                    resolve();
-                } else {
-                    processLoadedData(null, 'none');
-                    resolve();
-                }
-            }).catch(function() {
-                processLoadedData(null, 'none');
-                resolve();
-            });
+                try {
+                    var tx = database.transaction('backup', 'readonly');
+                    var store = tx.objectStore('backup');
+                    var req = store.get('appData_backup');
+                    req.onsuccess = function() {
+                        if (req.result && req.result.data) {
+                            processLoadedData(req.result.data, 'indexedDB', resolve);
+                        } else {
+                            processLoadedData(null, 'none', resolve);
+                        }
+                    };
+                    req.onerror = function() { processLoadedData(null, 'none', resolve); };
+                } catch(e) { processLoadedData(null, 'none', resolve); }
+            }).catch(function() { processLoadedData(null, 'none', resolve); });
             return;
         }
         
-        processLoadedData(saved, source);
-        resolve();
+        processLoadedData(saved, source, resolve);
     });
 }
 
-function processLoadedData(saved, source) {
+function processLoadedData(saved, source, resolve) {
     if (saved) {
         var p = safeParseJSON(saved);
         if (p && typeof p === 'object') {
@@ -375,11 +344,8 @@ function processLoadedData(saved, source) {
             if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
             if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
             
-            // 如果是从备份恢复的，提示用户
             if (source !== 'localStorage') {
-                setTimeout(function() {
-                    showToastLong('注意：数据从备份恢复\n建议立即导出全量备份', 4000);
-                }, 1000);
+                setTimeout(function() { showToastLong('数据从备份恢复，建议立即导出备份', 4000); }, 1000);
             }
         }
     }
@@ -406,11 +372,16 @@ function processLoadedData(saved, source) {
     if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
     if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
     
+    // 加载头像
     var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
     var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
     
-    return Promise.all([p1, p2]).then(function() {
+    Promise.all([p1, p2]).then(function() {
         saveData(true);
+        resolve();
+    }).catch(function() {
+        saveData(true);
+        resolve();
     });
 }
 
@@ -1254,7 +1225,7 @@ document.addEventListener('visibilitychange', function() {
 });
 window.addEventListener('beforeunload', function() { saveData(true); });
 window.addEventListener('pagehide', function() { saveData(true); });
-// 每 5 秒强制保存一次（更频繁）
+// 每 5 秒强制保存
 setInterval(function() { saveData(true); }, 5000);
 window.addEventListener('storage', function(e) { if (e.key === STORAGE_KEY && e.newValue) { console.log('检测到其他标签页的数据更新'); } });
 
