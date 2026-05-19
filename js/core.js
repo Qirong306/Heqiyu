@@ -4,12 +4,13 @@
 // ========== 存储密钥 ==========
 var STORAGE_KEY = 'chat_app_v20';
 var STORAGE_BACKUP_KEY = 'chat_app_v20_backup';
+var STORAGE_EMERGENCY_KEY = 'chat_app_v20_emergency';  // 新增紧急备份
 var DB_NAME = 'ChatAppDB';
-var DB_VERSION = 1;
+var DB_VERSION = 2;  // 升级版本，增加备份存储
 var db = null;
 var MAX_STORAGE_MB = 50;
 var saveTimer = null;
-var saveDebounceMs = 500;
+var saveDebounceMs = 0;  // 改为立即保存
 
 // ========== 引用状态 ==========
 var quotedMessage = null;
@@ -26,6 +27,8 @@ function openDB() {
             if (!database.objectStoreNames.contains('images')) database.createObjectStore('images', { keyPath: 'id' });
             if (!database.objectStoreNames.contains('avatars')) database.createObjectStore('avatars', { keyPath: 'id' });
             if (!database.objectStoreNames.contains('scripts')) database.createObjectStore('scripts', { keyPath: 'id' });
+            // 新增：备份存储区
+            if (!database.objectStoreNames.contains('backup')) database.createObjectStore('backup', { keyPath: 'id' });
         };
     });
 }
@@ -199,88 +202,8 @@ var DEFAULT_DATA = {
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// ========== 数据加载 ==========
-function safeParseJSON(str) {
-    if (!str) return null;
-    try { return JSON.parse(str); } catch(e) { return null; }
-}
-
-function loadData() {
-    var saved = null;
-    var source = 'none';
-    try { saved = localStorage.getItem(STORAGE_KEY); if (saved) source = 'localStorage'; } catch(e) { saved = null; }
-    if (!saved) {
-        try { saved = sessionStorage.getItem(STORAGE_BACKUP_KEY); if (saved) source = 'sessionStorage'; } catch(e) { saved = null; }
-    }
-    if (saved) {
-        var p = safeParseJSON(saved);
-        if (p && typeof p === 'object') {
-            console.log('从 ' + source + ' 加载数据成功');
-            if (typeof p.myName === 'string') appData.myName = p.myName;
-            if (typeof p.myAvatarId === 'string') appData.myAvatarId = p.myAvatarId;
-            if (typeof p.otherName === 'string') appData.otherName = p.otherName;
-            if (typeof p.otherAvatarId === 'string') appData.otherAvatarId = p.otherAvatarId;
-            if (typeof p.theme === 'string') appData.theme = p.theme;
-            if (typeof p.morePanelTab === 'string') appData.morePanelTab = p.morePanelTab;
-            if (Array.isArray(p.emojiIds)) appData.emojiIds = p.emojiIds;
-            if (Array.isArray(p.chatHistory)) appData.chatHistory = p.chatHistory;
-            if (Array.isArray(p.letters)) appData.letters = p.letters;
-            if (Array.isArray(p.replyGroups) && p.replyGroups.length > 0) appData.replyGroups = p.replyGroups;
-            else if (Array.isArray(p.replies) && p.replies.length > 0) appData.replyGroups = [{ name: '默认分组', replies: p.replies }];
-            // 论坛
-            if (Array.isArray(p.forumTopics)) appData.forumTopics = p.forumTopics;
-            if (typeof p.forumReplies === 'object' && p.forumReplies !== null) appData.forumReplies = p.forumReplies;
-            if (Array.isArray(p.forumReplyLib)) appData.forumReplyLib = p.forumReplyLib;
-            if (Array.isArray(p.forumTopicTemplates)) appData.forumTopicTemplates = p.forumTopicTemplates;
-            if (Array.isArray(p.forumTopicWords)) appData.forumTopicWords = p.forumTopicWords;
-            // 转账
-            if (Array.isArray(p.transferAmounts)) appData.transferAmounts = p.transferAmounts;
-            if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
-            // 刮刮乐
-            if (Array.isArray(p.scratchPrizes)) appData.scratchPrizes = p.scratchPrizes;
-            if (typeof p.scratchMaxPerDay === 'number') appData.scratchMaxPerDay = p.scratchMaxPerDay;
-            // 音乐
-            if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
-            if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
-            // 书籍
-            if (Array.isArray(p.books)) appData.books = p.books;
-            //转盘
-            if (Array.isArray(p.wheelItems)) appData.wheelItems = p.wheelItems;
-            if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
-            // 视频弹幕词库
-            if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
-        }
-    }
-    // 兜底初始化
-    if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
-    if (!Array.isArray(appData.chatHistory)) appData.chatHistory = [];
-    if (!Array.isArray(appData.letters)) appData.letters = [];
-    if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) {
-        appData.replyGroups = [{ name: '默认分组', replies: ['你好呀~'] }];
-    }
-    if (!Array.isArray(appData.forumTopics)) appData.forumTopics = [];
-    if (typeof appData.forumReplies !== 'object' || appData.forumReplies === null) appData.forumReplies = {};
-    if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
-    if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
-    if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
-    if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
-    if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
-    if (!Array.isArray(appData.scratchPrizes) || appData.scratchPrizes.length === 0) appData.scratchPrizes = [{ text: '一个拥抱', weight: 3 },{ text: '今日幸运星', weight: 2 }];
-    if (typeof appData.scratchMaxPerDay !== 'number') appData.scratchMaxPerDay = 3;
-    if (!Array.isArray(appData.playlist)) appData.playlist = [];
-    if (!Array.isArray(appData.books)) appData.books = [];
-    if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = ['一起看日落', '收到手写信'];
-    if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
-    if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
-    var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
-    var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
-    return Promise.all([p1, p2]).then(function() {
-        saveData(true);
-    });
-}
-
+// ========== 数据保存（强化版） ==========
 function saveData(immediate) {
-    if (saveTimer) clearTimeout(saveTimer);
     var doSave = function() {
         var saveObj = {
             myName: appData.myName,
@@ -307,22 +230,188 @@ function saveData(immediate) {
             books: appData.books,
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
-            vdWordBank: appData.vdWordBank
+            vdWordBank: appData.vdWordBank,
+            _savedAt: Date.now(),
+            _version: 2
         };
         var jsonStr = JSON.stringify(saveObj);
+        
+        // 1. localStorage 主存储
         try {
             localStorage.setItem(STORAGE_KEY, jsonStr);
         } catch(e) {
             if (e.name === 'QuotaExceededError') {
                 autoCleanOrphanImages().then(function() {
-                    try { localStorage.setItem(STORAGE_KEY, jsonStr); } catch(e2) {}
+                    try { localStorage.setItem(STORAGE_KEY, jsonStr); } catch(e2) { console.error('localStorage 写入失败', e2); }
                 });
             }
         }
+        
+        // 2. sessionStorage 二级备份
         try { sessionStorage.setItem(STORAGE_BACKUP_KEY, jsonStr); } catch(e) {}
+        
+        // 3. 紧急备份（单独 key，防止主 key 被清理）
+        try { localStorage.setItem(STORAGE_EMERGENCY_KEY, jsonStr.substring(0, 5000000)); } catch(e) {}
+        
+        // 4. IndexedDB 三级备份（最稳定）
+        openDB().then(function(database) {
+            try {
+                var tx = database.transaction('backup', 'readwrite');
+                var store = tx.objectStore('backup');
+                store.put({ id: 'appData_backup', data: jsonStr, time: Date.now() });
+                tx.oncomplete = function() { console.log('IndexedDB 备份成功'); };
+                tx.onerror = function(e) { console.error('IndexedDB 备份失败', e); };
+            } catch(e) { console.error('IndexedDB 备份异常', e); }
+        }).catch(function() {});
+        
+        // 5. 保存成功后记录时间戳
+        localStorage.setItem(STORAGE_KEY + '_last_save', Date.now().toString());
     };
-    if (immediate) { doSave(); }
-    else { saveTimer = setTimeout(doSave, saveDebounceMs); }
+    
+    if (immediate === true || saveDebounceMs === 0) {
+        doSave();
+    } else {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(doSave, saveDebounceMs);
+    }
+}
+
+// ========== 数据加载（强化版，支持多级恢复） ==========
+function safeParseJSON(str) {
+    if (!str) return null;
+    try { return JSON.parse(str); } catch(e) { return null; }
+}
+
+function loadData() {
+    return new Promise(function(resolve, reject) {
+        var saved = null;
+        var source = 'none';
+        
+        // 1. 尝试主存储
+        try { saved = localStorage.getItem(STORAGE_KEY); if (saved) source = 'localStorage'; } catch(e) { saved = null; }
+        
+        // 2. 如果主存储为空，尝试紧急备份
+        if (!saved) {
+            try { saved = localStorage.getItem(STORAGE_EMERGENCY_KEY); if (saved) source = 'emergency'; } catch(e) { saved = null; }
+            if (saved) console.log('从紧急备份恢复数据');
+        }
+        
+        // 3. 如果还没有，尝试 sessionStorage
+        if (!saved) {
+            try { saved = sessionStorage.getItem(STORAGE_BACKUP_KEY); if (saved) source = 'sessionStorage'; } catch(e) { saved = null; }
+            if (saved) console.log('从 sessionStorage 备份恢复数据');
+        }
+        
+        // 4. 最后尝试 IndexedDB
+        if (!saved) {
+            openDB().then(function(database) {
+                return new Promise(function(resolveIdb) {
+                    try {
+                        var tx = database.transaction('backup', 'readonly');
+                        var store = tx.objectStore('backup');
+                        var req = store.get('appData_backup');
+                        req.onsuccess = function() {
+                            if (req.result && req.result.data) {
+                                saved = req.result.data;
+                                source = 'indexedDB';
+                                console.log('从 IndexedDB 备份恢复数据');
+                                resolveIdb(saved);
+                            } else {
+                                resolveIdb(null);
+                            }
+                        };
+                        req.onerror = function() { resolveIdb(null); };
+                    } catch(e) { resolveIdb(null); }
+                });
+            }).then(function(idbData) {
+                if (idbData) {
+                    processLoadedData(idbData, source);
+                    resolve();
+                } else {
+                    processLoadedData(null, 'none');
+                    resolve();
+                }
+            }).catch(function() {
+                processLoadedData(null, 'none');
+                resolve();
+            });
+            return;
+        }
+        
+        processLoadedData(saved, source);
+        resolve();
+    });
+}
+
+function processLoadedData(saved, source) {
+    if (saved) {
+        var p = safeParseJSON(saved);
+        if (p && typeof p === 'object') {
+            console.log('从 ' + source + ' 加载数据成功');
+            if (typeof p.myName === 'string') appData.myName = p.myName;
+            if (typeof p.myAvatarId === 'string') appData.myAvatarId = p.myAvatarId;
+            if (typeof p.otherName === 'string') appData.otherName = p.otherName;
+            if (typeof p.otherAvatarId === 'string') appData.otherAvatarId = p.otherAvatarId;
+            if (typeof p.theme === 'string') appData.theme = p.theme;
+            if (typeof p.morePanelTab === 'string') appData.morePanelTab = p.morePanelTab;
+            if (Array.isArray(p.emojiIds)) appData.emojiIds = p.emojiIds;
+            if (Array.isArray(p.chatHistory)) appData.chatHistory = p.chatHistory;
+            if (Array.isArray(p.letters)) appData.letters = p.letters;
+            if (Array.isArray(p.replyGroups) && p.replyGroups.length > 0) appData.replyGroups = p.replyGroups;
+            else if (Array.isArray(p.replies) && p.replies.length > 0) appData.replyGroups = [{ name: '默认分组', replies: p.replies }];
+            if (Array.isArray(p.forumTopics)) appData.forumTopics = p.forumTopics;
+            if (typeof p.forumReplies === 'object' && p.forumReplies !== null) appData.forumReplies = p.forumReplies;
+            if (Array.isArray(p.forumReplyLib)) appData.forumReplyLib = p.forumReplyLib;
+            if (Array.isArray(p.forumTopicTemplates)) appData.forumTopicTemplates = p.forumTopicTemplates;
+            if (Array.isArray(p.forumTopicWords)) appData.forumTopicWords = p.forumTopicWords;
+            if (Array.isArray(p.transferAmounts)) appData.transferAmounts = p.transferAmounts;
+            if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
+            if (Array.isArray(p.scratchPrizes)) appData.scratchPrizes = p.scratchPrizes;
+            if (typeof p.scratchMaxPerDay === 'number') appData.scratchMaxPerDay = p.scratchMaxPerDay;
+            if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
+            if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
+            if (Array.isArray(p.books)) appData.books = p.books;
+            if (Array.isArray(p.wheelItems)) appData.wheelItems = p.wheelItems;
+            if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
+            if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
+            
+            // 如果是从备份恢复的，提示用户
+            if (source !== 'localStorage') {
+                setTimeout(function() {
+                    showToastLong('注意：数据从备份恢复\n建议立即导出全量备份', 4000);
+                }, 1000);
+            }
+        }
+    }
+    
+    // 兜底初始化
+    if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
+    if (!Array.isArray(appData.chatHistory)) appData.chatHistory = [];
+    if (!Array.isArray(appData.letters)) appData.letters = [];
+    if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) {
+        appData.replyGroups = [{ name: '默认分组', replies: ['你好呀~'] }];
+    }
+    if (!Array.isArray(appData.forumTopics)) appData.forumTopics = [];
+    if (typeof appData.forumReplies !== 'object' || appData.forumReplies === null) appData.forumReplies = {};
+    if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
+    if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
+    if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
+    if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
+    if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
+    if (!Array.isArray(appData.scratchPrizes) || appData.scratchPrizes.length === 0) appData.scratchPrizes = [{ text: '一个拥抱', weight: 3 },{ text: '今日幸运星', weight: 2 }];
+    if (typeof appData.scratchMaxPerDay !== 'number') appData.scratchMaxPerDay = 3;
+    if (!Array.isArray(appData.playlist)) appData.playlist = [];
+    if (!Array.isArray(appData.books)) appData.books = [];
+    if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = ['一起看日落', '收到手写信'];
+    if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
+    if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
+    
+    var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
+    var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
+    
+    return Promise.all([p1, p2]).then(function() {
+        saveData(true);
+    });
 }
 
 function getAllReplies() {
@@ -359,6 +448,15 @@ function initApp() {
         if (stats.usagePercent > 80) {
             showToast('存储已使用 ' + stats.usagePercent + '%\n建议在数据管理中清理');
         }
+        // 每周提醒备份
+        var lastBackupReminder = localStorage.getItem('chat_app_backup_reminder');
+        var now = Date.now();
+        if (!lastBackupReminder || now - parseInt(lastBackupReminder) > 7 * 24 * 60 * 60 * 1000) {
+            setTimeout(function() {
+                showToastLong('💾 备份提醒：建议去设置 → 数据管理\n点击「全量备份下载」保存数据', 5000);
+            }, 3000);
+            localStorage.setItem('chat_app_backup_reminder', now.toString());
+        }
     }).catch(function(e) { console.error('启动失败:', e); });
 }
 
@@ -372,8 +470,8 @@ function applyTheme() {
     if (appData.theme === 'dark') document.body.classList.add('dark-mode');
     else document.body.classList.remove('dark-mode');
 }
-function setThemeLight() { appData.theme = 'light'; applyTheme(); saveData(); closeModal('subOverlay'); showToast('已切换为浅色模式'); }
-function setThemeDark() { appData.theme = 'dark'; applyTheme(); saveData(); closeModal('subOverlay'); showToast('已切换为深色模式'); }
+function setThemeLight() { appData.theme = 'light'; applyTheme(); saveData(true); closeModal('subOverlay'); showToast('已切换为浅色模式'); }
+function setThemeDark() { appData.theme = 'dark'; applyTheme(); saveData(true); closeModal('subOverlay'); showToast('已切换为深色模式'); }
 function openThemeModal() {
     closeModal('settingsOverlay');
     var html = '<h4>主题模式</h4><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">';
@@ -401,7 +499,7 @@ function checkPendingLetters() {
             l.replied = true; l.replyShown = false; hasNew = true;
         }
     });
-    if (hasNew) { saveData(); updateLetterBadge(); }
+    if (hasNew) { saveData(true); updateLetterBadge(); }
 }
 function checkAndShowLetterReply() {
     var shown = false;
@@ -413,7 +511,7 @@ function checkAndShowLetterReply() {
             l.replyShown = true; shown = true;
         }
     });
-    if (shown) { saveData(); updateLetterBadge(); showToast('回信已送达聊天中~'); }
+    if (shown) { saveData(true); updateLetterBadge(); showToast('回信已送达聊天中~'); }
     else showToast('暂无新回信');
 }
 function generateLetterReply() {
@@ -434,7 +532,7 @@ function sendLetter() {
         sentContent: content, sentTime: Date.now(),
         expectedReplyTime: expectedTime, replyContent: '', replied: false, replyShown: false
     });
-    saveData(); closeModal('letterOverlay');
+    saveData(true); closeModal('letterOverlay');
     showToastLong('信件已寄出！\n预计 ' + formatTime(expectedTime) + ' 左右收到回信', 5000);
     updateLetterBadge();
     addSystemMsg('你给 ' + appData.otherName + ' 寄出了一封信，预计 ' + formatTime(expectedTime) + ' 收到回信');
@@ -504,7 +602,7 @@ function startAvatarCapture(target, useCamera) {
                     if (appData.otherAvatarId) deleteImageFromDB('avatars', appData.otherAvatarId).catch(function(){});
                     appData.otherAvatarId = id; appData.otherAvatar = dataUrl;
                 }
-                return saveData();
+                return saveData(true);
             });
         }).then(function() { return renderChatHistory(); })
         .then(function() { showToast((target === 'me' ? '我的' : '对方') + '头像已更新'); })
@@ -527,12 +625,12 @@ function openNicknameModal() {
 function saveMyNameFromModal() {
     var v = document.getElementById('editMyName').value.trim();
     if (!v) return showToast('请输入昵称');
-    appData.myName = v; saveData(); renderChatHistory(); closeModal('subOverlay'); showToast('昵称已更新');
+    appData.myName = v; saveData(true); renderChatHistory(); closeModal('subOverlay'); showToast('昵称已更新');
 }
 function saveOtherNameFromModal() {
     var v = document.getElementById('editOtherName').value.trim();
     if (!v) return showToast('请输入昵称');
-    appData.otherName = v; saveData(); updateHeader(); renderChatHistory(); closeModal('subOverlay'); showToast('昵称已更新');
+    appData.otherName = v; saveData(true); updateHeader(); renderChatHistory(); closeModal('subOverlay'); showToast('昵称已更新');
 }
 
 // ========== 照片 ==========
@@ -552,7 +650,7 @@ function handlePhotoFile(file) {
         return saveImageToDB('images', imageId, url).then(function() {
             addMessage(url, 'me', true);
             appData.chatHistory.push({ type: 'me', content: '', imageId: imageId, time: Date.now() });
-            return saveData();
+            return saveData(true);
         }).then(function() {
             setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 800);
             checkStorageAfterUpload();
@@ -578,7 +676,7 @@ function triggerAutoReply() {
                 var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
                 addTransferCard(amt, note, 'other');
                 appData.chatHistory.push({ type: 'transfer_other', amount: amt, note: note, time: Date.now() });
-                saveData();
+                saveData(true);
                 sendNext(index + 1);
                 return;
             }
@@ -586,7 +684,7 @@ function triggerAutoReply() {
                 if (sent === false && index === 0) {
                     addMessage('（还没有设置回复词库哦，去设置里添加一些吧~）', 'other');
                     appData.chatHistory.push({ type: 'other', content: '（还没有设置回复词库哦，去设置里添加一些吧~）', time: Date.now() });
-                    saveData();
+                    saveData(true);
                 }
                 if (sent !== false) sendNext(index + 1);
             });
@@ -605,7 +703,7 @@ function sendRandomReply() {
             if (!img) return false;
             addMessage(img, 'other', true, true);
             appData.chatHistory.push({ type: 'other', content: '', imageId: eid, time: Date.now(), isSticker: true });
-            return saveData().then(function() { return true; });
+            return saveData(true).then(function() { return true; });
         });
     } else {
         var content = allReplies[Math.floor(Math.random() * allReplies.length)];
@@ -616,7 +714,7 @@ function sendRandomReply() {
             addMessage(content, 'other', false);
             appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
         }
-        return saveData().then(function() { return true; });
+        return saveData(true).then(function() { return true; });
     }
 }
 function sendMsg() {
@@ -632,7 +730,7 @@ function sendMsg() {
     }
     quotedMessage = null;
     updateQuoteBar();
-    input.value = ''; saveData();
+    input.value = ''; saveData(true);
     setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
 }
 function addMessage(content, type, isImage, isSticker) {
@@ -671,14 +769,14 @@ function addMessageWithRole(content, role, roleClass) {
     bindQuoteEvent(div, { content: '[' + role + '] ' + content, type: 'other', time: Date.now() });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
     appData.chatHistory.push({ type: 'other', content: '[' + role + '] ' + content, time: Date.now() });
-    saveData();
+    saveData(true);
 }
 function addSystemMsg(text) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'system-msg'; div.textContent = text;
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
     appData.chatHistory.push({ type: 'system', content: text, time: Date.now() });
-    saveData();
+    saveData(true);
 }
 
 // ========== 引用功能 ==========
@@ -808,7 +906,7 @@ function uploadToMorePanel() {
         return saveImageToDB('images', id, url).then(function() {
             if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
             appData.emojiIds.push(id);
-            return saveData();
+            return saveData(true);
         }).then(function() { renderMoreImages(); showToastLong('表情包上传成功！', 3500); checkStorageAfterUpload(); });
     }).catch(function() { showToast('上传失败，请重试'); });
     document.getElementById('moreFileInput').value = '';
@@ -819,7 +917,7 @@ function sendFromMorePanel(index) {
         if (!url) { showToast('表情包已失效'); return; }
         addMessage(url, 'me', true, true);
         appData.chatHistory.push({ type: 'me', content: '', imageId: appData.emojiIds[index], time: Date.now(), isSticker: true });
-        saveData(); toggleMorePanel();
+        saveData(true); toggleMorePanel();
         setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 800);
     });
 }
@@ -876,7 +974,7 @@ function importReplyLib() {
                 } else {
                     throw new Error('格式错误');
                 }
-                saveData();
+                saveData(true);
                 openReplyModal();
                 showToast('回复词库已导入');
             } catch(err) { showToast('文件格式错误'); }
@@ -885,9 +983,9 @@ function importReplyLib() {
     };
     input.click();
 }
-function addNewGroup() { var n = prompt('分组名称'); if (!n) return; appData.replyGroups.push({name:n,replies:[]}); saveData(); openReplyModal(); showToast('分组已创建'); }
-function renameGroup(g) { var n = prompt('新名称', appData.replyGroups[g].name); if (!n) return; appData.replyGroups[g].name = n; saveData(); openReplyModal(); showToast('已重命名'); }
-function delGroup(g) { if (!confirm('删除分组"' + appData.replyGroups[g].name + '"?') || appData.replyGroups.length <= 1) { if (appData.replyGroups.length <= 1) showToast('至少保留一个分组'); return; } appData.replyGroups.splice(g,1); saveData(); openReplyModal(); showToast('分组已删除'); }
+function addNewGroup() { var n = prompt('分组名称'); if (!n) return; appData.replyGroups.push({name:n,replies:[]}); saveData(true); openReplyModal(); showToast('分组已创建'); }
+function renameGroup(g) { var n = prompt('新名称', appData.replyGroups[g].name); if (!n) return; appData.replyGroups[g].name = n; saveData(true); openReplyModal(); showToast('已重命名'); }
+function delGroup(g) { if (!confirm('删除分组"' + appData.replyGroups[g].name + '"?') || appData.replyGroups.length <= 1) { if (appData.replyGroups.length <= 1) showToast('至少保留一个分组'); return; } appData.replyGroups.splice(g,1); saveData(true); openReplyModal(); showToast('分组已删除'); }
 function addReplyBatchToGroup(g) {
     var t = document.getElementById('batchAdd_' + g).value.trim();
     if (!t) return;
@@ -897,13 +995,13 @@ function addReplyBatchToGroup(g) {
     var newLines = lines.filter(function(line) { return existing.indexOf(line) === -1; });
     if (newLines.length === 0) { showToast('所有内容已存在，无新增'); return; }
     appData.replyGroups[g].replies = existing.concat(newLines);
-    saveData(); openReplyModal();
+    saveData(true); openReplyModal();
     var dupCount = lines.length - newLines.length;
     showToast('已添加 ' + newLines.length + ' 条' + (dupCount > 0 ? '（跳过 ' + dupCount + ' 条重复）' : ''));
 }
-function delReplySingle(g, r) { var d = appData.replyGroups[g].replies[r]; appData.replyGroups[g].replies.splice(r,1); saveData(); openReplyModal(); showToast('已删除「' + d + '」'); }
+function delReplySingle(g, r) { var d = appData.replyGroups[g].replies[r]; appData.replyGroups[g].replies.splice(r,1); saveData(true); openReplyModal(); showToast('已删除「' + d + '」'); }
 function selectAllInGroup(g) { var cbs = document.querySelectorAll('#subModal input.cb[data-group="' + g + '"]'); var all = true; for (var i=0;i<cbs.length;i++) if (!cbs[i].checked) { all=false; break; } for (var j=0;j<cbs.length;j++) cbs[j].checked = !all; }
-function delSelectedReplies(g) { var cbs = document.querySelectorAll('#subModal input.cb[data-group="' + g + '"]:checked'); if (!cbs.length) return showToast('请先勾选'); var idxs = []; for (var i=0;i<cbs.length;i++) idxs.push(parseInt(cbs[i].getAttribute('data-idx'))); idxs.sort(function(a,b){return b-a;}); for (var j=0;j<idxs.length;j++) appData.replyGroups[g].replies.splice(idxs[j],1); saveData(); openReplyModal(); showToast('已删除 ' + idxs.length + ' 条'); }
+function delSelectedReplies(g) { var cbs = document.querySelectorAll('#subModal input.cb[data-group="' + g + '"]:checked'); if (!cbs.length) return showToast('请先勾选'); var idxs = []; for (var i=0;i<cbs.length;i++) idxs.push(parseInt(cbs[i].getAttribute('data-idx'))); idxs.sort(function(a,b){return b-a;}); for (var j=0;j<idxs.length;j++) appData.replyGroups[g].replies.splice(idxs[j],1); saveData(true); openReplyModal(); showToast('已删除 ' + idxs.length + ' 条'); }
 
 // ========== 表情管理 ==========
 function openEmojiManageModal() {
@@ -929,7 +1027,7 @@ function uploadEmojiManage() {
     var input = document.getElementById('emojiManageUpload'); var files = input.files;
     if (!files.length) return; var total = files.length;
     function processOne(index) {
-        if (index >= files.length) { saveData().then(function() { renderEmojiManageGrid(); renderMoreImages(); showToast('已上传 ' + total + ' 个'); input.value = ''; }); return; }
+        if (index >= files.length) { saveData(true).then(function() { renderEmojiManageGrid(); renderMoreImages(); showToast('已上传 ' + total + ' 个'); input.value = ''; }); return; }
         compressImage(files[index], 400, 400, 0.5).then(function(url) {
             var id = 'emoji_' + Date.now() + '_' + index;
             return saveImageToDB('images', id, url).then(function() {
@@ -942,12 +1040,12 @@ function uploadEmojiManage() {
 }
 function delEmojiManage(i) {
     deleteImageFromDB('images', appData.emojiIds[i]).catch(function(){});
-    appData.emojiIds.splice(i,1); saveData(); renderMoreImages(); renderEmojiManageGrid(); showToast('已删除');
+    appData.emojiIds.splice(i,1); saveData(true); renderMoreImages(); renderEmojiManageGrid(); showToast('已删除');
 }
 function clearAllEmojis() {
     if (!confirm('清空所有表情包？')) return;
     var ps = appData.emojiIds.map(function(id) { return deleteImageFromDB('images', id).catch(function(){}); });
-    Promise.all(ps).then(function() { appData.emojiIds = []; return saveData(); }).then(function() { renderMoreImages(); renderEmojiManageGrid(); showToast('已清空'); });
+    Promise.all(ps).then(function() { appData.emojiIds = []; return saveData(true); }).then(function() { renderMoreImages(); renderEmojiManageGrid(); showToast('已清空'); });
 }
 
 // ========== 数据管理 ==========
@@ -1149,17 +1247,22 @@ document.addEventListener('click', function(e) {
 });
 
 // ========== 保存机制 ==========
-document.addEventListener('visibilitychange', function() { if (document.hidden) { saveData(true); } });
+document.addEventListener('visibilitychange', function() { 
+    if (document.hidden) { 
+        saveData(true); 
+    }
+});
 window.addEventListener('beforeunload', function() { saveData(true); });
 window.addEventListener('pagehide', function() { saveData(true); });
-setInterval(function() { saveData(true); }, 15000);
+// 每 5 秒强制保存一次（更频繁）
+setInterval(function() { saveData(true); }, 5000);
 window.addEventListener('storage', function(e) { if (e.key === STORAGE_KEY && e.newValue) { console.log('检测到其他标签页的数据更新'); } });
 
 // ========== 视频弹幕聊天接口 ==========
 function vdAddMessage(content, type) {
     if (type === 'other') { addMessage(content, 'other', false); appData.chatHistory.push({ type: 'other', content: content, time: Date.now() }); }
     else { addMessage(content, 'me', false); appData.chatHistory.push({ type: 'me', content: content, time: Date.now() }); }
-    saveData();
+    saveData(true);
 }
 
 // ==================== 转账系统 ====================
@@ -1185,7 +1288,7 @@ function collectTransfer(cardElement, amount, note) {
     cardElement.querySelector('.transfer-status').textContent = '已收款';
     cardElement.querySelector('.transfer-status').style.color = 'var(--success)';
     cardElement.style.cursor = 'default'; cardElement.onclick = null;
-    showToast('已收款 ¥' + amount); saveData();
+    showToast('已收款 ¥' + amount); saveData(true);
 }
 function receiveTransferFromOtherModal() {
     if (!appData.transferAmounts.length) { showToast('请先设置对方转账金额'); return; }
@@ -1194,7 +1297,7 @@ function receiveTransferFromOtherModal() {
     var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
     addTransferCard(amt, note, 'other');
     appData.chatHistory.push({ type: 'transfer_other', amount: amt, note: note, time: Date.now() });
-    saveData(); showToast('收到 ' + appData.otherName + ' 的转账 ¥' + amt);
+    saveData(true); showToast('收到 ' + appData.otherName + ' 的转账 ¥' + amt);
 }
 function sendTransferToOther() {
     var amt = document.getElementById('transferAmountInput').value.trim();
@@ -1203,7 +1306,7 @@ function sendTransferToOther() {
     var amount = parseFloat(amt).toFixed(2);
     addTransferCard(amount, note || '', 'me');
     appData.chatHistory.push({ type: 'transfer_me', amount: amount, note: note || '', time: Date.now() });
-    saveData(); closeModal('subOverlay'); showToast('已向 ' + appData.otherName + ' 转账 ¥' + amount);
+    saveData(true); closeModal('subOverlay'); showToast('已向 ' + appData.otherName + ' 转账 ¥' + amount);
 }
 function openTransferModal() {
     var html = '<div style="display:flex;justify-content:center;align-items:center;position:relative;margin-bottom:12px;"><h4 style="margin:0;">转账</h4><div style="position:absolute;right:0;"><span onclick="event.stopPropagation();toggleTransferDropdown()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">&#8942;</span><div id="transferDropdownMenu" style="display:none;position:absolute;top:32px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:120px;box-shadow:0 4px 12px rgba(0,0,0,0.1);"><div onclick="receiveTransferFromOtherModal();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">收转账</div><div onclick="openTransferAmountSettings();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">对方转账金额</div><div onclick="openTransferNoteSettings();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">对方转账备注</div></div></div></div>';
@@ -1221,16 +1324,16 @@ function openTransferAmountSettings() {
     html += '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">返回</button>';
     openSubModal(html);
 }
-function addTransferAmount(){ var v=document.getElementById('newTransferAmount').value.trim(); if(!v||isNaN(parseFloat(v))||parseFloat(v)<=0){showToast('请输入有效金额');return;} appData.transferAmounts.push(parseFloat(v).toFixed(2));saveData();openTransferAmountSettings(); }
-function delTransferAmount(i){ appData.transferAmounts.splice(i,1);saveData();openTransferAmountSettings(); }
+function addTransferAmount(){ var v=document.getElementById('newTransferAmount').value.trim(); if(!v||isNaN(parseFloat(v))||parseFloat(v)<=0){showToast('请输入有效金额');return;} appData.transferAmounts.push(parseFloat(v).toFixed(2));saveData(true);openTransferAmountSettings(); }
+function delTransferAmount(i){ appData.transferAmounts.splice(i,1);saveData(true);openTransferAmountSettings(); }
 function openTransferNoteSettings() {
     var html = '<h4>对方转账备注</h4><div class="form-row"><input type="text" id="newTransferNote" placeholder="输入备注文案"><button class="btn-sm" onclick="addTransferNote()" style="margin-top:4px;">添加</button></div><div style="max-height:180px;overflow-y:auto;" id="transferNoteList">';
     appData.transferNotes.forEach(function(n,i){ html += '<div class="list-item"><span>'+escapeHTML(n)+'</span><button class="del-sm" onclick="delTransferNote('+i+')">删除</button></div>'; });
     html += '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">返回</button>';
     openSubModal(html);
 }
-function addTransferNote(){ var v=document.getElementById('newTransferNote').value.trim(); if(!v){showToast('请输入备注');return;} appData.transferNotes.push(v);saveData();openTransferNoteSettings(); }
-function delTransferNote(i){ appData.transferNotes.splice(i,1);saveData();openTransferNoteSettings(); }
+function addTransferNote(){ var v=document.getElementById('newTransferNote').value.trim(); if(!v){showToast('请输入备注');return;} appData.transferNotes.push(v);saveData(true);openTransferNoteSettings(); }
+function delTransferNote(i){ appData.transferNotes.splice(i,1);saveData(true);openTransferNoteSettings(); }
 function toggleTransferDropdown(){ var m=document.getElementById('transferDropdownMenu'); if(m)m.style.display=m.style.display==='block'?'none':'block'; }
 function closeTransferDropdown(){ var m=document.getElementById('transferDropdownMenu'); if(m)m.style.display='none'; }
 document.addEventListener('click', function(e) {
