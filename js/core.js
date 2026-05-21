@@ -5,7 +5,7 @@
 var STORAGE_KEY = 'chat_app_v20';
 var STORAGE_BACKUP_KEY = 'chat_app_v20_backup';
 var DB_NAME = 'ChatAppDB';
-var DB_VERSION = 1;
+var DB_VERSION = 2;
 var db = null;
 var MAX_STORAGE_MB = 50;
 var saveTimer = null;
@@ -14,7 +14,7 @@ var saveDebounceMs = 500;
 // ========== 引用状态 ==========
 var quotedMessage = null;
 
-// ========== IndexedDB ==========
+// ========== IndexedDB（仅用于存储图片） ==========
 function openDB() {
     return new Promise(function(resolve, reject) {
         if (db) { resolve(db); return; }
@@ -199,15 +199,15 @@ var DEFAULT_DATA = {
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// ========== 数据保存（修复版：强制同步写入，避免丢失） ==========
+// ========== 数据保存（文字存 localStorage，图片存 IndexedDB） ==========
 function safeParseJSON(str) {
     if (!str) return null;
     try { return JSON.parse(str); } catch(e) { return null; }
 }
 
-// 核心保存函数 - 每次调用都立即写入 localStorage
 function saveData(immediate) {
     var doSave = function() {
+        // 只保存文字数据，图片单独存 IndexedDB
         var saveObj = {
             myName: appData.myName,
             myAvatarId: appData.myAvatarId || '',
@@ -237,26 +237,24 @@ function saveData(immediate) {
         };
         var jsonStr = JSON.stringify(saveObj);
         
-        // 1. 主存储 localStorage
+        // 写入 localStorage
         try {
             localStorage.setItem(STORAGE_KEY, jsonStr);
-            console.log('[保存] localStorage 写入成功，聊天记录数:', appData.chatHistory.length);
+            console.log('[保存] 文字数据保存成功，聊天记录数:', appData.chatHistory.length);
         } catch(e) {
             console.error('[保存] localStorage 写入失败:', e);
             if (e.name === 'QuotaExceededError') {
-                showToast('存储空间不足，请清理数据');
+                showToast('存储空间不足，请清理聊天记录或导出备份后清除数据');
             }
         }
         
-        // 2. 备份到 sessionStorage
+        // 备份到 sessionStorage
         try {
             sessionStorage.setItem(STORAGE_BACKUP_KEY, jsonStr);
         } catch(e) {}
     };
     
-    // 清除之前的定时器
     if (saveTimer) clearTimeout(saveTimer);
-    
     if (immediate === true) {
         doSave();
     } else {
@@ -264,90 +262,90 @@ function saveData(immediate) {
     }
 }
 
-// ========== 数据加载（修复版：优先 localStorage，不自动覆盖） ==========
+// ========== 数据加载 ==========
 function loadData() {
-    // 先尝试从 localStorage 读取
-    var saved = null;
-    var source = 'none';
-    
-    try {
-        saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) source = 'localStorage';
-    } catch(e) { saved = null; }
-    
-    // 如果 localStorage 没有，尝试从 sessionStorage 恢复
-    if (!saved) {
+    return new Promise(function(resolve) {
+        var saved = null;
+        var source = 'none';
+        
         try {
-            saved = sessionStorage.getItem(STORAGE_BACKUP_KEY);
-            if (saved) source = 'sessionStorage';
+            saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) source = 'localStorage';
         } catch(e) { saved = null; }
-    }
-    
-    if (saved) {
-        var p = safeParseJSON(saved);
-        if (p && typeof p === 'object') {
-            console.log('[加载] 从 ' + source + ' 加载数据成功，聊天记录数:', p.chatHistory?.length);
-            
-            // 只更新有值的字段，保留默认值兜底
-            if (typeof p.myName === 'string') appData.myName = p.myName;
-            if (typeof p.myAvatarId === 'string') appData.myAvatarId = p.myAvatarId;
-            if (typeof p.otherName === 'string') appData.otherName = p.otherName;
-            if (typeof p.otherAvatarId === 'string') appData.otherAvatarId = p.otherAvatarId;
-            if (typeof p.theme === 'string') appData.theme = p.theme;
-            if (typeof p.morePanelTab === 'string') appData.morePanelTab = p.morePanelTab;
-            if (Array.isArray(p.emojiIds)) appData.emojiIds = p.emojiIds;
-            if (Array.isArray(p.chatHistory)) appData.chatHistory = p.chatHistory;
-            if (Array.isArray(p.letters)) appData.letters = p.letters;
-            if (Array.isArray(p.replyGroups) && p.replyGroups.length > 0) appData.replyGroups = p.replyGroups;
-            if (Array.isArray(p.forumTopics)) appData.forumTopics = p.forumTopics;
-            if (typeof p.forumReplies === 'object' && p.forumReplies !== null) appData.forumReplies = p.forumReplies;
-            if (Array.isArray(p.forumReplyLib)) appData.forumReplyLib = p.forumReplyLib;
-            if (Array.isArray(p.forumTopicTemplates)) appData.forumTopicTemplates = p.forumTopicTemplates;
-            if (Array.isArray(p.forumTopicWords)) appData.forumTopicWords = p.forumTopicWords;
-            if (Array.isArray(p.transferAmounts)) appData.transferAmounts = p.transferAmounts;
-            if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
-            if (Array.isArray(p.scratchPrizes)) appData.scratchPrizes = p.scratchPrizes;
-            if (typeof p.scratchMaxPerDay === 'number') appData.scratchMaxPerDay = p.scratchMaxPerDay;
-            if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
-            if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
-            if (Array.isArray(p.books)) appData.books = p.books;
-            if (Array.isArray(p.wheelItems)) appData.wheelItems = p.wheelItems;
-            if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
-            if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
+        
+        if (!saved) {
+            try {
+                saved = sessionStorage.getItem(STORAGE_BACKUP_KEY);
+                if (saved) source = 'sessionStorage';
+            } catch(e) { saved = null; }
         }
-    } else {
-        console.log('[加载] 无本地数据，使用默认数据');
-    }
-    
-    // 兜底初始化
-    if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
-    if (!Array.isArray(appData.chatHistory)) appData.chatHistory = [];
-    if (!Array.isArray(appData.letters)) appData.letters = [];
-    if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) {
-        appData.replyGroups = [{ name: '默认分组', replies: ['你好呀~'] }];
-    }
-    if (!Array.isArray(appData.forumTopics)) appData.forumTopics = [];
-    if (typeof appData.forumReplies !== 'object' || appData.forumReplies === null) appData.forumReplies = {};
-    if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
-    if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
-    if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
-    if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
-    if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
-    if (!Array.isArray(appData.scratchPrizes) || appData.scratchPrizes.length === 0) appData.scratchPrizes = [{ text: '一个拥抱', weight: 3 },{ text: '今日幸运星', weight: 2 }];
-    if (typeof appData.scratchMaxPerDay !== 'number') appData.scratchMaxPerDay = 3;
-    if (!Array.isArray(appData.playlist)) appData.playlist = [];
-    if (!Array.isArray(appData.books)) appData.books = [];
-    if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = ['一起看日落', '收到手写信'];
-    if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
-    if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
-    
-    // 加载头像（保留原逻辑）
-    var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
-    var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
-    
-    return Promise.all([p1, p2]).then(function() {
-        // 保存一次，确保数据一致
-        saveData(true);
+        
+        if (saved) {
+            var p = safeParseJSON(saved);
+            if (p && typeof p === 'object') {
+                console.log('[加载] 从 ' + source + ' 加载数据成功，聊天记录数:', p.chatHistory?.length);
+                
+                if (typeof p.myName === 'string') appData.myName = p.myName;
+                if (typeof p.myAvatarId === 'string') appData.myAvatarId = p.myAvatarId;
+                if (typeof p.otherName === 'string') appData.otherName = p.otherName;
+                if (typeof p.otherAvatarId === 'string') appData.otherAvatarId = p.otherAvatarId;
+                if (typeof p.theme === 'string') appData.theme = p.theme;
+                if (typeof p.morePanelTab === 'string') appData.morePanelTab = p.morePanelTab;
+                if (Array.isArray(p.emojiIds)) appData.emojiIds = p.emojiIds;
+                if (Array.isArray(p.chatHistory)) appData.chatHistory = p.chatHistory;
+                if (Array.isArray(p.letters)) appData.letters = p.letters;
+                if (Array.isArray(p.replyGroups) && p.replyGroups.length > 0) appData.replyGroups = p.replyGroups;
+                if (Array.isArray(p.forumTopics)) appData.forumTopics = p.forumTopics;
+                if (typeof p.forumReplies === 'object' && p.forumReplies !== null) appData.forumReplies = p.forumReplies;
+                if (Array.isArray(p.forumReplyLib)) appData.forumReplyLib = p.forumReplyLib;
+                if (Array.isArray(p.forumTopicTemplates)) appData.forumTopicTemplates = p.forumTopicTemplates;
+                if (Array.isArray(p.forumTopicWords)) appData.forumTopicWords = p.forumTopicWords;
+                if (Array.isArray(p.transferAmounts)) appData.transferAmounts = p.transferAmounts;
+                if (Array.isArray(p.transferNotes)) appData.transferNotes = p.transferNotes;
+                if (Array.isArray(p.scratchPrizes)) appData.scratchPrizes = p.scratchPrizes;
+                if (typeof p.scratchMaxPerDay === 'number') appData.scratchMaxPerDay = p.scratchMaxPerDay;
+                if (Array.isArray(p.playlist)) appData.playlist = p.playlist;
+                if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
+                if (Array.isArray(p.books)) appData.books = p.books;
+                if (Array.isArray(p.wheelItems)) appData.wheelItems = p.wheelItems;
+                if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
+                if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
+            }
+        } else {
+            console.log('[加载] 无本地数据，使用默认数据');
+        }
+        
+        // 兜底初始化
+        if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
+        if (!Array.isArray(appData.chatHistory)) appData.chatHistory = [];
+        if (!Array.isArray(appData.letters)) appData.letters = [];
+        if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) {
+            appData.replyGroups = [{ name: '默认分组', replies: ['你好呀~'] }];
+        }
+        if (!Array.isArray(appData.forumTopics)) appData.forumTopics = [];
+        if (typeof appData.forumReplies !== 'object' || appData.forumReplies === null) appData.forumReplies = {};
+        if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
+        if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
+        if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
+        if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
+        if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
+        if (!Array.isArray(appData.scratchPrizes) || appData.scratchPrizes.length === 0) appData.scratchPrizes = [{ text: '一个拥抱', weight: 3 },{ text: '今日幸运星', weight: 2 }];
+        if (typeof appData.scratchMaxPerDay !== 'number') appData.scratchMaxPerDay = 3;
+        if (!Array.isArray(appData.playlist)) appData.playlist = [];
+        if (!Array.isArray(appData.books)) appData.books = [];
+        if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = ['一起看日落', '收到手写信'];
+        if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
+        if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
+        
+        // 加载头像
+        var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
+        var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
+        
+        Promise.all([p1, p2]).then(function() {
+            resolve();
+        }).catch(function() {
+            resolve();
+        });
     });
 }
 
@@ -382,8 +380,17 @@ function initApp() {
         if (cleaned > 0) console.log('自动清理了 ' + cleaned + ' 个孤儿图片');
         return getStorageStats();
     }).then(function(stats) {
-        if (stats.usagePercent > 80) {
+        if (stats.usagePercent > 85) {
             showToast('存储已使用 ' + stats.usagePercent + '%\n建议在数据管理中清理');
+        }
+        // 每周提醒备份
+        var lastBackupReminder = localStorage.getItem('chat_app_backup_reminder');
+        var now = Date.now();
+        if (!lastBackupReminder || now - parseInt(lastBackupReminder) > 7 * 24 * 60 * 60 * 1000) {
+            setTimeout(function() {
+                showToastLong('💾 备份提醒：建议去设置 → 数据管理\n点击「全量备份下载」保存数据', 5000);
+            }, 3000);
+            localStorage.setItem('chat_app_backup_reminder', now.toString());
         }
     }).catch(function(e) { console.error('启动失败:', e); });
 }
@@ -1006,31 +1013,123 @@ function downloadJSONFile(filename, jsonData) {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
 }
+
+// ========== 导出备份（完整版：含表情包，不含聊天图片） ==========
 function exportFullAsFile() {
+    // 只导出表情包图片，不导出聊天记录中的图片 base64
     var emojiPromises = (appData.emojiIds || []).map(function(id) {
-        return getImageFromDB('images', id).then(function(data) { return { id: id, data: data || '' }; });
+        return getImageFromDB('images', id).then(function(data) { 
+            return { id: id, data: data || '' }; 
+        });
     });
+    
     Promise.all(emojiPromises).then(function(emojiData) {
+        // 处理聊天记录：只保留 imageId，不包含图片数据
+        var chatHistoryForBackup = (appData.chatHistory || []).map(function(msg) {
+            var newMsg = JSON.parse(JSON.stringify(msg));
+            // 如果是图片消息，只保留 imageId
+            if (newMsg.imageId) {
+                newMsg.imageData = undefined;  // 确保不包含 base64
+            }
+            return newMsg;
+        });
+        
         var backupData = {
-            myName: appData.myName, myAvatarId: appData.myAvatarId, myAvatar: appData.myAvatar || '',
-            otherName: appData.otherName, otherAvatarId: appData.otherAvatarId, otherAvatar: appData.otherAvatar || '',
-            replyGroups: appData.replyGroups, emojiIds: appData.emojiIds, emojiData: emojiData,
-            theme: appData.theme, chatHistory: appData.chatHistory, letters: appData.letters,
-            forumTopics: appData.forumTopics, forumReplies: appData.forumReplies,
-            forumReplyLib: appData.forumReplyLib, forumTopicTemplates: appData.forumTopicTemplates, forumTopicWords: appData.forumTopicWords,
-            transferAmounts: appData.transferAmounts, transferNotes: appData.transferNotes,
-            scratchPrizes: appData.scratchPrizes, scratchMaxPerDay: appData.scratchMaxPerDay,
-            playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
-            books: appData.books, vdWordBank: appData.vdWordBank,
+            myName: appData.myName,
+            myAvatarId: appData.myAvatarId,
+            myAvatar: '',  // 头像不存 base64
+            otherName: appData.otherName,
+            otherAvatarId: appData.otherAvatarId,
+            otherAvatar: '',
+            replyGroups: appData.replyGroups,
+            emojiIds: appData.emojiIds,
+            emojiData: emojiData,  // 表情包图片完整备份
+            theme: appData.theme,
+            chatHistory: chatHistoryForBackup,
+            letters: appData.letters,
+            forumTopics: appData.forumTopics,
+            forumReplies: appData.forumReplies,
+            forumReplyLib: appData.forumReplyLib,
+            forumTopicTemplates: appData.forumTopicTemplates,
+            forumTopicWords: appData.forumTopicWords,
+            transferAmounts: appData.transferAmounts,
+            transferNotes: appData.transferNotes,
+            scratchPrizes: appData.scratchPrizes,
+            scratchMaxPerDay: appData.scratchMaxPerDay,
+            playlist: appData.playlist,
+            musicFloatingImg: '',
+            books: appData.books,
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
             vdWordBank: appData.vdWordBank
         };
         var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
         downloadJSONFile('chat_app_backup_' + timestamp + '.json', backupData);
-        closeModal('subOverlay'); showToast('备份文件已下载（含表情包图片）');
+        closeModal('subOverlay');
+        showToast('备份文件已下载（含表情包，聊天图片仅保存ID）');
+    }).catch(function(e) {
+        console.error('导出失败:', e);
+        showToast('导出失败，请重试');
     });
 }
+
+function exportFull() {
+    var emojiPromises = (appData.emojiIds || []).map(function(id) {
+        return getImageFromDB('images', id).then(function(data) { return { id: id, data: data || '' }; });
+    });
+    Promise.all(emojiPromises).then(function(emojiData) {
+        var chatHistoryForBackup = (appData.chatHistory || []).map(function(msg) {
+            var newMsg = JSON.parse(JSON.stringify(msg));
+            if (newMsg.imageId) {
+                newMsg.imageData = undefined;
+            }
+            return newMsg;
+        });
+        var backupData = {
+            myName: appData.myName,
+            myAvatarId: appData.myAvatarId,
+            myAvatar: '',
+            otherName: appData.otherName,
+            otherAvatarId: appData.otherAvatarId,
+            otherAvatar: '',
+            replyGroups: appData.replyGroups,
+            emojiIds: appData.emojiIds,
+            emojiData: emojiData,
+            theme: appData.theme,
+            chatHistory: chatHistoryForBackup,
+            letters: appData.letters,
+            forumTopics: appData.forumTopics,
+            forumReplies: appData.forumReplies,
+            forumReplyLib: appData.forumReplyLib,
+            forumTopicTemplates: appData.forumTopicTemplates,
+            forumTopicWords: appData.forumTopicWords,
+            transferAmounts: appData.transferAmounts,
+            transferNotes: appData.transferNotes,
+            scratchPrizes: appData.scratchPrizes,
+            scratchMaxPerDay: appData.scratchMaxPerDay,
+            playlist: appData.playlist,
+            musicFloatingImg: '',
+            books: appData.books,
+            wheelItems: appData.wheelItems,
+            wheelHistory: appData.wheelHistory,
+            vdWordBank: appData.vdWordBank
+        };
+        copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
+        closeModal('subOverlay');
+    });
+}
+
+function exportChat() { 
+    var chatBackup = { chatHistory: appData.chatHistory };
+    copyToClipboard(JSON.stringify(chatBackup, null, 2), '聊天记录'); 
+    closeModal('subOverlay'); 
+}
+
+function exportLibs() { 
+    copyToClipboard(JSON.stringify({ replyGroups: appData.replyGroups, emojiIds: appData.emojiIds }, null, 2), '词库'); 
+    closeModal('subOverlay'); 
+}
+
 function copyToClipboard(text, label) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function() {
@@ -1046,34 +1145,8 @@ function fallbackCopy(text, label) {
     catch(e) { showToast('复制失败，请重试'); }
     document.body.removeChild(ta);
 }
-function exportFull() {
-    var emojiPromises = (appData.emojiIds || []).map(function(id) {
-        return getImageFromDB('images', id).then(function(data) { return { id: id, data: data || '' }; });
-    });
-    Promise.all(emojiPromises).then(function(emojiData) {
-        var backupData = {
-            myName: appData.myName, myAvatarId: appData.myAvatarId, myAvatar: appData.myAvatar || '',
-            otherName: appData.otherName, otherAvatarId: appData.otherAvatarId, otherAvatar: appData.otherAvatar || '',
-            replyGroups: appData.replyGroups, emojiIds: appData.emojiIds, emojiData: emojiData,
-            theme: appData.theme, chatHistory: appData.chatHistory, letters: appData.letters,
-            forumTopics: appData.forumTopics, forumReplies: appData.forumReplies,
-            forumReplyLib: appData.forumReplyLib, forumTopicTemplates: appData.forumTopicTemplates, forumTopicWords: appData.forumTopicWords,
-            transferAmounts: appData.transferAmounts, transferNotes: appData.transferNotes,
-            scratchPrizes: appData.scratchPrizes, scratchMaxPerDay: appData.scratchMaxPerDay,
-            playlist: appData.playlist, musicFloatingImg: appData.musicFloatingImg || '',
-            books: appData.books, vdWordBank: appData.vdWordBank,
-            wheelItems: appData.wheelItems,
-            wheelHistory: appData.wheelHistory,
-            vdWordBank: appData.vdWordBank
-        };
-        copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
-        closeModal('subOverlay');
-    });
-}
-function exportChat() { copyToClipboard(JSON.stringify({ chatHistory: appData.chatHistory }, null, 2), '聊天记录'); closeModal('subOverlay'); }
-function exportLibs() { copyToClipboard(JSON.stringify({ replyGroups: appData.replyGroups, emojiIds: appData.emojiIds }, null, 2), '词库'); closeModal('subOverlay'); }
 
-// ========== 导入备份（修复版：先清空旧数据再导入，强制覆盖） ==========
+// ========== 导入备份（完整版：恢复表情包，聊天图片只恢复ID） ==========
 function importDataFile() {
     var file = document.getElementById('importDataFile').files[0];
     if (!file) return;
@@ -1083,26 +1156,26 @@ function importDataFile() {
             var data = JSON.parse(e.target.result);
             if (!data || typeof data !== 'object') throw new Error('无效数据');
             
-            console.log('[导入] 开始导入，原聊天记录数:', appData.chatHistory.length);
+            console.log('[导入] 开始导入，原聊天记录数:', appData.chatHistory?.length || 0);
             
-            // 1. 清空当前 appData 的所有数组和对象（重要！）
+            // 1. 清空当前 appData 的数组
             appData.chatHistory = [];
             appData.letters = [];
-            appData.emojiIds = [];
             appData.forumTopics = [];
             appData.forumReplies = {};
             appData.playlist = [];
             appData.books = [];
             appData.wheelHistory = [];
             
-            // 2. 导入新数据
+            // 2. 导入文字数据
             if (typeof data.myName === 'string') appData.myName = data.myName;
             if (typeof data.otherName === 'string') appData.otherName = data.otherName;
             if (typeof data.theme === 'string') appData.theme = data.theme;
+            if (typeof data.morePanelTab === 'string') appData.morePanelTab = data.morePanelTab;
+            if (Array.isArray(data.emojiIds)) appData.emojiIds = data.emojiIds;
             if (Array.isArray(data.chatHistory)) appData.chatHistory = data.chatHistory;
             if (Array.isArray(data.letters)) appData.letters = data.letters;
             if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) appData.replyGroups = data.replyGroups;
-            else if (Array.isArray(data.replies)) appData.replyGroups = [{ name: '默认分组', replies: data.replies }];
             if (Array.isArray(data.forumTopics)) appData.forumTopics = data.forumTopics;
             if (typeof data.forumReplies === 'object' && data.forumReplies !== null) appData.forumReplies = data.forumReplies;
             if (Array.isArray(data.forumReplyLib)) appData.forumReplyLib = data.forumReplyLib;
@@ -1120,16 +1193,17 @@ function importDataFile() {
             if (Array.isArray(data.vdWordBank)) appData.vdWordBank = data.vdWordBank;
             
             // 3. 恢复表情包图片
-            if (Array.isArray(data.emojiData)) {
+            if (Array.isArray(data.emojiData) && data.emojiData.length > 0) {
                 appData.emojiIds = [];
                 data.emojiData.forEach(function(item) {
                     if (item.data && item.data.length > 100) {
                         appData.emojiIds.push(item.id);
-                        saveImageToDB('images', item.id, item.data).catch(function() {});
+                        saveImageToDB('images', item.id, item.data).catch(function() { 
+                            console.warn('表情包恢复失败:', item.id);
+                        });
                     }
                 });
-            } else if (Array.isArray(data.emojiIds)) {
-                appData.emojiIds = data.emojiIds;
+                console.log('[导入] 表情包恢复完成，数量:', appData.emojiIds.length);
             }
             
             // 4. 恢复头像
@@ -1165,13 +1239,7 @@ function importDataFile() {
             // 5. 强制立即保存到 localStorage
             saveData(true);
             
-            // 6. 验证保存是否成功
-            var verify = localStorage.getItem(STORAGE_KEY);
-            var verifyData = verify ? safeParseJSON(verify) : null;
-            console.log('[导入] 导入后聊天记录数:', appData.chatHistory.length);
-            console.log('[导入] localStorage 验证 - 聊天记录数:', verifyData?.chatHistory?.length);
-            
-            // 7. 刷新界面
+            // 6. 刷新界面
             applyTheme();
             updateHeader();
             renderChatHistory();
@@ -1179,12 +1247,9 @@ function importDataFile() {
             updateLetterBadge();
             
             closeModal('subOverlay');
+            showToastLong('导入成功！共 ' + (appData.chatHistory?.length || 0) + ' 条聊天记录，' + (appData.emojiIds?.length || 0) + ' 个表情包', 4000);
             
-            if (verifyData && verifyData.chatHistory && verifyData.chatHistory.length === appData.chatHistory.length) {
-                showToastLong('导入成功！共 ' + appData.chatHistory.length + ' 条聊天记录', 3000);
-            } else {
-                showToastLong('导入完成，但验证不通过，请重试', 3000);
-            }
+            console.log('[导入] 导入完成，聊天记录数:', appData.chatHistory?.length, '表情包数:', appData.emojiIds?.length);
         } catch(err) { 
             console.error('[导入] 错误:', err);
             showToast('导入失败，文件格式错误'); 
@@ -1201,6 +1266,7 @@ function clearChatHistory() {
     .then(function() { return autoCleanOrphanImages(); })
     .then(function(cleaned) { renderChatHistory(); closeModal('subOverlay'); showToast('聊天记录已清除' + (cleaned > 0 ? '，释放了 ' + cleaned + ' 张图片' : '')); });
 }
+
 function cleanOrphanImages() {
     autoCleanOrphanImages().then(function(cleaned) { showToast(cleaned > 0 ? '清理了 ' + cleaned + ' 张失效图片' : '没有需要清理的图片'); openBackupModal(); });
 }
@@ -1221,13 +1287,20 @@ function showToastLong(msg, duration) {
 
 // ========== 事件监听 ==========
 document.addEventListener('click', function(e) {
-    if (e.target.id === 'forumDetailOverlay') { e.stopPropagation(); if (typeof closeTopicDetail === 'function') closeTopicDetail(); return; }
-    if (e.target.id === 'forumOverlay') { if (typeof closeForum === 'function') closeForum(); return; }
+    if (e.target.id === 'forumDetailOverlay') { 
+        e.stopPropagation(); 
+        if (typeof closeTopicDetail === 'function') closeTopicDetail(); 
+        return; 
+    }
+    if (e.target.id === 'forumOverlay') { 
+        if (typeof closeForum === 'function') closeForum(); 
+        return; 
+    }
     if (e.target.id === 'settingsOverlay') closeModal('settingsOverlay');
     if (e.target.id === 'subOverlay') closeModal('subOverlay');
     if (e.target.id === 'photoOverlay') closeModal('photoOverlay');
     if (e.target.id === 'letterOverlay') closeModal('letterOverlay');
-    if (e.target.id === 'clueNotebookOverlay') closeClueNotebook();
+    if (e.target.id === 'clueNotebookOverlay' && typeof closeClueNotebook === 'function') closeClueNotebook();
 });
 
 // ========== 保存机制 ==========
