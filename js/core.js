@@ -1260,11 +1260,30 @@ function importDataFile() {
 }
 
 function clearChatHistory() {
-    if (!confirm('确定清除所有聊天记录？\n词库、表情包和设置会保留。')) return;
-    var ps = appData.chatHistory.map(function(m) { return m.imageId ? deleteImageFromDB('images', m.imageId).catch(function(){}) : Promise.resolve(); });
-    Promise.all(ps).then(function() { appData.chatHistory = []; return saveData(true); })
-    .then(function() { return autoCleanOrphanImages(); })
-    .then(function(cleaned) { renderChatHistory(); closeModal('subOverlay'); showToast('聊天记录已清除' + (cleaned > 0 ? '，释放了 ' + cleaned + ' 张图片' : '')); });
+    if (!confirm('确定清除所有聊天记录？\n\n注意：表情包不会被删除，只会删除聊天中的图片消息。')) return;
+    
+    // 收集聊天记录中的图片ID（排除表情包）
+    var chatImageIds = [];
+    for (var i = 0; i < appData.chatHistory.length; i++) {
+        var msg = appData.chatHistory[i];
+        // 只删除聊天中的图片，不删除表情包（emojiIds 里的）
+        if (msg.imageId && !appData.emojiIds.includes(msg.imageId)) {
+            chatImageIds.push(msg.imageId);
+        }
+    }
+    
+    // 删除这些图片
+    var promises = chatImageIds.map(function(id) {
+        return deleteImageFromDB('images', id).catch(function() {});
+    });
+    
+    Promise.all(promises).then(function() {
+        appData.chatHistory = [];  // 清空聊天记录
+        saveData(true);
+        renderChatHistory();
+        closeModal('subOverlay');
+        showToast('聊天记录已清除，表情包保留');
+    });
 }
 
 function cleanOrphanImages() {
