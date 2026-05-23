@@ -194,6 +194,9 @@ var DEFAULT_DATA = {
     '和朋友一起看日落', '收到一封手写信', '下雨天窝在被子里', '吃到想吃的蛋糕',
     '陌生人的微笑', '听到喜欢的歌', '完成一项挑战', '闻到咖啡香'],
     wheelHistory: [],
+    statusList: ['看书', '听音乐', '发呆', '想你', '喝咖啡', '散步', '晒太阳', '睡午觉', '写日记', '做甜点'],
+    lastStatusTime: 0,
+    currentStatus: '发呆',
     vdWordBank: []
 };
 
@@ -336,7 +339,9 @@ function loadData() {
         if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = ['一起看日落', '收到手写信'];
         if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
         if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
-        
+        if (!Array.isArray(appData.statusList)) appData.statusList = ['看书', '听音乐', '发呆', '想你', '喝咖啡', '散步', '晒太阳', '睡午觉', '写日记', '做甜点'];
+        if (typeof appData.lastStatusTime !== 'number') appData.lastStatusTime = 0;
+        if (typeof appData.currentStatus !== 'string') appData.currentStatus = '发呆';
         // 加载头像
         var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
         var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
@@ -370,6 +375,8 @@ function initApp() {
         checkPendingLetters();
         return renderChatHistory();
     }).then(function() {
+        updateStatus();
+        setInterval(updateStatus, 60 * 60 * 1000);
         updateLetterBadge();
         renderMoreImages();
         closeModal('settingsOverlay'); closeModal('subOverlay');
@@ -398,6 +405,7 @@ function initApp() {
 function updateHeader() {
     document.getElementById('headerTitle').textContent = appData.otherName;
     document.title = appData.otherName;
+    renderStatus();
 }
 
 // ========== 主题 ==========
@@ -1061,6 +1069,9 @@ function exportFullAsFile() {
             books: appData.books,
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
+            statusList: appData.statusList,
+            lastStatusTime: appData.lastStatusTime,
+            currentStatus: appData.currentStatus,
             vdWordBank: appData.vdWordBank
         };
         var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
@@ -1112,6 +1123,9 @@ function exportFull() {
             books: appData.books,
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
+            statusList: appData.statusList,
+            lastStatusTime: appData.lastStatusTime,
+            currentStatus: appData.currentStatus,
             vdWordBank: appData.vdWordBank
         };
         copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
@@ -1191,7 +1205,9 @@ function importDataFile() {
             if (Array.isArray(data.wheelItems)) appData.wheelItems = data.wheelItems;
             if (Array.isArray(data.wheelHistory)) appData.wheelHistory = data.wheelHistory;
             if (Array.isArray(data.vdWordBank)) appData.vdWordBank = data.vdWordBank;
-            
+            if (Array.isArray(data.statusList)) appData.statusList = data.statusList;
+            if (typeof data.lastStatusTime === 'number') appData.lastStatusTime = data.lastStatusTime;
+            if (typeof data.currentStatus === 'string') appData.currentStatus = data.currentStatus;
             // 3. 恢复表情包图片
             if (Array.isArray(data.emojiData) && data.emojiData.length > 0) {
                 appData.emojiIds = [];
@@ -1415,6 +1431,61 @@ document.addEventListener('click', function(e) {
         closeReplyLibMenu();
     }
 });
+// ========== 状态显示功能 ==========
+function updateStatus() {
+    var now = Date.now();
+    var lastTime = appData.lastStatusTime || 0;
+    
+    // 4小时 = 4 * 60 * 60 * 1000 毫秒
+    if (now - lastTime >= 4 * 60 * 60 * 1000 || !appData.currentStatus) {
+        var list = appData.statusList || ['发呆'];
+        var randomIndex = Math.floor(Math.random() * list.length);
+        appData.currentStatus = list[randomIndex];
+        appData.lastStatusTime = now;
+        saveData();
+        renderStatus();
+    }
+}
 
+function renderStatus() {
+    var statusEl = document.getElementById('otherStatus');
+    if (statusEl) {
+        statusEl.textContent = '✨ ' + (appData.currentStatus || '发呆');
+    }
+}
+
+function openStatusManageModal() {
+    closeModal('settingsOverlay');
+    var html = '<h4>对方状态词库</h4>';
+    html += '<div class="subtitle">对方会随机从这些词中选择显示状态（约4小时换一次）</div>';
+    html += '<div class="form-row">';
+    html += '<textarea id="statusListInput" rows="6" placeholder="每行一个状态词&#10;例如：&#10;看书&#10;听音乐&#10;喝咖啡"></textarea>';
+    html += '</div>';
+    html += '<div class="btn-row">';
+    html += '<button class="btn-sm" onclick="saveStatusList()">保存词库</button>';
+    html += '<button class="btn-sm outline" onclick="closeModal(\'subOverlay\')">取消</button>';
+    html += '</div>';
+    openSubModal(html);
+    
+    var textarea = document.getElementById('statusListInput');
+    if (textarea && appData.statusList) {
+        textarea.value = appData.statusList.join('\n');
+    }
+}
+
+function saveStatusList() {
+    var textarea = document.getElementById('statusListInput');
+    if (!textarea) return;
+    var lines = textarea.value.split('\n').filter(function(l) { return l.trim(); });
+    if (lines.length === 0) {
+        showToast('至少需要一个状态词');
+        return;
+    }
+    appData.statusList = lines;
+    saveData();
+    closeModal('subOverlay');
+    showToast('状态词库已保存');
+    updateStatus();
+}
 // ========== 启动 ==========
 initApp().then(function(){ console.log('甜心助手启动成功！'); }).catch(function(e){ console.error('启动失败:', e); });
