@@ -28,6 +28,7 @@
 <!-- ==================== 头部 ==================== -->
 <div class="header">
     <span class="header-title" id="headerTitle">甜心助手</span>
+    <div class="header-status" id="otherStatus"></div>
     <span class="letter-badge" id="letterBadge" style="display:none;" onclick="checkAndShowLetterReply()">新回信</span>
 </div>
 
@@ -94,6 +95,7 @@
             <div class="card" onclick="openThemeModal()">主题模式</div>
             <div class="card" onclick="openBackupModal()">数据管理</div>
             <div class="card" onclick="openLetterManageModal()">往来信件</div>
+            <div class="card" onclick="openStatusManageModal()">状态词库</div>
             <!-- 书籍阅读将由 modules.js 动态添加 -->
         </div>
         <button class="btn-close" onclick="closeModal('settingsOverlay')">关闭</button>
