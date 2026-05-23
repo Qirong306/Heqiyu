@@ -33,6 +33,13 @@
     --font-main: 'Ma Shan Zheng', 'STKaiti', 'KaiTi', '楷体', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
+/* ========== 状态词 ========== */
+.header-status {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    opacity: 0.8;
+}
 /* ========== 3. 深色模式 ========== */
 .dark-mode {
     --bg: #2c2420;
