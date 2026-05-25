@@ -48,7 +48,11 @@ function createFloatingBall() {
     ball.setAttribute('draggable', 'false');
     ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
     document.body.appendChild(ball);
-
+// 恢复之前的球图
+    if (appData.musicFloatingImg) {
+        musicFloatingImg = appData.musicFloatingImg;
+        showFloatingBall();
+    }
     if (!document.getElementById('musicSpinStyle')) {
         var styleEl = document.createElement('style');
         styleEl.id = 'musicSpinStyle';
@@ -136,6 +140,8 @@ function changeFloatingBallImage() {
         var reader = new FileReader();
         reader.onload = function(e) {
             musicFloatingImg = e.target.result;
+            appData.musicFloatingImg = musicFloatingImg;  // 加这行
+            if (typeof saveData === 'function') saveData();  // 加这行
             showFloatingBall();
             showToast('浮动球图片已更新');
             appData.musicFloatingImg = musicFloatingImg;
