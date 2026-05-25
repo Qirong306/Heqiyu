@@ -1553,6 +1553,7 @@ var isInCall = false;
 var isRinging = false;
 var callStartTime = null;
 var callTimerInterval = null;
+var isCallMinimized = false;
 
 // 发起通话
 function startVoiceCall() {
@@ -1565,37 +1566,26 @@ function startVoiceCall() {
         return;
     }
     
-    // 关闭更多面板
     if (document.getElementById('morePanel').style.display === 'block') {
         toggleMorePanel();
     }
     
     isRinging = true;
-    
-    // 添加系统消息
     addSystemMsg('你发起了通话，等待对方接听...');
-    
-    // 显示等待接听弹窗
     showCallingModal();
     
-    // 模拟对方响应（2-5秒后）
     callTimeout = setTimeout(function() {
         if (!isRinging) return;
-        
         var rand = Math.random();
-        
         if (rand < 0.7) {
-            // 接听
             addSystemMsg('对方接听了通话');
             closeModal('subOverlay');
             startCall();
         } else if (rand < 0.85) {
-            // 拒绝
             addSystemMsg('对方拒绝了通话');
             showToast('对方拒绝了通话');
             endCallSession();
         } else {
-            // 未接听
             addSystemMsg('对方未接听');
             showToast('对方未接听');
             endCallSession();
@@ -1603,7 +1593,6 @@ function startVoiceCall() {
     }, 2000 + Math.random() * 3000);
 }
 
-// 显示正在呼叫弹窗
 function showCallingModal() {
     var html = '<div style="text-align:center;">' +
         '<h3>正在呼叫</h3>' +
@@ -1613,27 +1602,19 @@ function showCallingModal() {
     openSubModal(html);
 }
 
-// 取消呼叫
 function cancelCall() {
-    if (callTimeout) {
-        clearTimeout(callTimeout);
-        callTimeout = null;
-    }
+    if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('你取消了通话');
     showToast('已取消');
     endCallSession();
 }
 
-// 开始通话（计时）
 function startCall() {
     isInCall = true;
     isRinging = false;
     callStartTime = Date.now();
-    
-    // 显示通话中弹窗
     showCallInProgressModal();
     
-    // 启动计时器
     callTimerInterval = setInterval(function() {
         if (isInCall && callStartTime) {
             var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
@@ -1641,72 +1622,111 @@ function startCall() {
             var seconds = elapsed % 60;
             var timeStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
             var timerEl = document.getElementById('callTimerDisplay');
-            if (timerEl) {
-                timerEl.textContent = timeStr;
-            }
+            if (timerEl) timerEl.textContent = timeStr;
+            var floatingTimerEl = document.getElementById('floatingCallTimer');
+            if (floatingTimerEl) floatingTimerEl.textContent = timeStr;
         }
     }, 1000);
     
-    // 自动挂断（30-90秒）
-    var autoHangup = 30000 + Math.random() * 60000;
-    callTimeout = setTimeout(function() {
-        if (isInCall) {
-            hangupCall();
-        }
-    }, autoHangup);
+    scheduleRandomHangup();
 }
 
-// 显示通话中弹窗
+function scheduleRandomHangup() {
+    var hangupDelay = 10000 + Math.random() * 30000;
+    callTimeout = setTimeout(function() {
+        if (isInCall) {
+            addSystemMsg('对方挂断了通话');
+            showToast('对方挂断了通话');
+            endCallSession();
+        }
+    }, hangupDelay);
+}
+
 function showCallInProgressModal() {
     var html = '<div style="text-align:center;">' +
+        '<div style="display:flex;justify-content:flex-end;margin:-8px -8px 0 0;">' +
+        '<button onclick="minimizeCall()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text);">[缩小]</button>' +
+        '</div>' +
         '<h3>通话中</h3>' +
         '<div class="subtitle" style="margin:16px 0;">与对方通话中...</div>' +
         '<div style="font-size:28px;font-weight:bold;margin:16px 0;" id="callTimerDisplay">0秒</div>' +
+        '<div class="btn-row" style="justify-content:center;gap:16px;">' +
         '<button class="btn-sm" style="background:var(--danger);" onclick="hangupCall()">挂断</button>' +
+        '<button class="btn-sm outline" onclick="minimizeCall()">缩小</button>' +
+        '</div>' +
         '</div>';
     openSubModal(html);
 }
 
-// 挂断通话
+function minimizeCall() {
+    if (!isInCall) return;
+    isCallMinimized = true;
+    closeModal('subOverlay');
+    
+    var existingBall = document.getElementById('callFloatingBall');
+    if (existingBall) existingBall.remove();
+    
+    var ball = document.createElement('div');
+    ball.id = 'callFloatingBall';
+    ball.style.cssText = 'position:fixed;bottom:160px;right:12px;width:60px;height:60px;border-radius:50%;background:var(--accent);z-index:160;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2);font-size:12px;font-weight:bold;';
+    ball.innerHTML = '<span>通话</span><span id="floatingCallTimer" style="font-size:10px;margin-top:4px;">0秒</span>';
+    ball.onclick = function() { restoreCallWindow(); };
+    document.body.appendChild(ball);
+    
+    if (callTimerInterval) clearInterval(callTimerInterval);
+    callTimerInterval = setInterval(function() {
+        if (isInCall && callStartTime) {
+            var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+            var minutes = Math.floor(elapsed / 60);
+            var seconds = elapsed % 60;
+            var timeStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
+            var floatingTimer = document.getElementById('floatingCallTimer');
+            if (floatingTimer) floatingTimer.textContent = timeStr;
+        }
+    }, 1000);
+    showToast('通话已缩小，点击小球恢复');
+}
+
+function restoreCallWindow() {
+    var ball = document.getElementById('callFloatingBall');
+    if (ball) ball.remove();
+    isCallMinimized = false;
+    showCallInProgressModal();
+}
+
 function hangupCall() {
     if (!isInCall) return;
-    
     var duration = Math.floor((Date.now() - callStartTime) / 1000);
     var minutes = Math.floor(duration / 60);
     var seconds = duration % 60;
     var durationStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
-    
-    addSystemMsg('通话结束，通话时长 ' + durationStr);
-    showToast('通话结束');
+    addSystemMsg('你挂断了通话，通话时长 ' + durationStr);
+    showToast('已挂断');
     endCallSession();
 }
 
-// 清理通话状态
 function endCallSession() {
-    if (callTimeout) {
-        clearTimeout(callTimeout);
-        callTimeout = null;
-    }
-    if (callTimerInterval) {
-        clearInterval(callTimerInterval);
-        callTimerInterval = null;
-    }
+    if (callTimeout) clearTimeout(callTimeout);
+    if (callTimerInterval) clearInterval(callTimerInterval);
     isInCall = false;
     isRinging = false;
+    isCallMinimized = false;
     callStartTime = null;
+    callTimeout = null;
+    callTimerInterval = null;
     closeModal('subOverlay');
+    var ball = document.getElementById('callFloatingBall');
+    if (ball) ball.remove();
 }
 
-// 对方随机发起通话（定时检查）
 function checkRandomIncomingCall() {
     if (isInCall || isRinging) return;
-    if (Math.random() > 0.03) return; // 3%概率
+    if (Math.random() > 0.03) return;
     
     isRinging = true;
     addSystemMsg('对方发起了通话...');
     showIncomingCallModal();
     
-    // 15秒无操作自动忽略
     callTimeout = setTimeout(function() {
         if (isRinging) {
             addSystemMsg('未接听');
@@ -1716,7 +1736,6 @@ function checkRandomIncomingCall() {
     }, 15000);
 }
 
-// 显示来电弹窗
 function showIncomingCallModal() {
     var html = '<div style="text-align:center;">' +
         '<h3>来电</h3>' +
@@ -1730,40 +1749,27 @@ function showIncomingCallModal() {
     openSubModal(html);
 }
 
-// 接听来电
 function answerIncomingCall() {
-    if (callTimeout) {
-        clearTimeout(callTimeout);
-        callTimeout = null;
-    }
+    if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('你接听了通话');
     closeModal('subOverlay');
     startCall();
 }
 
-// 拒绝来电
 function rejectIncomingCall() {
-    if (callTimeout) {
-        clearTimeout(callTimeout);
-        callTimeout = null;
-    }
+    if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('你拒绝了通话');
     showToast('已拒绝');
     endCallSession();
 }
 
-// 忽略来电
 function ignoreIncomingCall() {
-    if (callTimeout) {
-        clearTimeout(callTimeout);
-        callTimeout = null;
-    }
+    if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('未接听');
     showToast('未接听');
     endCallSession();
 }
 
-// 定时检查对方发起通话（每30秒检查一次）
 setInterval(function() {
     checkRandomIncomingCall();
 }, 30000);
