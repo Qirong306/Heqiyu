@@ -614,7 +614,7 @@ function triggerAutoReply() {
     function sendNext(index) {
         if (index >= replyCount) return;
         setTimeout(function() {
-            if (Math.random() < 0.3 && appData.transferAmounts.length > 0 && appData.transferNotes.length > 0) {
+            if (Math.random() < 0.1 && appData.transferAmounts.length > 0 && appData.transferNotes.length > 0) {
                 var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
                 var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
                 addTransferCard(amt, note, 'other');
