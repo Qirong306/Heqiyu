@@ -1732,6 +1732,7 @@ var isRinging = false;
 var callStartTime = null;
 var callTimerInterval = null;
 var isCallMinimized = false;
+var pendingCall = null; // 存储待接听的来电信息
 
 // 发起通话
 function startVoiceCall() {
@@ -1822,9 +1823,6 @@ function scheduleRandomHangup() {
 
 function showCallInProgressModal() {
     var html = '<div style="text-align:center;">' +
-        '<div style="display:flex;justify-content:flex-end;margin:-8px -8px 0 0;">' +
-        '<button onclick="minimizeCall()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text);">[缩小]</button>' +
-        '</div>' +
         '<h3>通话中</h3>' +
         '<div class="subtitle" style="margin:16px 0;">与对方通话中...</div>' +
         '<div style="font-size:28px;font-weight:bold;margin:16px 0;" id="callTimerDisplay">0秒</div>' +
@@ -1836,32 +1834,113 @@ function showCallInProgressModal() {
     openSubModal(html);
 }
 
-function minimizeCall() {
-    if (!isInCall) return;
-    isCallMinimized = true;
-    closeModal('subOverlay');
-    
+// 创建可拖动的通话小球
+function createCallFloatingBall() {
     var existingBall = document.getElementById('callFloatingBall');
     if (existingBall) existingBall.remove();
     
     var ball = document.createElement('div');
     ball.id = 'callFloatingBall';
-    ball.style.cssText = 'position:fixed;bottom:160px;right:12px;width:60px;height:60px;border-radius:50%;background:var(--accent);z-index:160;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2);font-size:12px;font-weight:bold;';
-    ball.innerHTML = '<span>通话</span><span id="floatingCallTimer" style="font-size:10px;margin-top:4px;">0秒</span>';
-    ball.onclick = function() { restoreCallWindow(); };
+    
+    // 获取对方头像，如果没有则用文字
+    var avatarHtml = '';
+    if (appData.otherAvatar) {
+        avatarHtml = '<img src="' + appData.otherAvatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    } else {
+        avatarHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;">' + (appData.otherName.charAt(0) || 'TA') + '</div>';
+    }
+    
+    ball.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;">' +
+        avatarHtml +
+        '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:white;font-size:9px;text-align:center;padding:2px 0;">' +
+        '<span id="floatingCallTimer">0秒</span>' +
+        '</div></div>';
+    
+    ball.style.cssText = 'position:fixed;bottom:160px;right:12px;width:55px;height:55px;border-radius:50%;z-index:160;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+    ball.setAttribute('draggable', 'false');
+    
     document.body.appendChild(ball);
     
-    if (callTimerInterval) clearInterval(callTimerInterval);
-    callTimerInterval = setInterval(function() {
-        if (isInCall && callStartTime) {
-            var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-            var minutes = Math.floor(elapsed / 60);
-            var seconds = elapsed % 60;
-            var timeStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
-            var floatingTimer = document.getElementById('floatingCallTimer');
-            if (floatingTimer) floatingTimer.textContent = timeStr;
+    // 添加拖动功能
+    makeDraggable(ball);
+    
+    ball.onclick = function(e) {
+        e.stopPropagation();
+        restoreCallWindow();
+    };
+}
+
+// 使元素可拖动
+function makeDraggable(element) {
+    var isDragging = false;
+    var startX, startY, startLeft, startTop;
+    
+    function onStart(e) {
+        e.preventDefault();
+        if (e.type === 'touchstart') {
+            var touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        } else {
+            startX = e.clientX;
+            startY = e.clientY;
         }
-    }, 1000);
+        var rect = element.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+        isDragging = true;
+        element.style.cursor = 'grabbing';
+        
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+    }
+    
+    function onMove(e) {
+        if (!isDragging) return;
+        var clientX, clientY;
+        if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+            e.preventDefault();
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        var dx = clientX - startX;
+        var dy = clientY - startY;
+        var newLeft = startLeft + dx;
+        var newTop = startTop + dy;
+        var maxLeft = window.innerWidth - element.offsetWidth;
+        var maxTop = window.innerHeight - element.offsetHeight;
+        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+        newTop = Math.max(0, Math.min(newTop, maxTop));
+        element.style.left = newLeft + 'px';
+        element.style.top = newTop + 'px';
+        element.style.right = 'auto';
+        element.style.bottom = 'auto';
+    }
+    
+    function onEnd() {
+        isDragging = false;
+        element.style.cursor = 'grab';
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+    }
+    
+    element.addEventListener('touchstart', onStart, { passive: false });
+    element.addEventListener('mousedown', onStart);
+    element.style.cursor = 'grab';
+}
+
+function minimizeCall() {
+    if (!isInCall) return;
+    isCallMinimized = true;
+    closeModal('subOverlay');
+    createCallFloatingBall();
     showToast('通话已缩小，点击小球恢复');
 }
 
@@ -1892,26 +1971,36 @@ function endCallSession() {
     callStartTime = null;
     callTimeout = null;
     callTimerInterval = null;
+    pendingCall = null;
     closeModal('subOverlay');
     var ball = document.getElementById('callFloatingBall');
     if (ball) ball.remove();
 }
 
+// 对方随机发起通话
 function checkRandomIncomingCall() {
     if (isInCall || isRinging) return;
     if (Math.random() > 0.03) return;
     
+    // 如果当前有其他弹窗，延迟一下
+    var overlay = document.querySelector('.modal-overlay.show');
+    if (overlay) return;
+    
     isRinging = true;
     addSystemMsg('对方发起了通话...');
-    showIncomingCallModal();
     
-    callTimeout = setTimeout(function() {
-        if (isRinging) {
-            addSystemMsg('未接听');
-            showToast('未接听');
-            endCallSession();
-        }
-    }, 15000);
+    // 保存来电信息，防止弹窗消失后无法接听
+    pendingCall = {
+        timeout: setTimeout(function() {
+            if (isRinging) {
+                addSystemMsg('未接听');
+                showToast('未接听');
+                endCallSession();
+            }
+        }, 15000)
+    };
+    
+    showIncomingCallModal();
 }
 
 function showIncomingCallModal() {
@@ -1928,13 +2017,21 @@ function showIncomingCallModal() {
 }
 
 function answerIncomingCall() {
+    if (pendingCall && pendingCall.timeout) {
+        clearTimeout(pendingCall.timeout);
+    }
     if (callTimeout) clearTimeout(callTimeout);
+    isRinging = false;
+    pendingCall = null;
     addSystemMsg('你接听了通话');
     closeModal('subOverlay');
     startCall();
 }
 
 function rejectIncomingCall() {
+    if (pendingCall && pendingCall.timeout) {
+        clearTimeout(pendingCall.timeout);
+    }
     if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('你拒绝了通话');
     showToast('已拒绝');
@@ -1942,11 +2039,24 @@ function rejectIncomingCall() {
 }
 
 function ignoreIncomingCall() {
+    if (pendingCall && pendingCall.timeout) {
+        clearTimeout(pendingCall.timeout);
+    }
     if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('未接听');
     showToast('未接听');
     endCallSession();
 }
+
+// 全局保护：防止其他弹窗关闭时影响通话状态
+var originalCloseModal = closeModal;
+window.closeModal = function(id) {
+    // 如果是通话相关的弹窗且正在通话中，不关闭
+    if (id === 'subOverlay' && (isInCall || isRinging)) {
+        return;
+    }
+    originalCloseModal(id);
+};
 
 setInterval(function() {
     checkRandomIncomingCall();
