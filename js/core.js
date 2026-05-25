@@ -1732,7 +1732,7 @@ var isRinging = false;
 var callStartTime = null;
 var callTimerInterval = null;
 var isCallMinimized = false;
-var pendingCall = null;
+var pendingCallTimeout = null;  // 改名为 pendingCallTimeout 避免歧义
 
 // 发起通话
 function startVoiceCall() {
@@ -1794,6 +1794,7 @@ function startCall() {
     callStartTime = Date.now();
     showCallInProgressModal();
     
+    if (callTimerInterval) clearInterval(callTimerInterval);
     callTimerInterval = setInterval(function() {
         if (isInCall && callStartTime) {
             var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
@@ -1871,7 +1872,10 @@ function createCallFloatingBall() {
         '<span id="floatingCallTimer">0秒</span>' +
         '</div></div>';
     
-    ball.style.cssText = 'position:fixed;bottom:160px;right:12px;width:55px;height:55px;border-radius:50%;z-index:160;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+    // 获取当前位置，默认右下角
+    var leftPos = window.innerWidth - 70;
+    var topPos = window.innerHeight - 180;
+    ball.style.cssText = 'position:fixed;left:' + leftPos + 'px;top:' + topPos + 'px;width:55px;height:55px;border-radius:50%;z-index:160;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.3);';
     ball.setAttribute('draggable', 'false');
     
     document.body.appendChild(ball);
@@ -1902,6 +1906,7 @@ function makeDraggable(element) {
         startTop = rect.top;
         isDragging = true;
         element.style.cursor = 'grabbing';
+        element.style.transition = 'none';
         
         document.addEventListener('touchmove', onMove, { passive: false });
         document.addEventListener('touchend', onEnd);
@@ -1937,6 +1942,7 @@ function makeDraggable(element) {
     function onEnd() {
         isDragging = false;
         element.style.cursor = 'grab';
+        element.style.transition = '';
         document.removeEventListener('touchmove', onMove);
         document.removeEventListener('touchend', onEnd);
         document.removeEventListener('mousemove', onMove);
@@ -1967,21 +1973,28 @@ function hangupCall() {
 }
 
 function endCallSession() {
-    if (callTimeout) clearTimeout(callTimeout);
-    if (callTimerInterval) clearInterval(callTimerInterval);
+    if (callTimeout) {
+        clearTimeout(callTimeout);
+        callTimeout = null;
+    }
+    if (callTimerInterval) {
+        clearInterval(callTimerInterval);
+        callTimerInterval = null;
+    }
     isInCall = false;
     isRinging = false;
     isCallMinimized = false;
     callStartTime = null;
-    callTimeout = null;
-    callTimerInterval = null;
-    pendingCall = null;
     
-    // 关闭所有弹窗
+    // 关闭通话相关弹窗（不影响其他弹窗）
     var subOverlay = document.getElementById('subOverlay');
-    if (subOverlay) {
-        subOverlay.classList.remove('show');
-        subOverlay.style.display = 'none';
+    if (subOverlay && subOverlay.classList.contains('show')) {
+        // 检查当前弹窗内容是否是通话相关的
+        var modalContent = document.querySelector('#subModal');
+        if (modalContent && (modalContent.innerText.includes('通话') || modalContent.innerText.includes('呼叫') || modalContent.innerText.includes('来电'))) {
+            subOverlay.classList.remove('show');
+            subOverlay.style.display = '';
+        }
     }
     document.body.style.overflow = '';
     
@@ -1994,13 +2007,17 @@ function checkRandomIncomingCall() {
     if (isInCall || isRinging) return;
     if (Math.random() > 0.03) return;
     
-    var overlay = document.querySelector('.modal-overlay.show');
-    if (overlay) return;
+    // 检查是否有其他重要弹窗打开
+    var settingsOverlay = document.getElementById('settingsOverlay');
+    if (settingsOverlay && settingsOverlay.classList.contains('show')) return;
+    
+    var photoOverlay = document.getElementById('photoOverlay');
+    if (photoOverlay && photoOverlay.classList.contains('show')) return;
     
     isRinging = true;
     addSystemMsg('对方发起了通话...');
     
-    pendingCall = setTimeout(function() {
+    pendingCallTimeout = setTimeout(function() {
         if (isRinging) {
             addSystemMsg('未接听');
             showToast('未接听');
@@ -2025,9 +2042,9 @@ function showIncomingCallModal() {
 }
 
 function answerIncomingCall() {
-    if (pendingCall) {
-        clearTimeout(pendingCall);
-        pendingCall = null;
+    if (pendingCallTimeout) {
+        clearTimeout(pendingCallTimeout);
+        pendingCallTimeout = null;
     }
     if (callTimeout) clearTimeout(callTimeout);
     isRinging = false;
@@ -2037,9 +2054,9 @@ function answerIncomingCall() {
 }
 
 function rejectIncomingCall() {
-    if (pendingCall) {
-        clearTimeout(pendingCall);
-        pendingCall = null;
+    if (pendingCallTimeout) {
+        clearTimeout(pendingCallTimeout);
+        pendingCallTimeout = null;
     }
     if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('你拒绝了通话');
@@ -2048,9 +2065,9 @@ function rejectIncomingCall() {
 }
 
 function ignoreIncomingCall() {
-    if (pendingCall) {
-        clearTimeout(pendingCall);
-        pendingCall = null;
+    if (pendingCallTimeout) {
+        clearTimeout(pendingCallTimeout);
+        pendingCallTimeout = null;
     }
     if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('未接听');
@@ -2058,10 +2075,10 @@ function ignoreIncomingCall() {
     endCallSession();
 }
 
-// 定时检查对方发起通话
+// 定时检查对方发起通话（每40秒检查一次，降低频率）
 setInterval(function() {
     checkRandomIncomingCall();
-}, 30000);
+}, 40000);
 // ========== 启动 ==========
 initApp().then(function() {
     console.log('甜心助手启动成功！');
