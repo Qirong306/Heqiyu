@@ -237,7 +237,10 @@ function saveData(immediate) {
             books: appData.books,    
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
-            vdWordBank: appData.vdWordBank
+            vdWordBank: appData.vdWordBank,
+            statusList: appData.statusList,        // 加这行
+            lastStatusTime: appData.lastStatusTime, // 加这行
+            currentStatus: appData.currentStatus   // 加这行
         };
         var jsonStr = JSON.stringify(saveObj);
         
@@ -1288,7 +1291,37 @@ function importDataFile() {
             renderChatHistory();
             renderMoreImages();
             updateLetterBadge();
-            
+            updateStatus();      // 刷新状态显示
+            renderStatus();      // 重新渲染状态
+
+            // 7. 恢复音乐歌单（同步到 music.js 的变量）
+            if (typeof musicPlaylist !== 'undefined') {
+                musicPlaylist.length = 0;
+                appData.playlist.forEach(function(song) {
+                    musicPlaylist.push(song);
+                });
+            }
+            // 如果有歌单，显示音乐浮动球
+            if (typeof showFloatingBall === 'function' && appData.playlist && appData.playlist.length > 0) {
+                setTimeout(function() {
+                    showFloatingBall();
+                }, 500);
+            }
+
+            // 8. 重新加载头像显示（确保头像图片正确显示）
+            if (appData.myAvatarId) {
+                getImageFromDB('avatars', appData.myAvatarId).then(function(img) {
+                    if (img) appData.myAvatar = img;
+                    renderChatHistory();
+                });
+            }
+            if (appData.otherAvatarId) {
+                getImageFromDB('avatars', appData.otherAvatarId).then(function(img) {
+                    if (img) appData.otherAvatar = img;
+                    renderChatHistory();
+                });
+            }
+
             closeModal('subOverlay');
             showToastLong('导入成功！共 ' + (appData.chatHistory?.length || 0) + ' 条聊天记录，' + (appData.emojiIds?.length || 0) + ' 个表情包', 4000);
             
