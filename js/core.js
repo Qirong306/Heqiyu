@@ -1823,6 +1823,13 @@ function scheduleRandomHangup() {
 }
 
 function showCallInProgressModal() {
+    // 先关闭可能存在的弹窗
+    var subOverlay = document.getElementById('subOverlay');
+    if (subOverlay) {
+        subOverlay.classList.remove('show');
+        subOverlay.style.display = 'none';
+    }
+    
     var html = '<div style="text-align:center;">' +
         '<h3>通话中</h3>' +
         '<div class="subtitle" style="margin:16px 0;">与对方通话中...</div>' +
@@ -1833,6 +1840,16 @@ function showCallInProgressModal() {
         '</div>' +
         '</div>';
     openSubModal(html);
+    
+    // 更新计时器显示
+    if (callStartTime) {
+        var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+        var minutes = Math.floor(elapsed / 60);
+        var seconds = elapsed % 60;
+        var timeStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
+        var timerEl = document.getElementById('callTimerDisplay');
+        if (timerEl) timerEl.textContent = timeStr;
+    }
 }
 
 function minimizeCall() {
@@ -1958,6 +1975,15 @@ function restoreCallWindow() {
     var ball = document.getElementById('callFloatingBall');
     if (ball) ball.remove();
     isCallMinimized = false;
+    
+    // 强制关闭弹窗
+    var subOverlay = document.getElementById('subOverlay');
+    if (subOverlay) {
+        subOverlay.classList.remove('show');
+        subOverlay.style.display = 'none';
+    }
+    
+    // 重新显示通话窗口
     showCallInProgressModal();
 }
 
