@@ -232,8 +232,9 @@ function saveData(immediate) {
             scratchPrizes: appData.scratchPrizes,
             scratchMaxPerDay: appData.scratchMaxPerDay,
             playlist: appData.playlist,
-            musicFloatingImg: appData.musicFloatingImg || '',
-            books: appData.books,
+            musicFloatingImgId: appData.musicFloatingImgId || '',  // 改成这个
+            // musicFloatingImg: appData.musicFloatingImg || '',   // 删掉或注释
+            books: appData.books,    
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
             vdWordBank: appData.vdWordBank
@@ -313,6 +314,8 @@ function loadData() {
                 if (Array.isArray(p.wheelItems)) appData.wheelItems = p.wheelItems;
                 if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
                 if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
+                if (typeof p.musicFloatingImgId === 'string') appData.musicFloatingImgId = p.musicFloatingImgId;
+                if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg; // 兼容旧版
             }
         } else {
             console.log('[加载] 无本地数据，使用默认数据');
@@ -1488,4 +1491,16 @@ function saveStatusList() {
     updateStatus();
 }
 // ========== 启动 ==========
-initApp().then(function(){ console.log('甜心助手启动成功！'); }).catch(function(e){ console.error('启动失败:', e); });
+initApp().then(function() {
+    console.log('甜心助手启动成功！');
+    // 如果歌单有内容，显示音乐浮动球
+    if (appData.playlist && appData.playlist.length > 0) {
+        setTimeout(function() {
+            if (typeof showFloatingBall === 'function') {
+                showFloatingBall();
+            }
+        }, 1000);
+    }
+}).catch(function(e) {
+    console.error('启动失败:', e);
+});
