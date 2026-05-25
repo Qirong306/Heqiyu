@@ -1547,6 +1547,226 @@ function saveStatusList() {
     showToast('状态词库已保存');
     updateStatus();
 }
+// ==================== 语音通话功能（模拟） ====================
+var callTimeout = null;
+var isInCall = false;
+var isRinging = false;
+var callStartTime = null;
+var callTimerInterval = null;
+
+// 发起通话
+function startVoiceCall() {
+    if (isInCall) {
+        showToast('通话中，请稍后再试');
+        return;
+    }
+    if (isRinging) {
+        showToast('正在呼叫中...');
+        return;
+    }
+    
+    // 关闭更多面板
+    if (document.getElementById('morePanel').style.display === 'block') {
+        toggleMorePanel();
+    }
+    
+    isRinging = true;
+    
+    // 添加系统消息
+    addSystemMsg('你发起了通话，等待对方接听...');
+    
+    // 显示等待接听弹窗
+    showCallingModal();
+    
+    // 模拟对方响应（2-5秒后）
+    callTimeout = setTimeout(function() {
+        if (!isRinging) return;
+        
+        var rand = Math.random();
+        
+        if (rand < 0.7) {
+            // 接听
+            addSystemMsg('对方接听了通话');
+            closeModal('subOverlay');
+            startCall();
+        } else if (rand < 0.85) {
+            // 拒绝
+            addSystemMsg('对方拒绝了通话');
+            showToast('对方拒绝了通话');
+            endCallSession();
+        } else {
+            // 未接听
+            addSystemMsg('对方未接听');
+            showToast('对方未接听');
+            endCallSession();
+        }
+    }, 2000 + Math.random() * 3000);
+}
+
+// 显示正在呼叫弹窗
+function showCallingModal() {
+    var html = '<div style="text-align:center;">' +
+        '<h3>正在呼叫</h3>' +
+        '<div class="subtitle" style="margin:16px 0;">等待对方接听...</div>' +
+        '<button class="btn-sm outline" onclick="cancelCall()">取消</button>' +
+        '</div>';
+    openSubModal(html);
+}
+
+// 取消呼叫
+function cancelCall() {
+    if (callTimeout) {
+        clearTimeout(callTimeout);
+        callTimeout = null;
+    }
+    addSystemMsg('你取消了通话');
+    showToast('已取消');
+    endCallSession();
+}
+
+// 开始通话（计时）
+function startCall() {
+    isInCall = true;
+    isRinging = false;
+    callStartTime = Date.now();
+    
+    // 显示通话中弹窗
+    showCallInProgressModal();
+    
+    // 启动计时器
+    callTimerInterval = setInterval(function() {
+        if (isInCall && callStartTime) {
+            var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+            var minutes = Math.floor(elapsed / 60);
+            var seconds = elapsed % 60;
+            var timeStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
+            var timerEl = document.getElementById('callTimerDisplay');
+            if (timerEl) {
+                timerEl.textContent = timeStr;
+            }
+        }
+    }, 1000);
+    
+    // 自动挂断（30-90秒）
+    var autoHangup = 30000 + Math.random() * 60000;
+    callTimeout = setTimeout(function() {
+        if (isInCall) {
+            hangupCall();
+        }
+    }, autoHangup);
+}
+
+// 显示通话中弹窗
+function showCallInProgressModal() {
+    var html = '<div style="text-align:center;">' +
+        '<h3>通话中</h3>' +
+        '<div class="subtitle" style="margin:16px 0;">与对方通话中...</div>' +
+        '<div style="font-size:28px;font-weight:bold;margin:16px 0;" id="callTimerDisplay">0秒</div>' +
+        '<button class="btn-sm" style="background:var(--danger);" onclick="hangupCall()">挂断</button>' +
+        '</div>';
+    openSubModal(html);
+}
+
+// 挂断通话
+function hangupCall() {
+    if (!isInCall) return;
+    
+    var duration = Math.floor((Date.now() - callStartTime) / 1000);
+    var minutes = Math.floor(duration / 60);
+    var seconds = duration % 60;
+    var durationStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
+    
+    addSystemMsg('通话结束，通话时长 ' + durationStr);
+    showToast('通话结束');
+    endCallSession();
+}
+
+// 清理通话状态
+function endCallSession() {
+    if (callTimeout) {
+        clearTimeout(callTimeout);
+        callTimeout = null;
+    }
+    if (callTimerInterval) {
+        clearInterval(callTimerInterval);
+        callTimerInterval = null;
+    }
+    isInCall = false;
+    isRinging = false;
+    callStartTime = null;
+    closeModal('subOverlay');
+}
+
+// 对方随机发起通话（定时检查）
+function checkRandomIncomingCall() {
+    if (isInCall || isRinging) return;
+    if (Math.random() > 0.03) return; // 3%概率
+    
+    isRinging = true;
+    addSystemMsg('对方发起了通话...');
+    showIncomingCallModal();
+    
+    // 15秒无操作自动忽略
+    callTimeout = setTimeout(function() {
+        if (isRinging) {
+            addSystemMsg('未接听');
+            showToast('未接听');
+            endCallSession();
+        }
+    }, 15000);
+}
+
+// 显示来电弹窗
+function showIncomingCallModal() {
+    var html = '<div style="text-align:center;">' +
+        '<h3>来电</h3>' +
+        '<div class="subtitle" style="margin:16px 0;">对方正在呼叫你...</div>' +
+        '<div class="btn-row" style="justify-content:center;gap:16px;">' +
+        '<button class="btn-sm" style="background:var(--success);" onclick="answerIncomingCall()">接听</button>' +
+        '<button class="btn-sm outline" style="color:var(--danger);" onclick="rejectIncomingCall()">拒绝</button>' +
+        '</div>' +
+        '<button class="btn-close" onclick="ignoreIncomingCall()" style="margin-top:12px;">忽略</button>' +
+        '</div>';
+    openSubModal(html);
+}
+
+// 接听来电
+function answerIncomingCall() {
+    if (callTimeout) {
+        clearTimeout(callTimeout);
+        callTimeout = null;
+    }
+    addSystemMsg('你接听了通话');
+    closeModal('subOverlay');
+    startCall();
+}
+
+// 拒绝来电
+function rejectIncomingCall() {
+    if (callTimeout) {
+        clearTimeout(callTimeout);
+        callTimeout = null;
+    }
+    addSystemMsg('你拒绝了通话');
+    showToast('已拒绝');
+    endCallSession();
+}
+
+// 忽略来电
+function ignoreIncomingCall() {
+    if (callTimeout) {
+        clearTimeout(callTimeout);
+        callTimeout = null;
+    }
+    addSystemMsg('未接听');
+    showToast('未接听');
+    endCallSession();
+}
+
+// 定时检查对方发起通话（每30秒检查一次）
+setInterval(function() {
+    checkRandomIncomingCall();
+}, 30000);
 // ========== 启动 ==========
 initApp().then(function() {
     console.log('甜心助手启动成功！');
