@@ -1028,24 +1028,17 @@ function clearAllEmojis() {
 // ========== 数据管理 ==========
 function openBackupModal() {
     closeModal('settingsOverlay');
-    getStorageStats().then(function(stats) {
-        var barColor = stats.usagePercent > 80 ? 'var(--danger)' : (stats.usagePercent > 60 ? '#f0c78e' : 'var(--success)');
-        var html = '<h4>数据管理</h4>';
-        html += '<div class="subtitle">存储用量：' + formatBytes(stats.totalBytes) + ' / 约 50 MB</div>';
-        html += '<div class="storage-bar-wrap"><div class="storage-bar-fill" style="width:' + stats.usagePercent + '%;background:' + barColor + ';"></div><div class="storage-bar-text">' + stats.usagePercent + '%</div></div>';
-        html += '<div style="font-size:10px;color:var(--text-system);text-align:center;margin-bottom:8px;">图片：' + formatBytes(stats.imagesBytes) + ' | 头像：' + formatBytes(stats.avatarsBytes) + ' | 文字：' + formatBytes(stats.lsBytes) + '</div>';
-        if (stats.usagePercent > 80) html += '<div style="text-align:center;color:var(--danger);font-size:12px;margin-bottom:8px;">存储空间紧张，建议清理</div>';
-        html += '<div class="backup-options">';
-        html += '<button onclick="exportFullAsFile()">全量备份下载</button>';
-        html += '<button onclick="exportFull()">全量备份复制</button>';
-        html += '<button onclick="exportChat()">聊天记录备份</button>';
-        html += '<button onclick="exportLibs()">词库备份</button>';
-        html += '</div>';
-        html += '<div style="margin-top:12px;"><button class="btn-sm outline" onclick="document.getElementById(\'importDataFile\').click()">导入JSON备份文件</button><input type="file" id="importDataFile" accept=".json" style="display:none" onchange="importDataFile()"></div>';
-        html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-sm danger-sm" onclick="clearChatHistory()">清除聊天记录</button><button class="btn-sm outline" onclick="cleanOrphanImages()">清理失效图片</button></div>';
-        html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
-        openSubModal(html);
-    });
+    var html = '<h4>数据管理</h4>';
+    html += '<div class="backup-options">';
+    html += '<button onclick="exportFullAsFile()">全量备份下载</button>';
+    html += '<button onclick="exportFull()">全量备份复制</button>';
+    html += '<button onclick="exportChat()">聊天记录备份</button>';
+    html += '<button onclick="exportLibs()">词库备份</button>';
+    html += '</div>';
+    html += '<div style="margin-top:12px;"><button class="btn-sm outline" onclick="document.getElementById(\'importDataFile\').click()">导入JSON备份文件</button><input type="file" id="importDataFile" accept=".json" style="display:none" onchange="importDataFile()"></div>';
+    html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-sm danger-sm" onclick="clearChatHistory()">清除聊天记录</button><button class="btn-sm outline" onclick="cleanOrphanImages()">清理失效图片</button></div>';
+    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
+    openSubModal(html);
 }
 function downloadJSONFile(filename, jsonData) {
     var blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
