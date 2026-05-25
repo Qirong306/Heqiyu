@@ -48,11 +48,7 @@ function createFloatingBall() {
     ball.setAttribute('draggable', 'false');
     ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
     document.body.appendChild(ball);
-// 恢复之前的球图
-    if (appData.musicFloatingImg) {
-        musicFloatingImg = appData.musicFloatingImg;
-        showFloatingBall();
-    }
+
     if (!document.getElementById('musicSpinStyle')) {
         var styleEl = document.createElement('style');
         styleEl.id = 'musicSpinStyle';
@@ -113,17 +109,45 @@ function createFloatingBall() {
 
     ball.addEventListener('touchstart', onStart, { passive: false });
     ball.addEventListener('mousedown', onStart);
+    
+    // 恢复之前的球图（从 IndexedDB）
+    if (appData.musicFloatingImgId) {
+        getImageFromDB('avatars', appData.musicFloatingImgId).then(function(url) {
+            if (url) {
+                musicFloatingImg = url;
+                showFloatingBall();
+            }
+        });
+    } else if (appData.musicFloatingImg) {
+        // 兼容旧版 base64
+        musicFloatingImg = appData.musicFloatingImg;
+        showFloatingBall();
+    }
 }
 
 function showFloatingBall() {
     var ball = document.getElementById('musicFloatingBall');
     if (!ball) return;
+    
+    // 优先从内存中的 musicFloatingImg 取
     if (musicFloatingImg) {
         ball.innerHTML = '<img src="' + musicFloatingImg + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;" draggable="false">';
+        ball.style.display = 'block';
+    } else if (appData.musicFloatingImgId) {
+        // 从 IndexedDB 加载
+        getImageFromDB('avatars', appData.musicFloatingImgId).then(function(url) {
+            if (url) {
+                musicFloatingImg = url;
+                ball.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;" draggable="false">';
+            } else {
+                ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
+            }
+            ball.style.display = 'block';
+        });
     } else {
         ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
+        ball.style.display = 'block';
     }
-    ball.style.display = 'block';
 }
 
 function hideFloatingBall() {
@@ -137,17 +161,21 @@ function changeFloatingBallImage() {
     input.onchange = function() {
         var file = input.files[0];
         if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            musicFloatingImg = e.target.result;
-            appData.musicFloatingImg = musicFloatingImg;  // 加这行
-            if (typeof saveData === 'function') saveData();  // 加这行
-            showFloatingBall();
-            showToast('浮动球图片已更新');
-            appData.musicFloatingImg = musicFloatingImg;
-            if (typeof saveData === 'function') saveData();
-        };
-        reader.readAsDataURL(file);
+        compressImage(file, 300, 300, 0.5).then(function(dataUrl) {
+            var id = 'music_float_' + Date.now();
+            return saveImageToDB('avatars', id, dataUrl).then(function() {
+                // 删除旧球图
+                if (appData.musicFloatingImgId && appData.musicFloatingImgId !== id) {
+                    deleteImageFromDB('avatars', appData.musicFloatingImgId).catch(function(){});
+                }
+                appData.musicFloatingImgId = id;
+                appData.musicFloatingImg = ''; // 清空旧 base64
+                musicFloatingImg = dataUrl;
+                if (typeof saveData === 'function') saveData();
+                showFloatingBall();
+                showToast('浮动球图片已更新');
+            });
+        }).catch(function() { showToast('图片处理失败'); });
     };
     input.click();
 }
@@ -178,7 +206,6 @@ function openMusicPlayer() {
         };
 
         overlay.innerHTML = '<div class="modal" style="text-align:center;max-width:400px;padding:16px;">' +
-            // 标题栏 + 菜单按钮
             '<div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:4px;">' +
             '<h3 style="margin:0;">音乐小憩</h3>' +
             '<div style="position:absolute;right:0;">' +
@@ -191,28 +218,23 @@ function openMusicPlayer() {
             '</div>' +
             '</div>' +
             '</div>' +
-            // 歌曲信息
             '<div id="musicNowPlaying" style="font-size:14px;color:var(--text);margin:6px 0;font-weight:bold;min-height:20px;">未在播放</div>' +
             '<div id="musicPlayerContainer" style="margin:4px 0;min-height:40px;"></div>' +
-            // 进度条
             '<div style="display:flex;align-items:center;gap:8px;padding:0 4px;margin:4px 0;">' +
             '<span id="musicCurTime" style="font-size:11px;color:var(--text-system);width:34px;">00:00</span>' +
             '<input type="range" id="musicProgress" min="0" max="100" value="0" oninput="seekMusic(this.value)" style="flex:1;height:4px;accent-color:var(--accent);cursor:pointer;">' +
             '<span id="musicDurTime" style="font-size:11px;color:var(--text-system);width:34px;">00:00</span>' +
             '</div>' +
-            // 播放控制按钮
             '<div style="display:flex;align-items:center;justify-content:center;gap:24px;margin:10px 0;">' +
             '<span onclick="prevSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="上一曲">|&lt;&lt;</span>' +
             '<span id="btnPlayPause" onclick="togglePlayPause()" style="display:flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:var(--accent);color:var(--text);font-size:20px;cursor:pointer;transition:all 0.2s;" title="播放/暂停">&gt;</span>' +
             '<span onclick="nextSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="下一曲">&gt;&gt;|</span>' +
             '</div>' +
-            // 播放模式（图标符号）
             '<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:6px 0;font-size:18px;">' +
             '<span id="btnModeLoop" onclick="setPlayMode(\'loop\')" style="cursor:pointer;color:var(--text-system);" title="单曲循环">&#8635;</span>' +
             '<span id="btnModeOrder" onclick="setPlayMode(\'order\')" style="cursor:pointer;color:var(--accent);" title="顺序播放">&#8801;</span>' +
             '<span id="btnModeRandom" onclick="setPlayMode(\'random\')" style="cursor:pointer;color:var(--text-system);" title="随机播放">&#8644;</span>' +
             '</div>' +
-            // 歌单列表
             '<div style="max-height:140px;overflow-y:auto;text-align:left;margin-top:4px;" id="musicPlaylistEl"></div>' +
             '<button class="btn-close" onclick="closeMusicPlayer()" style="margin-top:8px;">收起</button>' +
             '</div>';
@@ -231,7 +253,6 @@ function closeMusicPlayer() {
     showFloatingBall();
 }
 
-// ========== 播放/暂停 ==========
 function togglePlayPause() {
     if (musicAudio) {
         if (musicAudio.paused) {
@@ -255,7 +276,6 @@ function updatePlayPauseButton() {
     }
 }
 
-// ========== 进度条 ==========
 function seekMusic(value) {
     if (musicAudio && musicAudio.duration) {
         musicAudio.currentTime = (value / 100) * musicAudio.duration;
@@ -274,7 +294,6 @@ function updateProgress() {
     }
 }
 
-// ========== 歌曲切换 ==========
 function playSong(index) {
     if (index < 0 || index >= musicPlaylist.length) return;
     musicCurrentIndex = index;
@@ -360,7 +379,6 @@ function prevSong() {
     playSong(prev);
 }
 
-// ========== 播放模式图标 ==========
 function setPlayMode(mode) {
     musicPlayMode = mode;
     updateModeIcons();
@@ -377,7 +395,6 @@ function updateModeIcons() {
     if (random) random.style.color = musicPlayMode === 'random' ? 'var(--accent)' : 'var(--text-system)';
 }
 
-// ========== 歌单渲染 ==========
 function renderPlaylist() {
     var el = document.getElementById('musicPlaylistEl');
     if (!el) return;
@@ -398,7 +415,6 @@ function renderPlaylist() {
     el.innerHTML = html;
 }
 
-// ========== 歌单管理 ==========
 function addSongPrompt() {
     var id = prompt('输入网易云歌曲 ID：');
     if (!id) return;
