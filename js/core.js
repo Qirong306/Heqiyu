@@ -1732,7 +1732,7 @@ var isRinging = false;
 var callStartTime = null;
 var callTimerInterval = null;
 var isCallMinimized = false;
-var pendingCall = null; // 存储待接听的来电信息
+var pendingCall = null;
 
 // 发起通话
 function startVoiceCall() {
@@ -1834,7 +1834,22 @@ function showCallInProgressModal() {
     openSubModal(html);
 }
 
-// 创建可拖动的通话小球
+function minimizeCall() {
+    if (!isInCall) return;
+    isCallMinimized = true;
+    
+    // 强制关闭弹窗
+    var subOverlay = document.getElementById('subOverlay');
+    if (subOverlay) {
+        subOverlay.classList.remove('show');
+        subOverlay.style.display = 'none';
+    }
+    document.body.style.overflow = '';
+    
+    createCallFloatingBall();
+    showToast('通话已缩小，点击小球恢复');
+}
+
 function createCallFloatingBall() {
     var existingBall = document.getElementById('callFloatingBall');
     if (existingBall) existingBall.remove();
@@ -1847,7 +1862,7 @@ function createCallFloatingBall() {
     if (appData.otherAvatar) {
         avatarHtml = '<img src="' + appData.otherAvatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
     } else {
-        avatarHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;">' + (appData.otherName.charAt(0) || 'TA') + '</div>';
+        avatarHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;background:var(--accent);border-radius:50%;color:var(--text);">' + (appData.otherName.charAt(0) || 'T') + '</div>';
     }
     
     ball.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;">' +
@@ -1860,8 +1875,6 @@ function createCallFloatingBall() {
     ball.setAttribute('draggable', 'false');
     
     document.body.appendChild(ball);
-    
-    // 添加拖动功能
     makeDraggable(ball);
     
     ball.onclick = function(e) {
@@ -1870,7 +1883,6 @@ function createCallFloatingBall() {
     };
 }
 
-// 使元素可拖动
 function makeDraggable(element) {
     var isDragging = false;
     var startX, startY, startLeft, startTop;
@@ -1936,14 +1948,6 @@ function makeDraggable(element) {
     element.style.cursor = 'grab';
 }
 
-function minimizeCall() {
-    if (!isInCall) return;
-    isCallMinimized = true;
-    closeModal('subOverlay');
-    createCallFloatingBall();
-    showToast('通话已缩小，点击小球恢复');
-}
-
 function restoreCallWindow() {
     var ball = document.getElementById('callFloatingBall');
     if (ball) ball.remove();
@@ -1972,7 +1976,15 @@ function endCallSession() {
     callTimeout = null;
     callTimerInterval = null;
     pendingCall = null;
-    closeModal('subOverlay');
+    
+    // 关闭所有弹窗
+    var subOverlay = document.getElementById('subOverlay');
+    if (subOverlay) {
+        subOverlay.classList.remove('show');
+        subOverlay.style.display = 'none';
+    }
+    document.body.style.overflow = '';
+    
     var ball = document.getElementById('callFloatingBall');
     if (ball) ball.remove();
 }
@@ -1982,23 +1994,19 @@ function checkRandomIncomingCall() {
     if (isInCall || isRinging) return;
     if (Math.random() > 0.03) return;
     
-    // 如果当前有其他弹窗，延迟一下
     var overlay = document.querySelector('.modal-overlay.show');
     if (overlay) return;
     
     isRinging = true;
     addSystemMsg('对方发起了通话...');
     
-    // 保存来电信息，防止弹窗消失后无法接听
-    pendingCall = {
-        timeout: setTimeout(function() {
-            if (isRinging) {
-                addSystemMsg('未接听');
-                showToast('未接听');
-                endCallSession();
-            }
-        }, 15000)
-    };
+    pendingCall = setTimeout(function() {
+        if (isRinging) {
+            addSystemMsg('未接听');
+            showToast('未接听');
+            endCallSession();
+        }
+    }, 15000);
     
     showIncomingCallModal();
 }
@@ -2017,20 +2025,21 @@ function showIncomingCallModal() {
 }
 
 function answerIncomingCall() {
-    if (pendingCall && pendingCall.timeout) {
-        clearTimeout(pendingCall.timeout);
+    if (pendingCall) {
+        clearTimeout(pendingCall);
+        pendingCall = null;
     }
     if (callTimeout) clearTimeout(callTimeout);
     isRinging = false;
-    pendingCall = null;
     addSystemMsg('你接听了通话');
     closeModal('subOverlay');
     startCall();
 }
 
 function rejectIncomingCall() {
-    if (pendingCall && pendingCall.timeout) {
-        clearTimeout(pendingCall.timeout);
+    if (pendingCall) {
+        clearTimeout(pendingCall);
+        pendingCall = null;
     }
     if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('你拒绝了通话');
@@ -2039,8 +2048,9 @@ function rejectIncomingCall() {
 }
 
 function ignoreIncomingCall() {
-    if (pendingCall && pendingCall.timeout) {
-        clearTimeout(pendingCall.timeout);
+    if (pendingCall) {
+        clearTimeout(pendingCall);
+        pendingCall = null;
     }
     if (callTimeout) clearTimeout(callTimeout);
     addSystemMsg('未接听');
@@ -2048,16 +2058,7 @@ function ignoreIncomingCall() {
     endCallSession();
 }
 
-// 全局保护：防止其他弹窗关闭时影响通话状态
-var originalCloseModal = closeModal;
-window.closeModal = function(id) {
-    // 如果是通话相关的弹窗且正在通话中，不关闭
-    if (id === 'subOverlay' && (isInCall || isRinging)) {
-        return;
-    }
-    originalCloseModal(id);
-};
-
+// 定时检查对方发起通话
 setInterval(function() {
     checkRandomIncomingCall();
 }, 30000);
