@@ -956,15 +956,46 @@ function openEmojiManageModal() {
     renderEmojiManageGrid();
 }
 function renderEmojiManageGrid() {
-    var grid = document.getElementById('emojiManageGrid'); if (!grid) return;
-    if (!appData.emojiIds.length) { grid.innerHTML = '<div style="text-align:center;color:var(--text-system);grid-column:1/-1;padding:20px;">暂无表情包</div>'; return; }
+    var grid = document.getElementById('emojiManageGrid'); 
+    if (!grid) return;
+    
+    // 设置网格样式，让每个格子更大
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';  // 改成3列，格子更大
+    grid.style.gap = '12px';
+    grid.style.padding = '8px';
+    
+    if (!appData.emojiIds.length) { 
+        grid.innerHTML = '<div style="text-align:center;color:var(--text-system);grid-column:1/-1;padding:20px;">暂无表情包</div>'; 
+        return; 
+    }
+    
     grid.innerHTML = '';
+    
     appData.emojiIds.forEach(function(id, idx) {
         getImageFromDB('images', id).then(function(url) {
             var d = document.createElement('div');
-            d.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;';
-            if (url) d.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent=\'已失效\';"><button onclick="delEmojiManage(' + idx + ')" style="position:absolute;top:2px;right:2px;background:var(--danger);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;">x</button>';
-            else { d.textContent = '已失效'; d.style.cssText += 'display:flex;align-items:center;justify-content:center;background:var(--border);font-size:11px;color:var(--text-system);'; }
+            d.style.cssText = 'position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--item-bg);box-shadow:0 1px 3px rgba(0,0,0,0.1);';
+            
+            if (url) {
+                d.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:contain;background:var(--bubble-other);" onerror="this.parentElement.innerHTML=\'<div style=\\\'display:flex;align-items:center;justify-content:center;height:100%;\\\'>失效</div>\';">' +
+                    '<button onclick="delEmojiManage(' + idx + ')" style="position:absolute;top:4px;right:4px;background:var(--danger);color:white;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.2);z-index:2;">✕</button>';
+            } else {
+                d.style.cssText += 'display:flex;align-items:center;justify-content:center;background:var(--border);font-size:12px;color:var(--text-system);';
+                d.textContent = '已失效';
+                // 失效的图片也加删除按钮
+                var delBtn = document.createElement('button');
+                delBtn.textContent = '✕';
+                delBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:var(--danger);color:white;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;';
+                delBtn.onclick = function() { delEmojiManage(idx); };
+                d.appendChild(delBtn);
+            }
+            grid.appendChild(d);
+        }).catch(function() {
+            // 加载失败的占位
+            var d = document.createElement('div');
+            d.style.cssText = 'position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-system);';
+            d.textContent = '加载失败';
             grid.appendChild(d);
         });
     });
@@ -995,26 +1026,10 @@ function clearAllEmojis() {
 }
 
 // ========== 数据管理 ==========
-function openBackupModal() {
+function openEmojiManageModal() {
     closeModal('settingsOverlay');
-    getStorageStats().then(function(stats) {
-        var barColor = stats.usagePercent > 80 ? 'var(--danger)' : (stats.usagePercent > 60 ? '#f0c78e' : 'var(--success)');
-        var html = '<h4>数据管理</h4>';
-        html += '<div class="subtitle">存储用量：' + formatBytes(stats.totalBytes) + ' / 约 ' + MAX_STORAGE_MB + ' MB</div>';
-        html += '<div class="storage-bar-wrap"><div class="storage-bar-fill" style="width:' + stats.usagePercent + '%;background:' + barColor + ';"></div><div class="storage-bar-text">' + stats.usagePercent + '%</div></div>';
-        html += '<div style="font-size:10px;color:var(--text-system);text-align:center;margin-bottom:8px;">图片：' + formatBytes(stats.imagesBytes) + ' | 头像：' + formatBytes(stats.avatarsBytes) + ' | 文字：' + formatBytes(stats.lsBytes) + '</div>';
-        if (stats.usagePercent > 80) html += '<div style="text-align:center;color:var(--danger);font-size:12px;margin-bottom:8px;">存储空间紧张，建议清理</div>';
-        html += '<div class="backup-options">';
-        html += '<button onclick="exportFullAsFile()">全量备份下载 <span class="small-hint">（直接下载 .json 文件）</span></button>';
-        html += '<button onclick="exportFull()">全量备份复制 <span class="small-hint">（JSON复制到剪贴板）</span></button>';
-        html += '<button onclick="exportChat()">聊天记录备份</button>';
-        html += '<button onclick="exportLibs()">词库备份</button>';
-        html += '</div>';
-        html += '<div style="margin-top:12px;"><button class="btn-sm outline" onclick="document.getElementById(\'importDataFile\').click()">导入JSON备份文件</button><input type="file" id="importDataFile" accept=".json" style="display:none" onchange="importDataFile()"></div>';
-        html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-sm danger-sm" onclick="clearChatHistory()">清除聊天记录</button><button class="btn-sm outline" onclick="cleanOrphanImages()">清理失效图片</button></div>';
-        html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
-        openSubModal(html);
-    });
+    openSubModal('<h4>表情包管理</h4><div class="subtitle">共 ' + appData.emojiIds.length + ' 个</div><div class="btn-row" style="gap:8px;"><button class="btn-sm" onclick="document.getElementById(\'emojiManageUpload\').click()">上传表情包</button><button class="btn-sm outline" onclick="clearAllEmojis()" style="color:var(--danger);">清空</button></div><input type="file" id="emojiManageUpload" accept="image/*" multiple style="display:none" onchange="uploadEmojiManage()"><div style="max-height:380px;overflow-y:auto;margin-top:12px;" id="emojiManageGridContainer"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:4px;" id="emojiManageGrid">加载中...</div></div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>');
+    renderEmojiManageGrid();
 }
 function downloadJSONFile(filename, jsonData) {
     var blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
