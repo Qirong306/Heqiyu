@@ -650,16 +650,12 @@ function sendRandomReply() {
     // 随机选择回复类型：0=文字，1=表情包，2=画图
     var replyType = Math.floor(Math.random() * 3);
     
-    // 如果没有文字回复，跳过文字选项
     if (!hasText && replyType === 0) replyType = 1;
-    // 如果没有表情包，跳过表情包选项
     if (!hasEmoji && replyType === 1) replyType = 0;
-    // 如果文字和表情包都没有，返回false
     if (!hasText && !hasEmoji) return Promise.resolve(false);
     
-    // 类型2：画图（需要 drawing.js 模块）
+    // 类型2：画图
     if (replyType === 2) {
-        // 检查画图模块是否存在
         if (typeof RandomDrawing !== 'undefined' && RandomDrawing.getRandomDrawing) {
             var imgData = RandomDrawing.getRandomDrawing();
             var img = new Image();
@@ -672,13 +668,26 @@ function sendRandomReply() {
             img.src = imgData;
             return Promise.resolve(true);
         }
-        // 如果画图模块不存在，降级为文字回复
         replyType = 0;
     }
     
-    // 类型0：文字回复
+    // 类型0：文字回复（支持多个字卡组合）
     if (replyType === 0 && hasText) {
-        var content = allReplies[Math.floor(Math.random() * allReplies.length)];
+        // 随机决定组合几个字卡（1-4个）
+        var cardCount = Math.floor(Math.random() * 4) + 1;
+        var selectedReplies = [];
+        var tempReplies = allReplies.slice(); // 复制一份
+        
+        for (var i = 0; i < cardCount && tempReplies.length > 0; i++) {
+            var randomIndex = Math.floor(Math.random() * tempReplies.length);
+            selectedReplies.push(tempReplies[randomIndex]);
+            // 可选：移除已选中的，避免重复（注释掉则允许重复）
+            // tempReplies.splice(randomIndex, 1);
+        }
+        
+        // 用空格连接
+        var content = selectedReplies.join(' ');
+        
         if (quotedMessage && Math.random() < 0.3) {
             addMessageWithQuote(content, 'other', quotedMessage);
             appData.chatHistory.push({ type: 'other', content: content, time: Date.now(), quote: quotedMessage });
