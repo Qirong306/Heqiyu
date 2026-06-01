@@ -704,8 +704,10 @@ function sendRandomReply() {
 }
 
 function sendMsg() {
-    var input = document.getElementById('msgInput'); var msg = input.value.trim();
+    var input = document.getElementById('msgInput'); 
+    var msg = input.value.trim();
     if (!msg) return;
+    
     var quote = quotedMessage;
     if (quote) {
         addMessageWithQuote(msg, 'me', quote);
@@ -714,11 +716,23 @@ function sendMsg() {
         addMessage(msg, 'me');
         appData.chatHistory.push({ type: 'me', content: msg, time: Date.now() });
     }
+    
     quotedMessage = null;
     updateQuoteBar();
-    input.value = ''; saveData();
-    setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
+    input.value = ''; 
+    saveData();
+    
+    // 检测转盘邀请关键词
+    if (msg.includes('转转盘') || msg.includes('转盘邀请') || msg.includes('🎡')) {
+        sendWheelInvite();
+        return;
+    }
+    
+    setTimeout(function() { 
+        triggerAutoReply(); 
+    }, 400 + Math.random() * 1000);
 }
+
 function addMessage(content, type, isImage, isSticker) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg ' + type + (isSticker ? ' is-sticker' : '');
@@ -2142,6 +2156,111 @@ function ignoreIncomingCall() {
 setInterval(function() {
     checkRandomIncomingCall();
 }, 40000);
+
+// ==================== 转盘邀请功能 ====================
+function sendWheelInvite() {
+    // 生成一个唯一的邀请ID
+    var inviteId = 'wheel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    
+    // 构建可点击的转盘按钮消息
+    var inviteHtml = '<div class="wheel-invite" data-invite-id="' + inviteId + '" style="background:var(--item-bg);border-radius:12px;padding:12px;text-align:center;cursor:pointer;" onclick="acceptWheelInvite(this)">' +
+        '<div style="font-size:28px;margin-bottom:8px;"></div>' +
+        '<div style="font-weight:bold;margin-bottom:4px;">转盘邀请</div>' +
+        '<div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">' + appData.otherName + ' 邀请你转动幸福转盘</div>' +
+        '<div style="display:inline-block;background:var(--accent);color:white;padding:6px 16px;border-radius:20px;font-size:13px;">点击转一次</div>' +
+        '</div>';
+    
+    // 作为对方发送的消息显示
+    addMessage(inviteHtml, 'other', false, false);
+    appData.chatHistory.push({ 
+        type: 'other', 
+        content: inviteHtml, 
+        time: Date.now(), 
+        isWheelInvite: true, 
+        inviteId: inviteId,
+        inviteStatus: 'pending'  // pending 或 used
+    });
+    saveData();
+}
+
+// 接受转盘邀请
+function acceptWheelInvite(element) {
+    var inviteDiv = element;
+    // 找到整个邀请卡片
+    while (inviteDiv && !inviteDiv.classList.contains('wheel-invite')) {
+        inviteDiv = inviteDiv.parentElement;
+    }
+    if (!inviteDiv) return;
+    
+    var inviteId = inviteDiv.getAttribute('data-invite-id');
+    
+    // 检查是否已经转过
+    var inviteMsg = appData.chatHistory.find(function(m) {
+        return m.isWheelInvite && m.inviteId === inviteId && m.inviteStatus === 'used';
+    });
+    if (inviteMsg) {
+        showToast('这个转盘已经转过啦');
+        return;
+    }
+    
+    // 标记已使用
+    for (var i = 0; i < appData.chatHistory.length; i++) {
+        if (appData.chatHistory[i].isWheelInvite && appData.chatHistory[i].inviteId === inviteId) {
+            appData.chatHistory[i].inviteStatus = 'used';
+            break;
+        }
+    }
+    saveData();
+    
+    // 显示"正在转动..."
+    var originalContent = inviteDiv.innerHTML;
+    inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;">' +
+        '<div style="font-size:24px;margin-bottom:8px;"></div>' +
+        '<div style="font-size:12px;">正在转动...</div>' +
+        '</div>';
+    inviteDiv.style.cursor = 'default';
+    inviteDiv.onclick = null;
+    
+    // 执行转盘
+    setTimeout(function() {
+        var items = appData.wheelItems || [];
+        if (items.length === 0) {
+            inviteDiv.innerHTML = originalContent;
+            showToast('转盘词库为空，请先添加');
+            return;
+        }
+        
+        // 随机抽取一项
+        var randomIndex = Math.floor(Math.random() * items.length);
+        var result = items[randomIndex];
+        
+        // 记录历史
+        appData.wheelHistory.push({ item: result, time: Date.now(), source: 'invite' });
+        if (appData.wheelHistory.length > 50) appData.wheelHistory.shift();
+        saveData();
+        
+        // 更新邀请卡片显示结果
+        inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;">' +
+            '<div style="font-size:28px;margin-bottom:8px;"></div>' +
+            '<div style="font-weight:bold;margin-bottom:4px;">转盘结果</div>' +
+            '<div style="font-size:14px;color:var(--accent);margin-bottom:4px;">' + result + '</div>' +
+            '<div style="font-size:11px;color:var(--text-system);">已存入历史记录</div>' +
+            '</div>';
+        
+        // 同时在聊天中发一条结果消息（可选）
+        addMessage(' 转盘结果：' + result, 'other', false, false);
+        appData.chatHistory.push({ type: 'other', content: ' 转盘结果：' + result, time: Date.now() });
+        saveData();
+        
+        showToast('转到了：' + result);
+    }, 800);
+}
+
+// 手动触发转盘邀请（供调试或更多面板使用）
+function sendWheelInviteManually() {
+    sendWheelInvite();
+}
+
 // ========== 启动 ==========
 initApp().then(function() {
     console.log('甜心助手启动成功！');
