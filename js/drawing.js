@@ -51,15 +51,86 @@ var RandomDrawing = {
         ctx.stroke();
     },
     
-    // 随机直线涂鸦
+    // 随机不规则线条（直线、斜线、弯线、曲线、折线等）
     drawRandomLines: function(ctx, width, height, color, lineWidth) {
         ctx.strokeStyle = color;
         ctx.lineWidth = lineWidth;
-        var linesCount = this.randomInt(10, 20);
+        var linesCount = this.randomInt(8, 18);  // 8-18条线
+    
         for (var i = 0; i < linesCount; i++) {
+            var lineType = this.randomInt(1, 6);  // 1-6 种线条类型
             ctx.beginPath();
-            ctx.moveTo(Math.random() * width, Math.random() * height);
-            ctx.lineTo(Math.random() * width, Math.random() * height);
+        
+            // 随机起点
+            var startX = Math.random() * width;
+            var startY = Math.random() * height;
+            ctx.moveTo(startX, startY);
+        
+            if (lineType === 1) {
+                // 直线/斜线：直接连接到随机终点
+                var endX = Math.random() * width;
+                var endY = Math.random() * height;
+                ctx.lineTo(endX, endY);
+            } 
+            else if (lineType === 2) {
+                // 折线（2-3个转折点）
+                var points = this.randomInt(2, 4);
+                var currentX = startX;
+                var currentY = startY;
+                for (var p = 0; p < points; p++) {
+                    currentX += this.randomInt(-40, 40);
+                    currentY += this.randomInt(-40, 40);
+                    currentX = Math.min(width - 10, Math.max(10, currentX));
+                    currentY = Math.min(height - 10, Math.max(10, currentY));
+                    ctx.lineTo(currentX, currentY);
+                }
+            }
+            else if (lineType === 3) {
+                // 贝塞尔曲线（光滑曲线）
+                var cp1x = startX + this.randomInt(-50, 50);
+                var cp1y = startY + this.randomInt(-50, 50);
+                var cp2x = startX + this.randomInt(-30, 80);
+                var cp2y = startY + this.randomInt(-80, 30);
+                var endX = startX + this.randomInt(-60, 60);
+                var endY = startY + this.randomInt(-60, 60);
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
+            }
+            else if (lineType === 4) {
+                // 二次贝塞尔曲线（抛物线形）
+                var cpX = startX + this.randomInt(-60, 60);
+                var cpY = startY + this.randomInt(-80, 80);
+                var endX = startX + this.randomInt(-50, 50);
+                var endY = startY + this.randomInt(-50, 50);
+                ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+            }
+            else if (lineType === 5) {
+                // 波浪曲线（小幅度摆动）
+                var steps = this.randomInt(5, 12);
+                var stepX = this.randomInt(10, 25);
+                var stepY = this.randomInt(-15, 15);
+                var currentX = startX;
+                var currentY = startY;
+                for (var s = 0; s < steps; s++) {
+                    currentX += stepX;
+                    currentY += stepY;
+                    if (s % 2 === 0) currentY += this.randomInt(-20, 20);
+                    else currentY -= this.randomInt(-10, 30);
+                    currentX = Math.min(width - 10, Math.min(width - 10, Math.max(10, currentX)));
+                    currentY = Math.min(height - 10, Math.min(height - 10, Math.max(10, currentY)));
+                    ctx.lineTo(currentX, currentY);
+                    stepY = this.randomInt(-20, 20);
+                }
+            }
+            else {
+                // 环形/螺旋片段
+                var centerX = startX;
+                var centerY = startY;
+                var radius = this.randomInt(10, 40);
+                var startAngle = Math.random() * 2 * Math.PI;
+                var endAngle = startAngle + Math.PI * (0.5 + Math.random() * 1.5);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            }
+        
             ctx.stroke();
         }
     },
