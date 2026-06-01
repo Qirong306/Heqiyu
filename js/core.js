@@ -620,6 +620,7 @@ function triggerAutoReply() {
     function sendNext(index) {
         if (index >= replyCount) return;
         setTimeout(function() {
+            // 10% 概率发送转账
             if (Math.random() < 0.1 && appData.transferAmounts.length > 0 && appData.transferNotes.length > 0) {
                 var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
                 var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
@@ -645,16 +646,38 @@ function sendRandomReply() {
     var allReplies = getAllReplies();
     var hasEmoji = appData.emojiIds.length > 0;
     var hasText = allReplies.length > 0;
-    if (!hasEmoji && !hasText) return Promise.resolve(false);
-    if (hasEmoji && ((hasText && Math.random() < 0.3) || !hasText)) {
-        var eid = appData.emojiIds[Math.floor(Math.random() * appData.emojiIds.length)];
-        return getImageFromDB('images', eid).then(function(img) {
-            if (!img) return false;
-            addMessage(img, 'other', true, true);
-            appData.chatHistory.push({ type: 'other', content: '', imageId: eid, time: Date.now(), isSticker: true });
-            return saveData().then(function() { return true; });
-        });
-    } else {
+    
+    // 随机选择回复类型：0=文字，1=表情包，2=画图
+    var replyType = Math.floor(Math.random() * 3);
+    
+    // 如果没有文字回复，跳过文字选项
+    if (!hasText && replyType === 0) replyType = 1;
+    // 如果没有表情包，跳过表情包选项
+    if (!hasEmoji && replyType === 1) replyType = 0;
+    // 如果文字和表情包都没有，返回false
+    if (!hasText && !hasEmoji) return Promise.resolve(false);
+    
+    // 类型2：画图（需要 drawing.js 模块）
+    if (replyType === 2) {
+        // 检查画图模块是否存在
+        if (typeof RandomDrawing !== 'undefined' && RandomDrawing.getRandomDrawing) {
+            var imgData = RandomDrawing.getRandomDrawing();
+            var img = new Image();
+            img.onload = function() {
+                var imgHtml = '<img src="' + imgData + '" style="max-width:200px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">';
+                addMessage(imgHtml, 'other', true, false);
+                appData.chatHistory.push({ type: 'other', content: imgHtml, time: Date.now(), isDrawing: true });
+                saveData();
+            };
+            img.src = imgData;
+            return Promise.resolve(true);
+        }
+        // 如果画图模块不存在，降级为文字回复
+        replyType = 0;
+    }
+    
+    // 类型0：文字回复
+    if (replyType === 0 && hasText) {
         var content = allReplies[Math.floor(Math.random() * allReplies.length)];
         if (quotedMessage && Math.random() < 0.3) {
             addMessageWithQuote(content, 'other', quotedMessage);
@@ -665,7 +688,21 @@ function sendRandomReply() {
         }
         return saveData().then(function() { return true; });
     }
+    
+    // 类型1：表情包
+    if (replyType === 1 && hasEmoji) {
+        var eid = appData.emojiIds[Math.floor(Math.random() * appData.emojiIds.length)];
+        return getImageFromDB('images', eid).then(function(img) {
+            if (!img) return false;
+            addMessage(img, 'other', true, true);
+            appData.chatHistory.push({ type: 'other', content: '', imageId: eid, time: Date.now(), isSticker: true });
+            return saveData().then(function() { return true; });
+        });
+    }
+    
+    return Promise.resolve(false);
 }
+
 function sendMsg() {
     var input = document.getElementById('msgInput'); var msg = input.value.trim();
     if (!msg) return;
