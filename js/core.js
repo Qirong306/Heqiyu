@@ -733,18 +733,6 @@ function sendRandomReply() {
         return saveData().then(function() { return true; });
     }
         
-        // 用空格连接
-        var content = selectedReplies.join(' ');
-        
-        if (quotedMessage && Math.random() < 0.3) {
-            addMessageWithQuote(content, 'other', quotedMessage);
-            appData.chatHistory.push({ type: 'other', content: content, time: Date.now(), quote: quotedMessage });
-        } else {
-            addMessage(content, 'other', false);
-            appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
-        }
-        return saveData().then(function() { return true; });
-    }
     
     // 类型1：表情包
     if (replyType === 1 && hasEmoji) {
