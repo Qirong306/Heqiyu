@@ -642,6 +642,31 @@ function triggerAutoReply() {
     }
     sendNext(0);
 }
+// 获取一条随机历史消息用于引用
+function getRandomHistoryMessage() {
+    var history = appData.chatHistory || [];
+    // 过滤掉系统消息和转账消息，只保留文字消息
+    var textMessages = history.filter(function(msg) {
+        return (msg.type === 'me' || msg.type === 'other') && 
+               msg.content && 
+               typeof msg.content === 'string' &&
+               msg.content.length > 0 &&
+               msg.content.indexOf('<img') === -1; // 排除图片消息
+    });
+    
+    if (textMessages.length === 0) return null;
+    
+    var randomIndex = Math.floor(Math.random() * textMessages.length);
+    var msg = textMessages[randomIndex];
+    
+    return {
+        content: msg.content,
+        type: msg.type,
+        time: msg.time,
+        isImage: false
+    };
+}
+
 function sendRandomReply() {
     var allReplies = getAllReplies();
     var hasEmoji = appData.emojiIds.length > 0;
@@ -671,19 +696,42 @@ function sendRandomReply() {
         replyType = 0;
     }
     
-    // 类型0：文字回复（支持多个字卡组合）
+    // 类型0：文字回复（支持多个字卡组合，并可能引用历史消息）
     if (replyType === 0 && hasText) {
         // 随机决定组合几个字卡（1-4个）
         var cardCount = Math.floor(Math.random() * 4) + 1;
         var selectedReplies = [];
-        var tempReplies = allReplies.slice(); // 复制一份
-        
+        var tempReplies = allReplies.slice();
+    
         for (var i = 0; i < cardCount && tempReplies.length > 0; i++) {
             var randomIndex = Math.floor(Math.random() * tempReplies.length);
             selectedReplies.push(tempReplies[randomIndex]);
-            // 可选：移除已选中的，避免重复（注释掉则允许重复）
-            // tempReplies.splice(randomIndex, 1);
         }
+    
+        var content = selectedReplies.join(' ');
+    
+        // 30% 概率引用历史消息（包括对方自己发的和用户发的）
+        var shouldQuote = Math.random() < 0.3;
+        var quoteMsg = null;
+    
+        if (shouldQuote) {
+            quoteMsg = getRandomHistoryMessage();
+        }
+    
+        if (quoteMsg) {
+            addMessageWithQuote(content, 'other', quoteMsg);
+            appData.chatHistory.push({ 
+                type: 'other', 
+                content: content, 
+                time: Date.now(), 
+                quote: quoteMsg 
+            });
+        } else {
+            addMessage(content, 'other', false);
+            appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
+        }
+        return saveData().then(function() { return true; });
+    }
         
         // 用空格连接
         var content = selectedReplies.join(' ');
