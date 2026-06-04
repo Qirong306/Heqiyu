@@ -698,8 +698,8 @@ function sendRandomReply() {
     
     // 类型0：文字回复（支持多个字卡组合，并可能引用历史消息）
     if (replyType === 0 && hasText) {
-        // 随机决定组合几个字卡（1-4个）
-        var cardCount = Math.floor(Math.random() * 4) + 1;
+        // 随机决定组合几个字卡（1-10个）
+        var cardCount = Math.floor(Math.random() * 10) + 1;
         var selectedReplies = [];
         var tempReplies = allReplies.slice();
     
