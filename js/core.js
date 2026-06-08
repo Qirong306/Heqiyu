@@ -2339,18 +2339,15 @@ function openShopModal() {
     closeModal('settingsOverlay');
     
     var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
-    var switchChecked = isEnabled ? 'checked' : '';
     
     var html = '<div style="text-align:center;">' +
         '<h3>购物商城</h3>' +
         '<div class="subtitle">购买商品会发送到聊天记录</div>' +
         '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:8px 12px;border-radius:10px;margin-bottom:12px;">' +
         '<span style="font-size:13px;">允许对方随机购买</span>' +
-        '<label class="call-switch" style="position:relative;display:inline-block;width:44px;height:22px;">' +
-        '<input type="checkbox" id="otherRandomBuySwitch" ' + switchChecked + ' onchange="toggleOtherRandomBuy(this.checked)" style="opacity:0;width:0;height:0;">' +
-        '<span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:0.3s;border-radius:22px;"></span>' +
-        '<span style="position:absolute;content:"";height:18px;width:18px;left:2px;bottom:2px;background-color:white;transition:0.3s;border-radius:50%;"></span>' +
-        '</label>' +
+        '<button id="randomBuySwitchBtn" onclick="toggleOtherRandomBuySwitch()" style="width:50px;height:26px;border-radius:26px;border:none;cursor:pointer;background:' + (isEnabled ? 'var(--accent)' : '#ccc') + ';transition:0.2s;position:relative;">' +
+        '<span style="position:absolute;top:2px;left:' + (isEnabled ? '26px' : '2px') + ';width:22px;height:22px;border-radius:50%;background:white;transition:0.2s;"></span>' +
+        '</button>' +
         '</div>' +
         '<div class="btn-row" style="gap:8px;justify-content:center;margin-bottom:12px;">' +
         '<button class="btn-sm" onclick="showAddItemModal()">添加商品</button>' +
@@ -2361,34 +2358,27 @@ function openShopModal() {
         '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>' +
         '</div>';
     
-    // 动态添加开关样式和逻辑
-    if (!document.getElementById('shopSwitchStyle')) {
-        var style = document.createElement('style');
-        style.id = 'shopSwitchStyle';
-        style.textContent = '.call-switch input:checked + span { background-color: var(--accent); } .call-switch input:checked + span + span { transform: translateX(22px); }';
-        document.head.appendChild(style);
-    }
-    
     openSubModal(html);
-    
-    // 修复开关的样式（因为上面用了相邻兄弟选择器，需要确保结构正确）
-    setTimeout(function() {
-        var switchContainer = document.querySelector('.call-switch');
-        if (switchContainer) {
-            var spans = switchContainer.querySelectorAll('span');
-            if (spans.length === 2) {
-                // 已经正确
-            }
-        }
-    }, 10);
-    
     renderShopItemsList();
 }
 
-// 切换对方随机购买开关
-function toggleOtherRandomBuy(enabled) {
-    localStorage.setItem('other_random_buy_enabled', enabled ? 'true' : 'false');
-    showToast(enabled ? '已开启对方随机购买' : '已关闭对方随机购买');
+// 切换开关
+function toggleOtherRandomBuySwitch() {
+    var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
+    var newState = !isEnabled;
+    localStorage.setItem('other_random_buy_enabled', newState ? 'true' : 'false');
+    
+    // 更新按钮样式
+    var btn = document.getElementById('randomBuySwitchBtn');
+    if (btn) {
+        btn.style.background = newState ? 'var(--accent)' : '#ccc';
+        var span = btn.querySelector('span');
+        if (span) {
+            span.style.left = newState ? '26px' : '2px';
+        }
+    }
+    
+    showToast(newState ? '已开启对方随机购买' : '已关闭对方随机购买');
 }
 
 // 渲染商品列表
