@@ -2338,9 +2338,20 @@ function openShopModal() {
     loadShopItems();
     closeModal('settingsOverlay');
     
+    var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
+    var switchChecked = isEnabled ? 'checked' : '';
+    
     var html = '<div style="text-align:center;">' +
         '<h3>购物商城</h3>' +
         '<div class="subtitle">购买商品会发送到聊天记录</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:8px 12px;border-radius:10px;margin-bottom:12px;">' +
+        '<span style="font-size:13px;">允许对方随机购买</span>' +
+        '<label class="call-switch" style="position:relative;display:inline-block;width:44px;height:22px;">' +
+        '<input type="checkbox" id="otherRandomBuySwitch" ' + switchChecked + ' onchange="toggleOtherRandomBuy(this.checked)" style="opacity:0;width:0;height:0;">' +
+        '<span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:0.3s;border-radius:22px;"></span>' +
+        '<span style="position:absolute;content:"";height:18px;width:18px;left:2px;bottom:2px;background-color:white;transition:0.3s;border-radius:50%;"></span>' +
+        '</label>' +
+        '</div>' +
         '<div class="btn-row" style="gap:8px;justify-content:center;margin-bottom:12px;">' +
         '<button class="btn-sm" onclick="showAddItemModal()">添加商品</button>' +
         '<button class="btn-sm outline" onclick="exportShopItems()">导出商品库</button>' +
@@ -2349,8 +2360,35 @@ function openShopModal() {
         '<div style="max-height:350px;overflow-y:auto;" id="shopItemsList">加载中...</div>' +
         '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>' +
         '</div>';
+    
+    // 动态添加开关样式和逻辑
+    if (!document.getElementById('shopSwitchStyle')) {
+        var style = document.createElement('style');
+        style.id = 'shopSwitchStyle';
+        style.textContent = '.call-switch input:checked + span { background-color: var(--accent); } .call-switch input:checked + span + span { transform: translateX(22px); }';
+        document.head.appendChild(style);
+    }
+    
     openSubModal(html);
+    
+    // 修复开关的样式（因为上面用了相邻兄弟选择器，需要确保结构正确）
+    setTimeout(function() {
+        var switchContainer = document.querySelector('.call-switch');
+        if (switchContainer) {
+            var spans = switchContainer.querySelectorAll('span');
+            if (spans.length === 2) {
+                // 已经正确
+            }
+        }
+    }, 10);
+    
     renderShopItemsList();
+}
+
+// 切换对方随机购买开关
+function toggleOtherRandomBuy(enabled) {
+    localStorage.setItem('other_random_buy_enabled', enabled ? 'true' : 'false');
+    showToast(enabled ? '已开启对方随机购买' : '已关闭对方随机购买');
 }
 
 // 渲染商品列表
@@ -2476,13 +2514,22 @@ function buyItemWithBuyer(itemId, buyer) {
 function sendPurchaseMessage(item, buyer) {
     var buyerName = (buyer === 'me') ? appData.myName : appData.otherName;
     var receiverName = (buyer === 'me') ? appData.otherName : appData.myName;
-    var message = '🛒 ' + buyerName + ' 购买了 ' + item.name + '（¥' + item.price.toFixed(2) + '）送给 ' + receiverName;
     
-    // 添加到聊天记录
-    addSystemMsg(message);
-    
-    // 同时添加一条带购买卡片的消息
+    // 添加购买卡片到聊天
     addPurchaseCard(item, buyer);
+    
+    // 聊天记录中只保留一条系统消息
+    var systemMsg = buyerName + ' 购买了 ' + item.name + '（¥' + item.price.toFixed(2) + '）送给 ' + receiverName;
+    
+    // 检查是否已经存在相同的系统消息（避免重复）
+    var lastMsg = appData.chatHistory[appData.chatHistory.length - 1];
+    if (!lastMsg || lastMsg.content !== systemMsg) {
+        appData.chatHistory.push({
+            type: 'system',
+            content: systemMsg,
+            time: Date.now()
+        });
+    }
     
     showToast(buyerName + ' 购买了 ' + item.name);
     saveData();
@@ -2496,22 +2543,33 @@ function addPurchaseCard(item, buyer) {
     var av = getAvatarHTMLSync(buyer === 'me');
     var handler = buyer === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
     
-    var cardHTML = '<div class="transfer-card" style="border-left-color:var(--accent);">' +
-        '<div class="transfer-label">🎁 购买商品</div>' +
+    var isFromOther = (buyer === 'other');
+    var cardHTML = '<div class="transfer-card" style="border-left-color:var(--accent);"' + 
+        (isFromOther ? ' onclick="confirmReceive(this, \'' + escapeHTML(item.name) + '\', \'' + item.price + '\')" style="cursor:pointer;"' : '') + '>' +
+        '<div class="transfer-label">购买商品</div>' +
         '<div style="font-size:16px;font-weight:bold;margin:6px 0;">' + escapeHTML(item.name) + '</div>' +
         '<div class="transfer-amount">¥ ' + item.price.toFixed(2) + '</div>' +
-        '<div class="transfer-note">' + (buyer === 'me' ? '你购买了此商品' : '对方购买了此商品') + '</div>' +
+        '<div class="transfer-note">' + (buyer === 'me' ? '你购买了此商品' : (isFromOther ? '点击确认收到' : '对方购买了此商品')) + '</div>' +
         '</div>';
     
     div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-    
-    appData.chatHistory.push({
-        type: 'system',
-        content: (buyer === 'me' ? appData.myName : appData.otherName) + ' 购买了 ' + item.name + '（¥' + item.price.toFixed(2) + '）',
-        time: Date.now()
-    });
+}
+
+// 确认收到商品
+function confirmReceive(cardElement, itemName, itemPrice) {
+    if (cardElement.querySelector('.transfer-note').textContent !== '点击确认收到') {
+        showToast('已经确认过了');
+        return;
+    }
+    cardElement.querySelector('.transfer-note').textContent = '已收到';
+    cardElement.querySelector('.transfer-note').style.color = 'var(--success)';
+    cardElement.style.cursor = 'default';
+    cardElement.onclick = null;
+    addSystemMsg('你收到了 ' + appData.otherName + ' 送的 ' + itemName);
+    showToast('已收到 ' + itemName);
+    saveData();
 }
 
 // 导出商品库
@@ -2627,7 +2685,29 @@ function importShopItems() {
     };
     input.click();
 }
+// ==================== 对方随机购买 ====================
 
+// 对方随机购买商品
+function otherRandomBuy() {
+    // 检查开关（默认开启）
+    var isEnabled = localStorage.getItem('other_random_buy_enabled');
+    if (isEnabled === 'false') return;
+    
+    if (isInCall || isRinging) return;  // 通话中不触发
+    if (typeof shopItems === 'undefined' || !shopItems.length) return;
+    if (Math.random() > 0.02) return;  // 2% 概率，约每30秒检查一次，平均2-3分钟触发一次
+    
+    var randomIndex = Math.floor(Math.random() * shopItems.length);
+    var item = shopItems[randomIndex];
+    
+    // 对方购买
+    sendPurchaseMessage(item, 'other');
+}
+
+// 定时检查对方随机购买（每30秒检查一次）
+setInterval(function() {
+    otherRandomBuy();
+}, 30000);
 // ========== 启动 ==========
 initApp().then(function() {
     console.log('甜心助手启动成功！');
