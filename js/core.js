@@ -2305,6 +2305,328 @@ function acceptWheelInvite(element) {
 function sendWheelInviteManually() {
     sendWheelInvite();
 }
+// ==================== 购物商城（情侣购买） ====================
+var shopItems = [];  // 商品列表 [{ id, name, price }]
+var SHOP_STORAGE_KEY = 'shop_items_v1';
+
+// 加载商品数据
+function loadShopItems() {
+    var saved = localStorage.getItem(SHOP_STORAGE_KEY);
+    if (saved) {
+        try {
+            shopItems = JSON.parse(saved);
+        } catch(e) { shopItems = []; }
+    }
+    if (!shopItems.length) {
+        // 默认商品
+        shopItems = [
+            { id: 'item1', name: '红玫瑰', price: 5.20 },
+            { id: 'item2', name: '巧克力', price: 13.14 },
+            { id: 'item3', name: '小熊玩偶', price: 52.00 },
+            { id: 'item4', name: '手写信', price: 9.90 }
+        ];
+        saveShopItems();
+    }
+}
+
+function saveShopItems() {
+    localStorage.setItem(SHOP_STORAGE_KEY, JSON.stringify(shopItems));
+}
+
+// 打开购物商城弹窗
+function openShopModal() {
+    loadShopItems();
+    closeModal('settingsOverlay');
+    
+    var html = '<div style="text-align:center;">' +
+        '<h3>购物商城</h3>' +
+        '<div class="subtitle">购买商品会发送到聊天记录</div>' +
+        '<div class="btn-row" style="gap:8px;justify-content:center;margin-bottom:12px;">' +
+        '<button class="btn-sm" onclick="showAddItemModal()">添加商品</button>' +
+        '<button class="btn-sm outline" onclick="exportShopItems()">导出商品库</button>' +
+        '<button class="btn-sm outline" onclick="importShopItems()">导入商品库</button>' +
+        '</div>' +
+        '<div style="max-height:350px;overflow-y:auto;" id="shopItemsList">加载中...</div>' +
+        '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>' +
+        '</div>';
+    openSubModal(html);
+    renderShopItemsList();
+}
+
+// 渲染商品列表
+function renderShopItemsList() {
+    var container = document.getElementById('shopItemsList');
+    if (!container) return;
+    if (!shopItems.length) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:20px;">暂无商品，点击上方添加</div>';
+        return;
+    }
+    var html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+    for (var i = 0; i < shopItems.length; i++) {
+        var item = shopItems[i];
+        html += '<div style="background:var(--item-bg);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;">' +
+            '<div style="flex:1;">' +
+            '<div style="font-weight:bold;">' + escapeHTML(item.name) + '</div>' +
+            '<div style="color:var(--accent);font-size:14px;">¥ ' + item.price.toFixed(2) + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:8px;">' +
+            '<button class="btn-sm outline" onclick="buyItem(\'' + item.id + '\')">购买</button>' +
+            '<button class="del-sm" onclick="deleteShopItem(\'' + item.id + '\')">删除</button>' +
+            '</div>' +
+            '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// 显示添加商品弹窗
+function showAddItemModal() {
+    var html = '<div style="text-align:center;">' +
+        '<h4>添加商品</h4>' +
+        '<div class="form-row">' +
+        '<label>商品名称</label>' +
+        '<input type="text" id="newItemName" placeholder="例如：玫瑰花">' +
+        '</div>' +
+        '<div class="form-row">' +
+        '<label>价格（元）</label>' +
+        '<input type="number" id="newItemPrice" step="0.01" placeholder="例如：5.20">' +
+        '</div>' +
+        '<div class="btn-row" style="justify-content:center;gap:8px;margin-top:12px;">' +
+        '<button class="btn-sm" onclick="addShopItem()">确认添加</button>' +
+        '<button class="btn-sm outline" onclick="closeModal(\'subOverlay\')">取消</button>' +
+        '</div>' +
+        '</div>';
+    openSubModal(html);
+}
+
+// 添加商品
+function addShopItem() {
+    var name = document.getElementById('newItemName').value.trim();
+    var price = parseFloat(document.getElementById('newItemPrice').value);
+    if (!name) {
+        showToast('请输入商品名称');
+        return;
+    }
+    if (isNaN(price) || price <= 0) {
+        showToast('请输入有效价格');
+        return;
+    }
+    var newId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    shopItems.push({
+        id: newId,
+        name: name,
+        price: price
+    });
+    saveShopItems();
+    closeModal('subOverlay');
+    openShopModal();
+    showToast('商品已添加');
+}
+
+// 删除商品
+function deleteShopItem(id) {
+    if (!confirm('确定删除该商品吗？')) return;
+    shopItems = shopItems.filter(function(item) { return item.id !== id; });
+    saveShopItems();
+    renderShopItemsList();
+    showToast('已删除');
+}
+
+// 购买商品（自己购买或对方购买）
+function buyItem(itemId, buyer) {
+    var item = shopItems.find(function(i) { return i.id === itemId; });
+    if (!item) {
+        showToast('商品不存在');
+        return;
+    }
+    
+    // buyer 参数：'me' 或 'other'，如果不传则弹窗选择
+    if (!buyer) {
+        showBuyerChoiceModal(item);
+        return;
+    }
+    
+    sendPurchaseMessage(item, buyer);
+}
+
+// 显示购买者选择弹窗
+function showBuyerChoiceModal(item) {
+    var html = '<div style="text-align:center;">' +
+        '<h4>购买商品</h4>' +
+        '<div class="subtitle">' + escapeHTML(item.name) + ' - ¥' + item.price.toFixed(2) + '</div>' +
+        '<div class="subtitle" style="margin:12px 0;">谁购买？</div>' +
+        '<div class="btn-row" style="justify-content:center;gap:16px;">' +
+        '<button class="btn-sm" onclick="buyItemWithBuyer(\'' + item.id + '\', \'me\')">我购买</button>' +
+        '<button class="btn-sm outline" onclick="buyItemWithBuyer(\'' + item.id + '\', \'other\')">对方购买</button>' +
+        '</div>' +
+        '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">取消</button>' +
+        '</div>';
+    openSubModal(html);
+}
+
+function buyItemWithBuyer(itemId, buyer) {
+    closeModal('subOverlay');
+    var item = shopItems.find(function(i) { return i.id === itemId; });
+    if (item) {
+        sendPurchaseMessage(item, buyer);
+    }
+}
+
+// 发送购买消息到聊天记录
+function sendPurchaseMessage(item, buyer) {
+    var buyerName = (buyer === 'me') ? appData.myName : appData.otherName;
+    var receiverName = (buyer === 'me') ? appData.otherName : appData.myName;
+    var message = '🛒 ' + buyerName + ' 购买了 ' + item.name + '（¥' + item.price.toFixed(2) + '）送给 ' + receiverName;
+    
+    // 添加到聊天记录
+    addSystemMsg(message);
+    
+    // 同时添加一条带购买卡片的消息
+    addPurchaseCard(item, buyer);
+    
+    showToast(buyerName + ' 购买了 ' + item.name);
+    saveData();
+}
+
+// 添加购买卡片到聊天
+function addPurchaseCard(item, buyer) {
+    var chat = document.getElementById('chat');
+    var div = document.createElement('div');
+    div.className = 'msg ' + (buyer === 'me' ? 'me' : 'other');
+    var av = getAvatarHTMLSync(buyer === 'me');
+    var handler = buyer === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
+    
+    var cardHTML = '<div class="transfer-card" style="border-left-color:var(--accent);">' +
+        '<div class="transfer-label">🎁 购买商品</div>' +
+        '<div style="font-size:16px;font-weight:bold;margin:6px 0;">' + escapeHTML(item.name) + '</div>' +
+        '<div class="transfer-amount">¥ ' + item.price.toFixed(2) + '</div>' +
+        '<div class="transfer-note">' + (buyer === 'me' ? '你购买了此商品' : '对方购买了此商品') + '</div>' +
+        '</div>';
+    
+    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    
+    appData.chatHistory.push({
+        type: 'system',
+        content: (buyer === 'me' ? appData.myName : appData.otherName) + ' 购买了 ' + item.name + '（¥' + item.price.toFixed(2) + '）',
+        time: Date.now()
+    });
+}
+
+// 导出商品库
+function exportShopItems() {
+    if (!shopItems.length) {
+        showToast('商品库为空，无法导出');
+        return;
+    }
+    var exportData = {
+        type: 'shopItems',
+        version: '1.0',
+        data: shopItems,
+        count: shopItems.length
+    };
+    var jsonStr = JSON.stringify(exportData, null, 2);
+    
+    var html = '<div style="text-align:center;">' +
+        '<h4>导出商品库</h4>' +
+        '<div class="subtitle">共 ' + shopItems.length + ' 个商品</div>' +
+        '<div class="btn-row" style="gap:8px;margin:12px 0;">' +
+        '<button class="btn-sm" onclick="copyShopItemsToClipboard()">复制到剪贴板</button>' +
+        '<button class="btn-sm outline" onclick="downloadShopItemsFile()">下载为文件</button>' +
+        '</div>' +
+        '<textarea readonly style="width:100%;height:120px;font-size:11px;margin:8px 0;padding:8px;border-radius:6px;background:var(--item-bg);border:1px solid var(--border);">' + escapeHTML(jsonStr) + '</textarea>' +
+        '<button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>' +
+        '</div>';
+    openSubModal(html);
+}
+
+function copyShopItemsToClipboard() {
+    var exportData = {
+        type: 'shopItems',
+        version: '1.0',
+        data: shopItems,
+        count: shopItems.length
+    };
+    copyToClipboard(JSON.stringify(exportData, null, 2), '商品库');
+    closeModal('subOverlay');
+}
+
+function downloadShopItemsFile() {
+    var exportData = {
+        type: 'shopItems',
+        version: '1.0',
+        data: shopItems,
+        count: shopItems.length,
+        exportTime: new Date().toISOString()
+    };
+    var jsonStr = JSON.stringify(exportData, null, 2);
+    var blob = new Blob([jsonStr], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'shop_items_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    closeModal('subOverlay');
+    showToast('商品库已下载');
+}
+
+// 导入商品库
+function importShopItems() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function() {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var data = JSON.parse(e.target.result);
+                var newItems = null;
+                
+                if (Array.isArray(data)) {
+                    newItems = data;
+                } else if (data.type === 'shopItems' && Array.isArray(data.data)) {
+                    newItems = data.data;
+                } else if (Array.isArray(data.items)) {
+                    newItems = data.items;
+                }
+                
+                if (newItems && newItems.length > 0) {
+                    // 验证每个商品是否有 name 和 price
+                    var valid = true;
+                    for (var i = 0; i < newItems.length; i++) {
+                        if (!newItems[i].name || typeof newItems[i].price !== 'number') {
+                            valid = false;
+                            break;
+                        }
+                        // 确保有 id
+                        if (!newItems[i].id) {
+                            newItems[i].id = 'item_' + Date.now() + '_' + i;
+                        }
+                    }
+                    if (!valid) throw new Error('格式错误');
+                    
+                    shopItems = newItems;
+                    saveShopItems();
+                    showToast('导入成功，共 ' + shopItems.length + ' 个商品');
+                    openShopModal();
+                } else {
+                    throw new Error('格式错误或内容为空');
+                }
+            } catch(err) {
+                console.error('导入错误:', err);
+                showToast('导入失败，文件格式错误');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
 
 // ========== 启动 ==========
 initApp().then(function() {
