@@ -2685,7 +2685,7 @@ function otherRandomBuy() {
     
     if (isInCall || isRinging) return;  // 通话中不触发
     if (typeof shopItems === 'undefined' || !shopItems.length) return;
-    if (Math.random() > 0.02) return;  // 2% 概率，约每30秒检查一次，平均2-3分钟触发一次
+    if (Math.random() > 0.1) return;  // 10% 概率，约每30秒检查一次，平均2-3分钟触发一次
     
     var randomIndex = Math.floor(Math.random() * shopItems.length);
     var item = shopItems[randomIndex];
