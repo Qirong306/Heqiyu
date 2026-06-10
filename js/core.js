@@ -14,7 +14,7 @@ var saveDebounceMs = 500;
 // ========== 引用状态 ==========
 var quotedMessage = null;
 
-// ========== IndexedDB（仅用于存储图片） ==========
+// ========== IndexedDB ==========
 function openDB() {
     return new Promise(function(resolve, reject) {
         if (db) { resolve(db); return; }
@@ -235,7 +235,7 @@ var DEFAULT_DATA = {
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-// ========== 数据保存（文字存 localStorage，图片存 IndexedDB） ==========
+// ========== 数据保存 ==========
 function safeParseJSON(str) {
     if (!str) return null;
     try { return JSON.parse(str); } catch(e) { return null; }
@@ -413,8 +413,8 @@ function initApp() {
         checkPendingLetters();
         return renderChatHistory();
     }).then(function() {
-        updateStatus();
-        setInterval(updateStatus, 60 * 60 * 1000);
+        if (typeof updateStatus === 'function') updateStatus();
+        if (typeof updateStatus === 'function') setInterval(updateStatus, 60 * 60 * 1000);
         updateLetterBadge();
         renderMoreImages();
         closeModal('settingsOverlay'); closeModal('subOverlay');
@@ -432,7 +432,7 @@ function initApp() {
         var now = Date.now();
         if (!lastBackupReminder || now - parseInt(lastBackupReminder) > 7 * 24 * 60 * 60 * 1000) {
             setTimeout(function() {
-                showToastLong('💾 备份提醒：建议去设置 → 数据管理\n点击「全量备份下载」保存数据', 5000);
+                showToastLong('备份提醒：建议去设置 → 数据管理\n点击「全量备份下载」保存数据', 5000);
             }, 3000);
             localStorage.setItem('chat_app_backup_reminder', now.toString());
         }
@@ -442,7 +442,7 @@ function initApp() {
 function updateHeader() {
     document.getElementById('headerTitle').textContent = appData.otherName;
     document.title = appData.otherName;
-    renderStatus();
+    if (typeof renderStatus === 'function') renderStatus();
 }
 
 // ========== 主题 ==========
@@ -468,8 +468,10 @@ function updateLetterBadge() {
         if (l.replied && !l.replyShown) pending++;
         if (!l.replied && l.expectedReplyTime <= Date.now()) pending++;
     });
-    badge.style.display = pending > 0 ? 'inline-block' : 'none';
-    badge.textContent = pending + ' 封回信';
+    if (badge) {
+        badge.style.display = pending > 0 ? 'inline-block' : 'none';
+        badge.textContent = pending + ' 封回信';
+    }
 }
 function checkPendingLetters() {
     var hasNew = false;
@@ -652,44 +654,31 @@ function triggerAutoReply() {
         if (index >= replyCount) return;
         setTimeout(function() {
             if (Math.random() < 0.1 && appData.transferAmounts.length > 0 && appData.transferNotes.length > 0) {
-                var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
-                var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
-                addTransferCard(amt, note, 'other');
-                appData.chatHistory.push({ type: 'transfer_other', amount: amt, note: note, time: Date.now() });
-                saveData();
-                sendNext(index + 1);
-                return;
-            }
-            sendRandomReply().then(function(sent) {
-                if (sent === false && index === 0) {
-                    addMessage('（还没有设置回复词库哦，去设置里添加一些吧~）', 'other');
-                    appData.chatHistory.push({ type: 'other', content: '（还没有设置回复词库哦，去设置里添加一些吧~）', time: Date.now() });
+                if (typeof addTransferCard === 'function') {
+                    var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
+                    var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
+                    addTransferCard(amt, note, 'other');
+                    appData.chatHistory.push({ type: 'transfer_other', amount: amt, note: note, time: Date.now() });
                     saveData();
+                    sendNext(index + 1);
+                    return;
                 }
-                if (sent !== false) sendNext(index + 1);
-            });
+            }
+            if (typeof sendRandomReply === 'function') {
+                sendRandomReply().then(function(sent) {
+                    if (sent === false && index === 0) {
+                        addMessage('（还没有设置回复词库哦，去设置里添加一些吧~）', 'other');
+                        appData.chatHistory.push({ type: 'other', content: '（还没有设置回复词库哦，去设置里添加一些吧~）', time: Date.now() });
+                        saveData();
+                    }
+                    if (sent !== false) sendNext(index + 1);
+                });
+            } else {
+                sendNext(index + 1);
+            }
         }, 500 + Math.random() * 800);
     }
     sendNext(0);
-}
-function getRandomHistoryMessage() {
-    var history = appData.chatHistory || [];
-    var textMessages = history.filter(function(msg) {
-        return (msg.type === 'me' || msg.type === 'other') && 
-               msg.content && 
-               typeof msg.content === 'string' &&
-               msg.content.length > 0 &&
-               msg.content.indexOf('<img') === -1;
-    });
-    if (textMessages.length === 0) return null;
-    var randomIndex = Math.floor(Math.random() * textMessages.length);
-    var msg = textMessages[randomIndex];
-    return {
-        content: msg.content,
-        type: msg.type,
-        time: msg.time,
-        isImage: false
-    };
 }
 function sendRandomReply() {
     var allReplies = getAllReplies();
@@ -748,6 +737,25 @@ function sendRandomReply() {
     }
     return Promise.resolve(false);
 }
+function getRandomHistoryMessage() {
+    var history = appData.chatHistory || [];
+    var textMessages = history.filter(function(msg) {
+        return (msg.type === 'me' || msg.type === 'other') && 
+               msg.content && 
+               typeof msg.content === 'string' &&
+               msg.content.length > 0 &&
+               msg.content.indexOf('<img') === -1;
+    });
+    if (textMessages.length === 0) return null;
+    var randomIndex = Math.floor(Math.random() * textMessages.length);
+    var msg = textMessages[randomIndex];
+    return {
+        content: msg.content,
+        type: msg.type,
+        time: msg.time,
+        isImage: false
+    };
+}
 function sendMsg() {
     var input = document.getElementById('msgInput'); 
     var msg = input.value.trim();
@@ -765,10 +773,12 @@ function sendMsg() {
     input.value = ''; 
     saveData();
     if (msg.includes('转转盘') || msg.includes('转盘邀请') || msg.includes('🎡')) {
-        sendWheelInvite();
+        if (typeof sendWheelInvite === 'function') sendWheelInvite();
         return;
     }
-    setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
+    setTimeout(function() { 
+        if (typeof triggerAutoReply === 'function') triggerAutoReply(); 
+    }, 400 + Math.random() * 1000);
 }
 function addMessage(content, type, isImage, isSticker) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
@@ -780,7 +790,7 @@ function addMessage(content, type, isImage, isSticker) {
     } else {
         div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImage ? '<img class="msg-image" src="' + content + '">' : content) + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     }
-    bindQuoteEvent(div, { content: content, type: type, time: Date.now(), isImage: isImage });
+    if (typeof bindQuoteEvent === 'function') bindQuoteEvent(div, { content: content, type: type, time: Date.now(), isImage: isImage });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
 }
 function addMessageWithQuote(content, type, quote) {
@@ -795,7 +805,7 @@ function addMessageWithQuote(content, type, quote) {
         escapeHTML((quote.type === 'me' ? appData.myName : appData.otherName) + '：' + quotePreview) +
         '</div>' + content +
         '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
-    bindQuoteEvent(div, { content: content, type: type, time: Date.now() });
+    if (typeof bindQuoteEvent === 'function') bindQuoteEvent(div, { content: content, type: type, time: Date.now() });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
 }
 function addMessageWithRole(content, role, roleClass) {
@@ -803,7 +813,7 @@ function addMessageWithRole(content, role, roleClass) {
     div.className = 'msg other';
     var av = '<div class="avatar-placeholder" style="background:var(--' + (roleClass || 'role-a') + ');color:var(--text);">' + (role ? role.charAt(0) : '?') + '</div>';
     div.innerHTML = '<div class="avatar-wrap">' + av + '</div><div class="bubble"><span class="role-tag ' + (roleClass || 'role-a') + '">' + role + '</span><br>' + content + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
-    bindQuoteEvent(div, { content: '[' + role + '] ' + content, type: 'other', time: Date.now() });
+    if (typeof bindQuoteEvent === 'function') bindQuoteEvent(div, { content: '[' + role + '] ' + content, type: 'other', time: Date.now() });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
     appData.chatHistory.push({ type: 'other', content: '[' + role + '] ' + content, time: Date.now() });
     saveData();
@@ -881,7 +891,7 @@ function renderChatHistory() {
                     if (m.quote.isImage) qp = '[图片]';
                     bubble.innerHTML = '<div class="quote-ref" style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:11px;color:var(--text-secondary);">' + escapeHTML((m.quote.type === 'me' ? appData.myName : appData.otherName) + '：' + qp) + '</div>加载中...<span class="msg-time">' + formatTimeShort(m.time) + '</span>';
                 }
-                bindQuoteEvent(d, { content: m.content, type: m.type, time: m.time });
+                if (typeof bindQuoteEvent === 'function') bindQuoteEvent(d, { content: m.content, type: m.type, time: m.time });
                 chat.appendChild(d);
                 getImageFromDB('images', m.imageId).then(function(img) {
                     var bubbleEl = d.querySelector('.bubble');
@@ -906,7 +916,7 @@ function renderChatHistory() {
                     qHtml = '<div class="quote-ref" style="background:var(--item-bg);border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:4px;font-size:11px;color:var(--text-secondary);">' + escapeHTML((m.quote.type === 'me' ? appData.myName : appData.otherName) + '：' + qp) + '</div>';
                 }
                 d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + qHtml + (isImg ? '<img class="msg-image" src="' + m.content + '">' : m.content) + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
-                bindQuoteEvent(d, { content: m.content, type: m.type, time: m.time, isImage: isImg });
+                if (typeof bindQuoteEvent === 'function') bindQuoteEvent(d, { content: m.content, type: m.type, time: m.time, isImage: isImg });
                 chat.appendChild(d); resolve();
             }
         });
@@ -955,7 +965,7 @@ function sendFromMorePanel(index) {
         addMessage(url, 'me', true, true);
         appData.chatHistory.push({ type: 'me', content: '', imageId: appData.emojiIds[index], time: Date.now(), isSticker: true });
         saveData(); toggleMorePanel();
-        setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 800);
+        setTimeout(function() { if (typeof triggerAutoReply === 'function') triggerAutoReply(); }, 400 + Math.random() * 800);
     });
 }
 
@@ -1145,6 +1155,16 @@ function acceptWheelInvite(element) {
 }
 function sendWheelInviteManually() {
     sendWheelInvite();
+}
+
+// ========== 打开设置 ==========
+function openSettings() { 
+    openModal('settingsOverlay'); 
+}
+
+function openSubModal(html) { 
+    document.getElementById('subModal').innerHTML = html; 
+    openModal('subOverlay'); 
 }
 
 // ========== 启动 ==========
