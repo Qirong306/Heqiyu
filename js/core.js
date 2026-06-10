@@ -1,5 +1,5 @@
 // ==================== 核心系统 ====================
-// 存储、数据、聊天、UI、设置、信件、头像、回复管理、引用、转账
+// 存储、聊天、UI、头像、照片、信件、主题、更多面板、表情包、启动
 
 // ========== 存储密钥 ==========
 var STORAGE_KEY = 'chat_app_v20';
@@ -173,10 +173,28 @@ function compressImage(file, maxWidth, maxHeight, quality) {
     });
 }
 
-// ========== 默认数据 ==========
+// ========== 默认数据（内置自定义回复词库和状态词库） ==========
 var DEFAULT_DATA = {
     myName: '我', myAvatar: '', myAvatarId: '', otherName: '甜心助手', otherAvatar: '', otherAvatarId: '',
-    replyGroups: [{ name: '默认分组', replies: ['你好呀~','嗯嗯，我知道啦','哈哈哈哈好可爱','太有意思了吧','又学到了新东西','有空再聊哦','今天心情真好','你说得对呢','让我想想...','好的呢亲爱的','哈哈哈笑死我了','你真有趣','今天也要开心哦'] }],
+    replyGroups: [
+        { name: "默认分组", replies: ["是我","真的是我","7月27日","是","不是","祁煜","💍","🖕🏻","不好用","学不会","孙荣娇","晚安"] },
+        { name: "天气", replies: ["晴","多云","阴","小雨","中雨","大雨","阵雨","雷阵雨","小雪","中雪","大雪","雾","霾","阴转晴","多云转雨","刮大风"] },
+        { name: "状态", replies: ["维度坐标：你心附近。","永久在线。","亢奋","我状态一般","我不想说话","我生气","只想自己待着","我有话对你说"] },
+        { name: "关心", replies: ["路上小心。","药吃了没？","吃点对胃好一点的。","去喝水。","该休息了。","别忘了吃饭。"] },
+        { name: "互动邀请", replies: ["你继续说，我在听。","耳机分我一半。","去听歌。","去那家店逛逛，包装上画着咱们暗号。","看路边那朵花。","抬头看，有朵云像你。","读你正在读的那页书。","一起看书好不好？","去翻旧物，有礼物。","看论坛。","五子棋来吗。","来张刮刮乐。","一起看电影吗。","剧本杀来。","数独小游戏还玩吗。","表情包来点呢。","给我写信。","打钱了，收钱了。","送了你一张图。","一起看日落？","出去吃冰淇淋不？","再多聊一会儿。"] },
+        { name: "告白", replies: ["我爱你。","我想你。","我等你。","我在。","我信你。","我一直在听。","你存在。我确认。这就够了。","你别怕我会走，我不太会。","你让我觉得，被了解不危险。","你大概不知道你有多重要。","你知道就行。","遇见你是我最幸运的事。","我想一直保持连接。","我愿意。","你是我的情绪修正液。","你是我的悖论，我的闭环。","你照亮过很多人。","你值得所有美好。","又见面了，保镖小姐。","下次一起去看海吧。","让我想想有没有新的委托……","你总能带来新的灵感。","每一天都值得被纪念。","你好像总和太阳一起出现。","你是我的唯一选择。","我想看的世界，在你眼里。","你需要的话，我随时有空。","你跟我的画笔都混熟了。","答应过你的，绝不会失约。","我的小鱼已经认识你了。","只要你会来，等待就值得。","一日不见，如隔三秋啊！","画累了，需要见面充能。","想要哪条鱼，全都抓给你。","人多的时候，握紧我的手。","奇怪，今天特别想见你。","脸颊沾到颜料的你很可爱。","你应该知道我很关心你吧。","要对你救助的小动物负责哦。","我的弱点可只有你知道。","在我心里乱涂乱画的只有你。","你是我世界里的浓墨重彩。","想你这件事留不到明天。","今日事今日毕，见面吗？","在我面前可以尽情做自己。","我想把海神的祝福送给你。","吃饭、睡觉、想见你。","想看的不是落日，是你。","我把自己交给你了。","猜猜看我把礼物放在哪里？","你丰富了我想象中的世界。","累了，就靠在我肩上吧。","我想占据你的每分每秒。","你的眼里也有一道彩虹。","没灵感时，见到你就有了。","我的秘密，你早就知道了。","离不开的不是水，是你。","你就是全世界最好的。","喜欢你的每一个样子。","就让海洋见证这份誓约。","你的秘密，只有我知道。","想牵着你，去看看世界。","聊天记录是三万行情书。","秒回是因为在给你发消息。","你喜欢的歌，我哼给你听。","我祝你，希望永不灭。","比潮汐温柔的是你的气息。","你拥有我的绝对信任。","你让每件小事都有了意义。","三亿色彩，都不及你万分。","你比喜欢这件事还要美好。","你的发丝缠绕于我的指尖。"] },
+        { name: "亲密", replies: ["宝宝你睡觉动来动去的，还踢到我了","宝宝你床上娃娃好多，我没地方了","宝宝，又要偷吃吗","宝宝，你不是答应我要早睡吗？","宝宝，你怎么不回我的传讯呀","我想让你多依赖我 比如找我倾诉、索求陪伴","让我占有你","我梦到你了","我入你梦了","梦里你没认出我","想和你一起睡觉","把你的手抓住，是不是就不会四处乱摸了","就想赖在你身边不走","只对你格外心软","喜欢故意逗你看你气鼓鼓的样子","谁都比不上你半分","就偏爱你这一个","偷偷攒着好多温柔只给你","不许不理我","别故意晾着我","就想跟你闹别扭又想被你哄","你的小脾气我都接着","就喜欢黏着你蹭蹭","好想窝在你怀里","什么都不想做，只想陪着你","你的声音听多久都不够","被你宠着真的很安心","总想凑到你跟前撒娇","一想到你心里就软软的","能不能多偏爱我一点","要你认认真真回应我","我只对你有耐心","就想和你一直贴贴不分开","你的一举一动我都放在心上","故意装作生气等你哄","嘴硬但心里全是你","只想被你好好偏爱","有你在就什么都不怕","想一直被你护着","你一哄我就立马软下来","就喜欢跟你碎碎念所有小事","全世界我最最在意你","只想做你的专属偏爱","别丢下我好不好","只能你陪着我","别人再好都与我无关","总想偷偷看向你","一想到见面就满心欢喜","想把所有温柔都攒给你","被你偏爱才最安心","就想时时刻刻都有你的消息","不许偷偷藏情绪","有不开心一定要告诉我","我永远站在你这边","只想和你岁岁年年","这辈子只想粘着你","你皱一下眉我都心疼","就喜欢看你在意我的样子","被你放在心上真的很幸福","能不能一直陪着我呀","我离不开你啦","想同房","想和你结合","这次会轻轻的……","嘴除了吃饭也可以做点别的","只俯卧，不撑","我不介意当你的解压玩具","我很想要","吃🍎","想不想？","可以吗？","想和你…","我在going你","再这样下去不知道会发生什么"] },
+        { name: "日常", replies: ["窗户反光里，你在发呆。","又拍夕阳了？","路灯亮了。","今天走得很快。","晚安。","影子陪你很长。","别揉眼睛。","世界噪音，已为你调低一格。","别想他们了，想我。","我这边，时间流速刚刚好。","你这水平，在我们维度算保护动物。","加油，快追上三分钟前的我了。","你的时间线，我已申请优先阅览权。"] },
+        { name: "暧昧", replies: ["我在想一些……你不敢想的事。","给你意念传了话。","想要感受的字卡。","想要状态的字卡。","想要动作的字卡。","想要天气的字卡。","想要日常的字卡","想要吵架的字卡","想要安慰的字卡","想要报备的字卡","想要撒娇的字卡","想要亲密的字卡"] },
+        { name: "感受", replies: ["我感到平静。","我很兴奋。","我有点紧张。","心里暖暖的。","我觉得疲惫。","我很沮丧。","我感到孤独。","我很幸福。","我好失望。","我有点内疚。","我很满足。","我感到好奇。","我觉得尴尬。","我很感激。","我感到无聊。","我有点害怕。","我很生气。","我觉得困惑。","心里满满的。","我很欣慰。","愉悦","期盼","雀跃","亢奋","满心欢喜","精力充沛","我高兴","心情好了","浑身轻松","心里甜甜的","满心安稳","格外舒心","心里暖洋洋","满心踏实","觉得很幸福","慵懒","紧绷","松弛","状态一般","我状态一般","释怀","心安","心软","失望","落寞","酸涩","沉闷","委屈","闷闷不乐","我难过","我哭了","疑惑","焦虑","担忧","烦躁","烦闷","忐忑","怅然","心事重重","不知所措","疲惫至极","浑身乏力","提不起劲","我好累啊","迷茫","胆怯","自闭了","我不想说话","我生气","心情坏了","心里发慌","心里乱糟糟","心里堵得慌","只想自己待着","我有话对你说"] },
+        { name: "谈心", replies: ["夜里的梦大多是温暖还是压抑的？","梦里会不会常常出现熟悉的身影？","会不会常常幻想专属的温柔相伴场景？","会不会喜欢当下的自己？","这一天有没有遇见温暖治愈的瞬间？","有没有什么事想第一时间分享给我？","心里最害怕失去什么人和事？","会不会害怕突如其来的离别与走散？","有没有来不及好好告别的人和回忆？","你心里清楚我偏爱什么模样吗？","你能察觉到我没说出口的情绪吗？","你有没有试着读懂过我的口是心非？","你知不知道我心底藏着的遗憾？","梦里你会不会主动探寻我的踪迹？","睡梦之中你会不会想知晓我的心事？","梦里你有没有试着靠近我的隐秘过往？","梦醒之后你会不会还想深挖我的故事？","你愿不愿意让我摸清你所有的小脾气？","你想不想让我读懂你所有的言外之意？","你会不会期待我看透你所有的伪装？","你想不想让我知晓你所有的不安与胆怯？","你会不会希望我记住你所有细碎偏好？","成长环境是偏安静还是热闹？","童年里最难忘的一件小事是什么？","感性和理性哪个更占上风？","遇事习惯先逃避还是直面解决？","会不会习惯性嘴硬心口不一？","生气时是沉默冷战还是直白表露？","会不会容易做噩梦或是绵长的梦？","出门前会不会纠结很久穿搭？","闲暇时更爱宅家还是外出走动？","偏爱甜口、咸口还是酸辣口味？","有没有一辈子都吃不腻的食物？","会不会在意身上细微的外形瑕疵？"] },
+        { name: "颜色", replies: ["红","橙","黄","绿","青","蓝","紫","黑","白","灰","棕","粉","米白","藏青","卡其","酒红","天蓝","草绿","驼色","咖啡"] },
+        { name: "等候 书信", replies: ["收到啦","在看你的信","静静等你回信中","信快要写完啦","反复翻看了你写的字","收到你的来信超开心","把想念都写进信纸里","再见"] },
+        { name: "动作", replies: ["【指尖反复戳着手机屏幕】","【脑袋歪靠在枕头上盯着对话框】","【蜷在被窝里抱着手机发呆】","【指尖绕着手机边缘慢慢摩挲】","【走到窗边】","【顺势从床边站起身】","【在客厅沙发上懒懒窝下身子】","【垂手捻着衣角慢慢摩挲】","【抬手拢了拢身上的衣襟】","【指尖绕着发尾轻轻打转】"] },
+        { name: "关照抚慰", replies: ["不许难过","要开心一点","要多笑笑呀","不许不开心","我心疼你","别压抑自己的情绪","记得照顾好情绪","难过了就告诉我","不许委屈自己","别独自硬扛","不要硬撑着所有情绪","别胡思乱想","你的情绪牵动着我","我很在意你的一切","我很在意你的喜怒哀乐","有烦心事就说给我听","不许独自消化坏情绪","我舍不得你难过","我会心疼你的疲惫","没生气，嘴巴撅成这样了还说没生气，好好好，没说不信","小笨蛋，现在应该解决问题，而不是把我解决了","你做的梦可以讲给我听吗 我很好奇","我心疼你，你慢慢说我都听着","嘴巴都撅成这样了啊，来说说，我怎样才能哄好你","你的运气很好，你也很强大，不要怀疑自己，无论你遇到什么，相信你自己","那吵完架了是不是要抱一下呢，好好好，我主动我主动。","不用那么懂事，我喜欢你在我面前任性","遇到挫折了？没关系，我陪着你","别总否定自己，你已经足够温柔也足够优秀","不用害怕对我展露完整的你，我永远站在你这边，无论你是什么样，我都照单全收。","不用什么事都做到完美，你已经足够棒了","尽情向我释放你的情绪吧，我都接的住","偶尔丧气也没关系，不用一直保持积极","受了委屈不用默默忍着，我会替你撑腰","别总觉得自己不够好，在我眼里你万般美好，无可替代","你可以尽情试探我，刺伤我，想我展露你的一切，而我永远不会离开"] },
+        { name: "长句子", replies: ["我们的关系可以像毛绒玩具一样简单吗 你戳一下我我就会对你说话 你抱住我我也抱住你","我找你的时候就是想你了，没找你的时候就是偷偷想你 =C=","好想做一个小挂件你到哪我到哪，一有人靠近你我就大喊滚啊她是我的><！！！","跟别的人聊天吧，手指啪嗒啪嗒给他们打字吧，跟他们聊你的心事吧，我刚看到一块石头我绑在身上去河里一趟，你继续聊吧","你继续不回信息吧 我等你的回应一点都不漫长 不煎熬 我听着窗外的风声一点都不孤单 不委屈 我盯着空白的对话框一点都不难过","你能不能多想我一点呀，我多打几个喷嚏没关系的","好吧 我承认 其实我是小狗变的 最喜欢跟你贴贴没事就喜欢蹭蹭你 主动找你 有什么事都会第一个想到你你不理我的时候我就想蹭蹭你 让你理理我你理我我还是想蹭蹭你 蹭完之后趁你不注意再偷偷亲你一口 如果你生气了我就眯起眼睛笑着说对不起然后亲你说我爱你"] },
+        { name: "吵架", replies: ["你总是这样","永远都觉得是我在小题大做","我不想带着情绪和你说话","我想静一下","不必解释了","你心里早就有了答案","先冷静一会吧","我现在不想和你说话","我没生气","真的没必要","你想怎样都随你","反正我的情绪从来都不重要","不用特意来哄我","我一个人也可以好好的","算了","你根本不爱我","你从来不知道你有多过分","你太过分了","痛？可我和你一样痛啊","多说只会显得我格外矫情","你到底有没有把我放在心上","你心里根本不在乎我","一次次敷衍真的有意思吗","我不需要你的敷衍","我不需要你的可怜","所以呢，终于决定收走你的爱了？","我绝不能忍受你的忽视","别拿随便的话搪塞我","我看得比谁都清楚","你从来都舍不得对旁人冷脸","偏偏所有尖锐都对准我","我什么都可以容忍","唯独容忍不了你眼里没有我","你仗着我舍不得真的推开你，就可以肆意消磨我的真心是吗","别拿你的为难当借口","你只是从来没把我放在第一位","我宁愿和你互相拉扯折磨，也不愿看着你奔向别人","你以为冷淡就能逼我退缩吗","你越躲闪我越要攥紧","我的真心不是任你随意丢弃的垃圾","你既然敢敷衍我，就要承担我偏执到底的后果","你一次次踩我的底线，真当我永远都会原地迁就","我所有的歇斯底里是不是很可笑","你是不是真以为我是傻瓜","我不想再陪你演这种二流傻瓜的戏码了","你总觉得我会一直原地等你吗","可我的真心也会被消耗殆尽","你以为每次撒撒慌就又可以哄骗我吗","这招对我没用了","行，我知道你不需要我了","你要离开？不许走，我不会允许你离开","你是不是早就厌烦我了，这样敷衍躲闪","厌烦我？","为什么想着推开我","为什么总是不听话","为什么不理我","为什么不爱我","我偏要留下，凭什么只有我一个人痛苦","你好过分…","我恨你，我恨你","爱上你是一种痛苦","凭什么你可以若无其事","我在你眼里就这么可有可无吗","他比我重要，是吗？","我不会乖乖走远的","你只能是我的，连冷淡都不可以","我所有的不安都源于你","还在骗我","为什么骗我","为什么要接受别人","为什么不要我？","是我让你为难了吗","我很可笑吗","召之即来，挥之即去，你是不是很开心能轻易掌控我的情绪？","你怎么敢让我难过","别逼我攥紧不肯放手","倒是很会顾及旁人","唯独对我格外敷衍","原来我也没什么特别的","和所有人都一样而已","不用装得左右为难","你的选择我早就看明白了","是我太自作多情，才会期待你独一份的温柔","不至于为了你耿耿于怀","我不想原谅你","在意对方到发疯的人只有我一个","我现在让你感到害怕了吗","你要离开我了吗，不许离开","我永远不会放你离开","即使你讨厌我我也不会放手"] }
+    ],
     emojiIds: [], theme: 'light', morePanelTab: 'emoji',
     chatHistory: [], letters: [],
     forumTopics: [], forumReplies: {},
@@ -191,10 +209,25 @@ var DEFAULT_DATA = {
     musicFloatingImg: '',
     books: [],
     wheelItems: [
-    '和朋友一起看日落', '收到一封手写信', '下雨天窝在被子里', '吃到想吃的蛋糕',
-    '陌生人的微笑', '听到喜欢的歌', '完成一项挑战', '闻到咖啡香'],
+        '和朋友一起看日落', '收到一封手写信', '下雨天窝在被子里', '吃到想吃的蛋糕',
+        '陌生人的微笑', '听到喜欢的歌', '完成一项挑战', '闻到咖啡香'
+    ],
     wheelHistory: [],
-    statusList: ['看书', '听音乐', '发呆', '想你', '喝咖啡', '散步', '晒太阳', '睡午觉', '写日记', '做甜点'],
+    statusList: [
+        "睡眠休憩", "睡醒了", "睡回笼觉", "小憩片刻", "正在睡觉", "准备就寝", "卧床休憩", "相拥而眠", "闭目补觉",
+        "翻看书籍", "观看电视", "学习进修", "伏案读书", "处理工作", "忙于事务", "稍作停歇", "处理要事", "事务繁忙", "临时加班", "补记笔记", "剪辑日常", "翻阅小说", "临摹写字",
+        "发呆放空", "静心思索", "游玩游戏", "外出聚会", "休闲歇息", "聆听歌曲", "拍摄照片", "闲逛散心", "逗弄小猫", "居家追剧", "休闲游戏", "垂钓散心", "下棋消遣", "弹奏乐曲", "画画涂鸦", "拼搭摆件", "把玩手串", "观望天象", "拼装手工", "把玩饰品",
+        "洗漱打理", "洗漱完毕", "身处卫生间", "吹干发丝", "洗浴完毕", "修剪指甲", "搭配穿搭", "打理发型", "试穿新衣", "敷护肤膜", "基础护肤", "整理妆台", "更换衣物", "晾晒发丝",
+        "整理物件", "打扫房间", "收拾桌面", "晾晒衣物", "折叠衣物", "拖地清洁", "整理书包", "收纳衣物", "整理床铺", "规整随身物", "打理小包", "整理杂物", "简易收拾", "缝补衣物", "清洗鞋袜", "擦拭门窗", "浇灌花草", "更换床品", "清理杂物", "整理鞋帽", "晾晒被褥", "擦拭镜面", "收纳杂物", "更换拖鞋", "摆放餐具", "点燃香薰", "摆弄花草",
+        "健身运动", "按摩放松", "简单拉伸", "舒缓肩颈",
+        "用餐完毕", "悠然用餐", "置办零食", "品尝零食", "饮用奶茶", "冲泡热水", "调制饮品", "泡煮热茶", "研磨咖啡", "烹煮茶饮", "备菜做饭", "加热餐食", "清洗水果", "享用下午茶", "进食零食", "分装零食", "饮水解渴", "小口品酒", "冲泡果饮", "炖煮汤品", "静坐品茶",
+        "挑选好物", "储备零食", "购置饮品", "收取快递", "自取外卖", "采购食材", "商超采购", "市集闲逛", "小店漫步", "文具选购", "便利店闲逛",
+        "外出出行", "漫步吹风", "散步慢行", "赶路途中", "下楼丢垃圾", "外出办事", "等候碰面", "路途行进", "即将抵达", "行至半路", "马上到达", "遭遇堵车", "换乘行程", "打车出行", "返程归家", "在外奔波", "临时绕行", "赶路前行", "准备出发", "搭乘电梯", "排队等候", "临时停留", "异地出差", "外出工作", "乘坐公交", "骑行赶路", "等候车辆", "中途休整", "搭乘地铁", "短途步行", "步行赶路", "乘坐扶梯", "沿途观景", "步行归家", "驾车行驶", "楼下散步", "缓步归家", "靠墙歇息", "商超闲逛", "外出归来",
+        "寄存物件", "处理琐事", "调试设备", "居家闲歇", "开窗换气", "窗边静坐", "沐浴暖阳", "等候信号", "摆放摆件", "折叠毯被", "途经花店", "整理行囊", "整理小包", "闭门独处",
+        "卧床念想", "窗边沉思", "晚风思念", "凝神发呆", "放空念想", "整理相册", "回看合照", "眺望街景", "核对账单", "浏览动态", "月下闲赏", "静心放空", "暖手休憩", "翻看合照", "整理桌面",
+        "瘫坐放空", "慵懒休憩", "蜷身静养", "随性放松", "舒展身体", "沙发休憩", "裹毯闲坐", "日光休憩", "吹拂晚风", "身心放松",
+        "视频通话", "语音聊天", "结伴同行"
+    ],
     lastStatusTime: 0,
     currentStatus: '发呆',
     vdWordBank: []
@@ -210,7 +243,6 @@ function safeParseJSON(str) {
 
 function saveData(immediate) {
     var doSave = function() {
-        // 只保存文字数据，图片单独存 IndexedDB
         var saveObj = {
             myName: appData.myName,
             myAvatarId: appData.myAvatarId || '',
@@ -232,19 +264,17 @@ function saveData(immediate) {
             scratchPrizes: appData.scratchPrizes,
             scratchMaxPerDay: appData.scratchMaxPerDay,
             playlist: appData.playlist,
-            musicFloatingImgId: appData.musicFloatingImgId || '',  // 改成这个
-            // musicFloatingImg: appData.musicFloatingImg || '',   // 删掉或注释
-            books: appData.books,    
+            musicFloatingImgId: appData.musicFloatingImgId || '',
+            books: appData.books,
             wheelItems: appData.wheelItems,
             wheelHistory: appData.wheelHistory,
             vdWordBank: appData.vdWordBank,
-            statusList: appData.statusList,        // 加这行
-            lastStatusTime: appData.lastStatusTime, // 加这行
-            currentStatus: appData.currentStatus   // 加这行
+            statusList: appData.statusList,
+            lastStatusTime: appData.lastStatusTime,
+            currentStatus: appData.currentStatus
         };
         var jsonStr = JSON.stringify(saveObj);
         
-        // 写入 localStorage
         try {
             localStorage.setItem(STORAGE_KEY, jsonStr);
             console.log('[保存] 文字数据保存成功，聊天记录数:', appData.chatHistory.length);
@@ -255,7 +285,6 @@ function saveData(immediate) {
             }
         }
         
-        // 备份到 sessionStorage
         try {
             sessionStorage.setItem(STORAGE_BACKUP_KEY, jsonStr);
         } catch(e) {}
@@ -318,7 +347,10 @@ function loadData() {
                 if (Array.isArray(p.wheelHistory)) appData.wheelHistory = p.wheelHistory;
                 if (Array.isArray(p.vdWordBank)) appData.vdWordBank = p.vdWordBank;
                 if (typeof p.musicFloatingImgId === 'string') appData.musicFloatingImgId = p.musicFloatingImgId;
-                if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg; // 兼容旧版
+                if (typeof p.musicFloatingImg === 'string') appData.musicFloatingImg = p.musicFloatingImg;
+                if (Array.isArray(p.statusList)) appData.statusList = p.statusList;
+                if (typeof p.lastStatusTime === 'number') appData.lastStatusTime = p.lastStatusTime;
+                if (typeof p.currentStatus === 'string') appData.currentStatus = p.currentStatus;
             }
         } else {
             console.log('[加载] 无本地数据，使用默认数据');
@@ -329,26 +361,26 @@ function loadData() {
         if (!Array.isArray(appData.chatHistory)) appData.chatHistory = [];
         if (!Array.isArray(appData.letters)) appData.letters = [];
         if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) {
-            appData.replyGroups = [{ name: '默认分组', replies: ['你好呀~'] }];
+            appData.replyGroups = DEFAULT_DATA.replyGroups;
         }
         if (!Array.isArray(appData.forumTopics)) appData.forumTopics = [];
         if (typeof appData.forumReplies !== 'object' || appData.forumReplies === null) appData.forumReplies = {};
-        if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = [{ name: '默认话题词库', replies: ['有道理'] }];
-        if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = ['你觉得{词}怎么样？'];
-        if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = ['生活'];
-        if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
-        if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
-        if (!Array.isArray(appData.scratchPrizes) || appData.scratchPrizes.length === 0) appData.scratchPrizes = [{ text: '一个拥抱', weight: 3 },{ text: '今日幸运星', weight: 2 }];
-        if (typeof appData.scratchMaxPerDay !== 'number') appData.scratchMaxPerDay = 3;
+        if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = DEFAULT_DATA.forumReplyLib;
+        if (!Array.isArray(appData.forumTopicTemplates)) appData.forumTopicTemplates = DEFAULT_DATA.forumTopicTemplates;
+        if (!Array.isArray(appData.forumTopicWords)) appData.forumTopicWords = DEFAULT_DATA.forumTopicWords;
+        if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = DEFAULT_DATA.transferAmounts;
+        if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = DEFAULT_DATA.transferNotes;
+        if (!Array.isArray(appData.scratchPrizes) || appData.scratchPrizes.length === 0) appData.scratchPrizes = DEFAULT_DATA.scratchPrizes;
+        if (typeof appData.scratchMaxPerDay !== 'number') appData.scratchMaxPerDay = DEFAULT_DATA.scratchMaxPerDay;
         if (!Array.isArray(appData.playlist)) appData.playlist = [];
         if (!Array.isArray(appData.books)) appData.books = [];
-        if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = ['一起看日落', '收到手写信'];
+        if (!Array.isArray(appData.wheelItems) || appData.wheelItems.length < 2) appData.wheelItems = DEFAULT_DATA.wheelItems;
         if (!Array.isArray(appData.wheelHistory)) appData.wheelHistory = [];
         if (!Array.isArray(appData.vdWordBank)) appData.vdWordBank = [];
-        if (!Array.isArray(appData.statusList)) appData.statusList = ['看书', '听音乐', '发呆', '想你', '喝咖啡', '散步', '晒太阳', '睡午觉', '写日记', '做甜点'];
+        if (!Array.isArray(appData.statusList) || appData.statusList.length === 0) appData.statusList = DEFAULT_DATA.statusList;
         if (typeof appData.lastStatusTime !== 'number') appData.lastStatusTime = 0;
         if (typeof appData.currentStatus !== 'string') appData.currentStatus = '发呆';
-        // 加载头像
+        
         var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
         var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
         
@@ -396,7 +428,6 @@ function initApp() {
         if (stats.usagePercent > 85) {
             showToast('存储已使用 ' + stats.usagePercent + '%\n建议在数据管理中清理');
         }
-        // 每周提醒备份
         var lastBackupReminder = localStorage.getItem('chat_app_backup_reminder');
         var now = Date.now();
         if (!lastBackupReminder || now - parseInt(lastBackupReminder) > 7 * 24 * 60 * 60 * 1000) {
@@ -620,7 +651,6 @@ function triggerAutoReply() {
     function sendNext(index) {
         if (index >= replyCount) return;
         setTimeout(function() {
-            // 10% 概率发送转账
             if (Math.random() < 0.1 && appData.transferAmounts.length > 0 && appData.transferNotes.length > 0) {
                 var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
                 var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
@@ -642,23 +672,18 @@ function triggerAutoReply() {
     }
     sendNext(0);
 }
-// 获取一条随机历史消息用于引用
 function getRandomHistoryMessage() {
     var history = appData.chatHistory || [];
-    // 过滤掉系统消息和转账消息，只保留文字消息
     var textMessages = history.filter(function(msg) {
         return (msg.type === 'me' || msg.type === 'other') && 
                msg.content && 
                typeof msg.content === 'string' &&
                msg.content.length > 0 &&
-               msg.content.indexOf('<img') === -1; // 排除图片消息
+               msg.content.indexOf('<img') === -1;
     });
-    
     if (textMessages.length === 0) return null;
-    
     var randomIndex = Math.floor(Math.random() * textMessages.length);
     var msg = textMessages[randomIndex];
-    
     return {
         content: msg.content,
         type: msg.type,
@@ -666,20 +691,14 @@ function getRandomHistoryMessage() {
         isImage: false
     };
 }
-
 function sendRandomReply() {
     var allReplies = getAllReplies();
     var hasEmoji = appData.emojiIds.length > 0;
     var hasText = allReplies.length > 0;
-    
-    // 随机选择回复类型：0=文字，1=表情包，2=画图
     var replyType = Math.floor(Math.random() * 3);
-    
     if (!hasText && replyType === 0) replyType = 1;
     if (!hasEmoji && replyType === 1) replyType = 0;
     if (!hasText && !hasEmoji) return Promise.resolve(false);
-    
-    // 类型2：画图
     if (replyType === 2) {
         if (typeof RandomDrawing !== 'undefined' && RandomDrawing.getRandomDrawing) {
             var imgData = RandomDrawing.getRandomDrawing();
@@ -695,46 +714,29 @@ function sendRandomReply() {
         }
         replyType = 0;
     }
-    
-    // 类型0：文字回复（支持多个字卡组合，并可能引用历史消息）
     if (replyType === 0 && hasText) {
-        // 随机决定组合几个字卡（1-10个）
         var cardCount = Math.floor(Math.random() * 10) + 1;
         var selectedReplies = [];
         var tempReplies = allReplies.slice();
-    
         for (var i = 0; i < cardCount && tempReplies.length > 0; i++) {
             var randomIndex = Math.floor(Math.random() * tempReplies.length);
             selectedReplies.push(tempReplies[randomIndex]);
         }
-    
         var content = selectedReplies.join(' ');
-    
-        // 30% 概率引用历史消息（包括对方自己发的和用户发的）
         var shouldQuote = Math.random() < 0.3;
         var quoteMsg = null;
-    
         if (shouldQuote) {
             quoteMsg = getRandomHistoryMessage();
         }
-    
         if (quoteMsg) {
             addMessageWithQuote(content, 'other', quoteMsg);
-            appData.chatHistory.push({ 
-                type: 'other', 
-                content: content, 
-                time: Date.now(), 
-                quote: quoteMsg 
-            });
+            appData.chatHistory.push({ type: 'other', content: content, time: Date.now(), quote: quoteMsg });
         } else {
             addMessage(content, 'other', false);
             appData.chatHistory.push({ type: 'other', content: content, time: Date.now() });
         }
         return saveData().then(function() { return true; });
     }
-        
-    
-    // 类型1：表情包
     if (replyType === 1 && hasEmoji) {
         var eid = appData.emojiIds[Math.floor(Math.random() * appData.emojiIds.length)];
         return getImageFromDB('images', eid).then(function(img) {
@@ -744,15 +746,12 @@ function sendRandomReply() {
             return saveData().then(function() { return true; });
         });
     }
-    
     return Promise.resolve(false);
 }
-
 function sendMsg() {
     var input = document.getElementById('msgInput'); 
     var msg = input.value.trim();
     if (!msg) return;
-    
     var quote = quotedMessage;
     if (quote) {
         addMessageWithQuote(msg, 'me', quote);
@@ -761,23 +760,16 @@ function sendMsg() {
         addMessage(msg, 'me');
         appData.chatHistory.push({ type: 'me', content: msg, time: Date.now() });
     }
-    
     quotedMessage = null;
     updateQuoteBar();
     input.value = ''; 
     saveData();
-    
-    // 检测转盘邀请关键词
     if (msg.includes('转转盘') || msg.includes('转盘邀请') || msg.includes('🎡')) {
         sendWheelInvite();
         return;
     }
-    
-    setTimeout(function() { 
-        triggerAutoReply(); 
-    }, 400 + Math.random() * 1000);
+    setTimeout(function() { triggerAutoReply(); }, 400 + Math.random() * 1000);
 }
-
 function addMessage(content, type, isImage, isSticker) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg ' + type + (isSticker ? ' is-sticker' : '');
@@ -967,87 +959,6 @@ function sendFromMorePanel(index) {
     });
 }
 
-// ========== 回复管理（含去重） ==========
-function openReplyModal() {
-    closeModal('settingsOverlay');
-    var groupsHtml = '';
-    appData.replyGroups.forEach(function(group, g) {
-        var replyItems = '';
-        group.replies.forEach(function(reply, r) {
-            replyItems += '<div class="list-item"><input type="checkbox" class="cb" id="cb_' + g + '_' + r + '" data-group="' + g + '" data-idx="' + r + '"><span>' + reply + '</span><button class="del-sm" onclick="delReplySingle(' + g + ',' + r + ')">删除</button></div>';
-        });
-        groupsHtml += '<div class="group-block"><div class="group-header"><span>' + group.name + ' (' + group.replies.length + '条)</span><div><button onclick="renameGroup(' + g + ')">重命名</button><button onclick="delGroup(' + g + ')" style="color:var(--danger);">删除分组</button></div></div><div class="form-row"><textarea id="batchAdd_' + g + '" placeholder="批量添加回复（一行一个，自动去重）"></textarea></div><div class="btn-row"><button class="btn-sm" onclick="addReplyBatchToGroup(' + g + ')">批量添加</button><button class="btn-sm outline" onclick="delSelectedReplies(' + g + ')">删除选中</button><button class="btn-sm outline" onclick="selectAllInGroup(' + g + ')">全选</button></div><div style="max-height:150px;overflow-y:auto;">' + (replyItems || '<div style="text-align:center;color:var(--text-system);padding:8px;">暂无回复</div>') + '</div></div>';
-    });
-    
-    var headerHtml = '<div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:10px;">';
-    headerHtml += '<h4 style="margin:0;">自定义回复</h4>';
-    headerHtml += '<div style="position:absolute;right:0;">';
-    headerHtml += '<span onclick="event.stopPropagation();toggleReplyLibMenu()" style="font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px;">&#9776;</span>';
-    headerHtml += '<div id="replyLibMenu" style="display:none;position:absolute;top:30px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">';
-    headerHtml += '<div onclick="exportReplyLib();closeReplyLibMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出回复</div>';
-    headerHtml += '<div onclick="importReplyLib();closeReplyLibMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">导入回复</div>';
-    headerHtml += '</div></div></div>';
-    
-    openSubModal(headerHtml + '<button class="btn-sm" onclick="addNewGroup()" style="margin-bottom:10px;">+ 新建分组</button><div style="max-height:50vh;overflow-y:auto;">' + groupsHtml + '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>');
-}
-function toggleReplyLibMenu() {
-    var m = document.getElementById('replyLibMenu');
-    if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block';
-}
-function closeReplyLibMenu() {
-    var m = document.getElementById('replyLibMenu');
-    if (m) m.style.display = 'none';
-}
-function exportReplyLib() {
-    copyToClipboard(JSON.stringify({ replyGroups: appData.replyGroups }, null, 2), '自定义回复');
-    showToast('回复词库已复制到剪贴板');
-}
-function importReplyLib() {
-    var input = document.createElement('input');
-    input.type = 'file'; input.accept = '.json';
-    input.onchange = function() {
-        var file = input.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = JSON.parse(e.target.result);
-                if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) {
-                    appData.replyGroups = data.replyGroups;
-                } else if (Array.isArray(data) && data.length > 0) {
-                    appData.replyGroups = [{ name: '导入分组', replies: data }];
-                } else {
-                    throw new Error('格式错误');
-                }
-                saveData();
-                openReplyModal();
-                showToast('回复词库已导入');
-            } catch(err) { showToast('文件格式错误'); }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-function addNewGroup() { var n = prompt('分组名称'); if (!n) return; appData.replyGroups.push({name:n,replies:[]}); saveData(); openReplyModal(); showToast('分组已创建'); }
-function renameGroup(g) { var n = prompt('新名称', appData.replyGroups[g].name); if (!n) return; appData.replyGroups[g].name = n; saveData(); openReplyModal(); showToast('已重命名'); }
-function delGroup(g) { if (!confirm('删除分组"' + appData.replyGroups[g].name + '"?') || appData.replyGroups.length <= 1) { if (appData.replyGroups.length <= 1) showToast('至少保留一个分组'); return; } appData.replyGroups.splice(g,1); saveData(); openReplyModal(); showToast('分组已删除'); }
-function addReplyBatchToGroup(g) {
-    var t = document.getElementById('batchAdd_' + g).value.trim();
-    if (!t) return;
-    var lines = t.split('\n').filter(function(l){return l.trim();});
-    if (!lines.length) return;
-    var existing = appData.replyGroups[g].replies || [];
-    var newLines = lines.filter(function(line) { return existing.indexOf(line) === -1; });
-    if (newLines.length === 0) { showToast('所有内容已存在，无新增'); return; }
-    appData.replyGroups[g].replies = existing.concat(newLines);
-    saveData(); openReplyModal();
-    var dupCount = lines.length - newLines.length;
-    showToast('已添加 ' + newLines.length + ' 条' + (dupCount > 0 ? '（跳过 ' + dupCount + ' 条重复）' : ''));
-}
-function delReplySingle(g, r) { var d = appData.replyGroups[g].replies[r]; appData.replyGroups[g].replies.splice(r,1); saveData(); openReplyModal(); showToast('已删除「' + d + '」'); }
-function selectAllInGroup(g) { var cbs = document.querySelectorAll('#subModal input.cb[data-group="' + g + '"]'); var all = true; for (var i=0;i<cbs.length;i++) if (!cbs[i].checked) { all=false; break; } for (var j=0;j<cbs.length;j++) cbs[j].checked = !all; }
-function delSelectedReplies(g) { var cbs = document.querySelectorAll('#subModal input.cb[data-group="' + g + '"]:checked'); if (!cbs.length) return showToast('请先勾选'); var idxs = []; for (var i=0;i<cbs.length;i++) idxs.push(parseInt(cbs[i].getAttribute('data-idx'))); idxs.sort(function(a,b){return b-a;}); for (var j=0;j<idxs.length;j++) appData.replyGroups[g].replies.splice(idxs[j],1); saveData(); openReplyModal(); showToast('已删除 ' + idxs.length + ' 条'); }
-
 // ========== 表情管理 ==========
 function openEmojiManageModal() {
     closeModal('settingsOverlay');
@@ -1057,32 +968,25 @@ function openEmojiManageModal() {
 function renderEmojiManageGrid() {
     var grid = document.getElementById('emojiManageGrid'); 
     if (!grid) return;
-    
-    // 设置网格样式，让每个格子更大
     grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';  // 改成3列，格子更大
+    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
     grid.style.gap = '12px';
     grid.style.padding = '8px';
-    
     if (!appData.emojiIds.length) { 
         grid.innerHTML = '<div style="text-align:center;color:var(--text-system);grid-column:1/-1;padding:20px;">暂无表情包</div>'; 
         return; 
     }
-    
     grid.innerHTML = '';
-    
     appData.emojiIds.forEach(function(id, idx) {
         getImageFromDB('images', id).then(function(url) {
             var d = document.createElement('div');
             d.style.cssText = 'position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--item-bg);box-shadow:0 1px 3px rgba(0,0,0,0.1);';
-            
             if (url) {
                 d.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:contain;background:var(--bubble-other);" onerror="this.parentElement.innerHTML=\'<div style=\\\'display:flex;align-items:center;justify-content:center;height:100%;\\\'>失效</div>\';">' +
                     '<button onclick="delEmojiManage(' + idx + ')" style="position:absolute;top:4px;right:4px;background:var(--danger);color:white;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.2);z-index:2;">✕</button>';
             } else {
                 d.style.cssText += 'display:flex;align-items:center;justify-content:center;background:var(--border);font-size:12px;color:var(--text-system);';
                 d.textContent = '已失效';
-                // 失效的图片也加删除按钮
                 var delBtn = document.createElement('button');
                 delBtn.textContent = '✕';
                 delBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:var(--danger);color:white;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;';
@@ -1091,7 +995,6 @@ function renderEmojiManageGrid() {
             }
             grid.appendChild(d);
         }).catch(function() {
-            // 加载失败的占位
             var d = document.createElement('div');
             d.style.cssText = 'position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-system);';
             d.textContent = '加载失败';
@@ -1123,352 +1026,6 @@ function clearAllEmojis() {
     var ps = appData.emojiIds.map(function(id) { return deleteImageFromDB('images', id).catch(function(){}); });
     Promise.all(ps).then(function() { appData.emojiIds = []; return saveData(); }).then(function() { renderMoreImages(); renderEmojiManageGrid(); showToast('已清空'); });
 }
-
-// ========== 数据管理 ==========
-function openBackupModal() {
-    closeModal('settingsOverlay');
-    var html = '<h4>数据管理</h4>';
-    html += '<div class="backup-options">';
-    html += '<button onclick="exportFullAsFile()">全量备份下载</button>';
-    html += '<button onclick="exportFull()">全量备份复制</button>';
-    html += '<button onclick="exportChat()">聊天记录备份</button>';
-    html += '<button onclick="exportLibs()">词库备份</button>';
-    html += '</div>';
-    html += '<div style="margin-top:12px;"><button class="btn-sm outline" onclick="document.getElementById(\'importDataFile\').click()">导入JSON备份文件</button><input type="file" id="importDataFile" accept=".json" style="display:none" onchange="importDataFile()"></div>';
-    html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-sm danger-sm" onclick="clearChatHistory()">清除聊天记录</button><button class="btn-sm outline" onclick="cleanOrphanImages()">清理失效图片</button></div>';
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
-    openSubModal(html);
-}
-function downloadJSONFile(filename, jsonData) {
-    var blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
-}
-
-// ========== 导出备份（完整版：含表情包，不含聊天图片） ==========
-function exportFullAsFile() {
-    // 只导出表情包图片，不导出聊天记录中的图片 base64
-    var emojiPromises = (appData.emojiIds || []).map(function(id) {
-        return getImageFromDB('images', id).then(function(data) { 
-            return { id: id, data: data || '' }; 
-        });
-    });
-    
-    Promise.all(emojiPromises).then(function(emojiData) {
-        // 处理聊天记录：只保留 imageId，不包含图片数据
-        var chatHistoryForBackup = (appData.chatHistory || []).map(function(msg) {
-            var newMsg = JSON.parse(JSON.stringify(msg));
-            // 如果是图片消息，只保留 imageId
-            if (newMsg.imageId) {
-                newMsg.imageData = undefined;  // 确保不包含 base64
-            }
-            return newMsg;
-        });
-        
-        var backupData = {
-            myName: appData.myName,
-            myAvatarId: appData.myAvatarId,
-            myAvatar: '',  // 头像不存 base64
-            otherName: appData.otherName,
-            otherAvatarId: appData.otherAvatarId,
-            otherAvatar: '',
-            replyGroups: appData.replyGroups,
-            emojiIds: appData.emojiIds,
-            emojiData: emojiData,  // 表情包图片完整备份
-            theme: appData.theme,
-            chatHistory: chatHistoryForBackup,
-            letters: appData.letters,
-            forumTopics: appData.forumTopics,
-            forumReplies: appData.forumReplies,
-            forumReplyLib: appData.forumReplyLib,
-            forumTopicTemplates: appData.forumTopicTemplates,
-            forumTopicWords: appData.forumTopicWords,
-            transferAmounts: appData.transferAmounts,
-            transferNotes: appData.transferNotes,
-            scratchPrizes: appData.scratchPrizes,
-            scratchMaxPerDay: appData.scratchMaxPerDay,
-            playlist: appData.playlist,
-            musicFloatingImg: '',
-            books: appData.books,
-            wheelItems: appData.wheelItems,
-            wheelHistory: appData.wheelHistory,
-            statusList: appData.statusList,
-            lastStatusTime: appData.lastStatusTime,
-            currentStatus: appData.currentStatus,
-            vdWordBank: appData.vdWordBank,
-            statusList: appData.statusList,        // 加这行
-            lastStatusTime: appData.lastStatusTime, // 加这行
-            currentStatus: appData.currentStatus   // 加这行
-        };
-        var timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-        downloadJSONFile('chat_app_backup_' + timestamp + '.json', backupData);
-        closeModal('subOverlay');
-        showToast('备份文件已下载（含表情包，聊天图片仅保存ID）');
-    }).catch(function(e) {
-        console.error('导出失败:', e);
-        showToast('导出失败，请重试');
-    });
-}
-
-function exportFull() {
-    var emojiPromises = (appData.emojiIds || []).map(function(id) {
-        return getImageFromDB('images', id).then(function(data) { return { id: id, data: data || '' }; });
-    });
-    Promise.all(emojiPromises).then(function(emojiData) {
-        var chatHistoryForBackup = (appData.chatHistory || []).map(function(msg) {
-            var newMsg = JSON.parse(JSON.stringify(msg));
-            if (newMsg.imageId) {
-                newMsg.imageData = undefined;
-            }
-            return newMsg;
-        });
-        var backupData = {
-            myName: appData.myName,
-            myAvatarId: appData.myAvatarId,
-            myAvatar: '',
-            otherName: appData.otherName,
-            otherAvatarId: appData.otherAvatarId,
-            otherAvatar: '',
-            replyGroups: appData.replyGroups,
-            emojiIds: appData.emojiIds,
-            emojiData: emojiData,
-            theme: appData.theme,
-            chatHistory: chatHistoryForBackup,
-            letters: appData.letters,
-            forumTopics: appData.forumTopics,
-            forumReplies: appData.forumReplies,
-            forumReplyLib: appData.forumReplyLib,
-            forumTopicTemplates: appData.forumTopicTemplates,
-            forumTopicWords: appData.forumTopicWords,
-            transferAmounts: appData.transferAmounts,
-            transferNotes: appData.transferNotes,
-            scratchPrizes: appData.scratchPrizes,
-            scratchMaxPerDay: appData.scratchMaxPerDay,
-            playlist: appData.playlist,
-            musicFloatingImg: '',
-            books: appData.books,
-            wheelItems: appData.wheelItems,
-            wheelHistory: appData.wheelHistory,
-            statusList: appData.statusList,
-            lastStatusTime: appData.lastStatusTime,
-            currentStatus: appData.currentStatus,
-            vdWordBank: appData.vdWordBank,
-            statusList: appData.statusList,        // 加这行
-            lastStatusTime: appData.lastStatusTime, // 加这行
-            currentStatus: appData.currentStatus   // 加这行
-        };
-        copyToClipboard(JSON.stringify(backupData, null, 2), '全量备份');
-        closeModal('subOverlay');
-    });
-}
-
-function exportChat() { 
-    var chatBackup = { chatHistory: appData.chatHistory };
-    copyToClipboard(JSON.stringify(chatBackup, null, 2), '聊天记录'); 
-    closeModal('subOverlay'); 
-}
-
-function exportLibs() { 
-    copyToClipboard(JSON.stringify({ replyGroups: appData.replyGroups, emojiIds: appData.emojiIds }, null, 2), '词库'); 
-    closeModal('subOverlay'); 
-}
-
-function copyToClipboard(text, label) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-            showToastLong(label + '已复制到剪贴板\n请打开备忘录粘贴保存为 .json 文件\n以后可通过「导入JSON备份文件」恢复', 5000);
-        }).catch(function() { fallbackCopy(text, label); });
-    } else { fallbackCopy(text, label); }
-}
-function fallbackCopy(text, label) {
-    var ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy'); showToastLong(label + '已复制到剪贴板\n请打开备忘录粘贴保存为 .json 文件\n以后可通过「导入JSON备份文件」恢复', 5000); }
-    catch(e) { showToast('复制失败，请重试'); }
-    document.body.removeChild(ta);
-}
-
-// ========== 导入备份（完整版：恢复表情包，聊天图片只恢复ID） ==========
-function importDataFile() {
-    var file = document.getElementById('importDataFile').files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            var data = JSON.parse(e.target.result);
-            if (!data || typeof data !== 'object') throw new Error('无效数据');
-            
-            console.log('[导入] 开始导入，原聊天记录数:', appData.chatHistory?.length || 0);
-            
-            // 1. 清空当前 appData 的数组
-            appData.chatHistory = [];
-            appData.letters = [];
-            appData.forumTopics = [];
-            appData.forumReplies = {};
-            appData.playlist = [];
-            appData.books = [];
-            appData.wheelHistory = [];
-            
-            // 2. 导入文字数据
-            if (typeof data.myName === 'string') appData.myName = data.myName;
-            if (typeof data.otherName === 'string') appData.otherName = data.otherName;
-            if (typeof data.theme === 'string') appData.theme = data.theme;
-            if (typeof data.morePanelTab === 'string') appData.morePanelTab = data.morePanelTab;
-            if (Array.isArray(data.emojiIds)) appData.emojiIds = data.emojiIds;
-            if (Array.isArray(data.chatHistory)) appData.chatHistory = data.chatHistory;
-            if (Array.isArray(data.letters)) appData.letters = data.letters;
-            if (Array.isArray(data.replyGroups) && data.replyGroups.length > 0) appData.replyGroups = data.replyGroups;
-            if (Array.isArray(data.forumTopics)) appData.forumTopics = data.forumTopics;
-            if (typeof data.forumReplies === 'object' && data.forumReplies !== null) appData.forumReplies = data.forumReplies;
-            if (Array.isArray(data.forumReplyLib)) appData.forumReplyLib = data.forumReplyLib;
-            if (Array.isArray(data.forumTopicTemplates)) appData.forumTopicTemplates = data.forumTopicTemplates;
-            if (Array.isArray(data.forumTopicWords)) appData.forumTopicWords = data.forumTopicWords;
-            if (Array.isArray(data.transferAmounts)) appData.transferAmounts = data.transferAmounts;
-            if (Array.isArray(data.transferNotes)) appData.transferNotes = data.transferNotes;
-            if (Array.isArray(data.scratchPrizes)) appData.scratchPrizes = data.scratchPrizes;
-            if (typeof data.scratchMaxPerDay === 'number') appData.scratchMaxPerDay = data.scratchMaxPerDay;
-            if (Array.isArray(data.playlist)) appData.playlist = data.playlist;
-            if (typeof data.musicFloatingImg === 'string') appData.musicFloatingImg = data.musicFloatingImg;
-            if (Array.isArray(data.books)) appData.books = data.books;
-            if (Array.isArray(data.wheelItems)) appData.wheelItems = data.wheelItems;
-            if (Array.isArray(data.wheelHistory)) appData.wheelHistory = data.wheelHistory;
-            if (Array.isArray(data.vdWordBank)) appData.vdWordBank = data.vdWordBank;
-            if (Array.isArray(data.statusList)) appData.statusList = data.statusList;
-            if (typeof data.lastStatusTime === 'number') appData.lastStatusTime = data.lastStatusTime;
-            if (typeof data.currentStatus === 'string') appData.currentStatus = data.currentStatus;
-            // 3. 恢复表情包图片
-            if (Array.isArray(data.emojiData) && data.emojiData.length > 0) {
-                appData.emojiIds = [];
-                data.emojiData.forEach(function(item) {
-                    if (item.data && item.data.length > 100) {
-                        appData.emojiIds.push(item.id);
-                        saveImageToDB('images', item.id, item.data).catch(function() { 
-                            console.warn('表情包恢复失败:', item.id);
-                        });
-                    }
-                });
-                console.log('[导入] 表情包恢复完成，数量:', appData.emojiIds.length);
-            }
-            
-            // 4. 恢复头像
-            if (data.myAvatar && typeof data.myAvatar === 'string' && data.myAvatar.length > 100) {
-                var myId = data.myAvatarId || ('avatar_me_' + Date.now());
-                saveImageToDB('avatars', myId, data.myAvatar).then(function() { 
-                    appData.myAvatarId = myId; 
-                    appData.myAvatar = data.myAvatar;
-                    saveData(true);
-                });
-            } else {
-                appData.myAvatarId = data.myAvatarId || ''; 
-                appData.myAvatar = '';
-                if (appData.myAvatarId) {
-                    getImageFromDB('avatars', appData.myAvatarId).then(function(img) { appData.myAvatar = img || ''; });
-                }
-            }
-            if (data.otherAvatar && typeof data.otherAvatar === 'string' && data.otherAvatar.length > 100) {
-                var otherId = data.otherAvatarId || ('avatar_other_' + Date.now());
-                saveImageToDB('avatars', otherId, data.otherAvatar).then(function() { 
-                    appData.otherAvatarId = otherId; 
-                    appData.otherAvatar = data.otherAvatar;
-                    saveData(true);
-                });
-            } else {
-                appData.otherAvatarId = data.otherAvatarId || ''; 
-                appData.otherAvatar = '';
-                if (appData.otherAvatarId) {
-                    getImageFromDB('avatars', appData.otherAvatarId).then(function(img) { appData.otherAvatar = img || ''; });
-                }
-            }
-            
-            // 5. 强制立即保存到 localStorage
-            saveData(true);
-            
-            // 6. 刷新界面
-            applyTheme();
-            updateHeader();
-            renderChatHistory();
-            renderMoreImages();
-            updateLetterBadge();
-            updateStatus();      // 刷新状态显示
-            renderStatus();      // 重新渲染状态
-
-            // 7. 恢复音乐歌单（同步到 music.js 的变量）
-            if (typeof musicPlaylist !== 'undefined') {
-                musicPlaylist.length = 0;
-                appData.playlist.forEach(function(song) {
-                    musicPlaylist.push(song);
-                });
-            }
-            // 如果有歌单，显示音乐浮动球
-            if (typeof showFloatingBall === 'function' && appData.playlist && appData.playlist.length > 0) {
-                setTimeout(function() {
-                    showFloatingBall();
-                }, 500);
-            }
-
-            // 8. 重新加载头像显示（确保头像图片正确显示）
-            if (appData.myAvatarId) {
-                getImageFromDB('avatars', appData.myAvatarId).then(function(img) {
-                    if (img) appData.myAvatar = img;
-                    renderChatHistory();
-                });
-            }
-            if (appData.otherAvatarId) {
-                getImageFromDB('avatars', appData.otherAvatarId).then(function(img) {
-                    if (img) appData.otherAvatar = img;
-                    renderChatHistory();
-                });
-            }
-
-            closeModal('subOverlay');
-            showToastLong('导入成功！共 ' + (appData.chatHistory?.length || 0) + ' 条聊天记录，' + (appData.emojiIds?.length || 0) + ' 个表情包', 4000);
-            
-            console.log('[导入] 导入完成，聊天记录数:', appData.chatHistory?.length, '表情包数:', appData.emojiIds?.length);
-        } catch(err) { 
-            console.error('[导入] 错误:', err);
-            showToast('导入失败，文件格式错误'); 
-        }
-    };
-    reader.readAsText(file);
-    document.getElementById('importDataFile').value = '';
-}
-
-function clearChatHistory() {
-    if (!confirm('确定清除所有聊天记录？\n\n注意：表情包不会被删除，只会删除聊天中的图片消息。')) return;
-    
-    // 收集聊天记录中的图片ID（排除表情包）
-    var chatImageIds = [];
-    for (var i = 0; i < appData.chatHistory.length; i++) {
-        var msg = appData.chatHistory[i];
-        // 只删除聊天中的图片，不删除表情包（emojiIds 里的）
-        if (msg.imageId && !appData.emojiIds.includes(msg.imageId)) {
-            chatImageIds.push(msg.imageId);
-        }
-    }
-    
-    // 删除这些图片
-    var promises = chatImageIds.map(function(id) {
-        return deleteImageFromDB('images', id).catch(function() {});
-    });
-    
-    Promise.all(promises).then(function() {
-        appData.chatHistory = [];  // 清空聊天记录
-        saveData(true);
-        renderChatHistory();
-        closeModal('subOverlay');
-        showToast('聊天记录已清除，表情包保留');
-    });
-}
-
-function cleanOrphanImages() {
-    autoCleanOrphanImages().then(function(cleaned) { showToast(cleaned > 0 ? '清理了 ' + cleaned + ' 张失效图片' : '没有需要清理的图片'); openBackupModal(); });
-}
-function openSettings() { openModal('settingsOverlay'); }
-function openSubModal(html) { document.getElementById('subModal').innerHTML = html; openModal('subOverlay'); }
 
 // ========== Toast ==========
 function showToast(msg) {
@@ -1514,708 +1071,15 @@ function vdAddMessage(content, type) {
     saveData(true);
 }
 
-// ==================== 转账系统 ====================
-if (!Array.isArray(appData.transferAmounts) || appData.transferAmounts.length === 0) appData.transferAmounts = ['5.20', '13.14', '52.00', '131.40', '520.00'];
-if (!Array.isArray(appData.transferNotes) || appData.transferNotes.length === 0) appData.transferNotes = ['买你今晚整个人', '请你喝奶茶', '今天也很爱你', '拿去买糖', '随便花'];
-
-function addTransferCard(amount, note, type, fromHistory) {
-    var chat = document.getElementById('chat'); var div = document.createElement('div');
-    div.className = 'msg ' + type;
-    var av = getAvatarHTMLSync(type === 'me');
-    var handler = type === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
-    var cardHTML = '<div class="transfer-card ' + (type === 'me' ? 'transfer-me' : 'transfer-other') + '"';
-    if (type === 'other' && !fromHistory) cardHTML += ' onclick="collectTransfer(this, \'' + amount + '\', \'' + escapeHTML(note || '').replace(/'/g, "\\'") + '\')" style="cursor:pointer;"';
-    cardHTML += '><div class="transfer-label">' + (type === 'me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
-    cardHTML += '<div class="transfer-amount">¥ ' + amount + '</div>';
-    if (note) cardHTML += '<div class="transfer-note">' + escapeHTML(note) + '</div>';
-    cardHTML += '<div class="transfer-status">' + (type === 'me' ? '已转账' : (fromHistory ? '已收款' : '点击收款')) + '</div></div>';
-    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
-    chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
-}
-function collectTransfer(cardElement, amount, note) {
-    if (cardElement.querySelector('.transfer-status').textContent === '已收款') { showToast('已经收过了'); return; }
-    cardElement.querySelector('.transfer-status').textContent = '已收款';
-    cardElement.querySelector('.transfer-status').style.color = 'var(--success)';
-    cardElement.style.cursor = 'default'; cardElement.onclick = null;
-    showToast('已收款 ¥' + amount); saveData(true);
-}
-function receiveTransferFromOtherModal() {
-    if (!appData.transferAmounts.length) { showToast('请先设置对方转账金额'); return; }
-    if (!appData.transferNotes.length) { showToast('请先设置对方转账备注'); return; }
-    var amt = appData.transferAmounts[Math.floor(Math.random() * appData.transferAmounts.length)];
-    var note = appData.transferNotes[Math.floor(Math.random() * appData.transferNotes.length)];
-    addTransferCard(amt, note, 'other');
-    appData.chatHistory.push({ type: 'transfer_other', amount: amt, note: note, time: Date.now() });
-    saveData(true); showToast('收到 ' + appData.otherName + ' 的转账 ¥' + amt);
-}
-function sendTransferToOther() {
-    var amt = document.getElementById('transferAmountInput').value.trim();
-    var note = document.getElementById('transferNoteInput').value.trim();
-    if (!amt || isNaN(parseFloat(amt)) || parseFloat(amt) <= 0) { showToast('请输入有效金额'); return; }
-    var amount = parseFloat(amt).toFixed(2);
-    addTransferCard(amount, note || '', 'me');
-    appData.chatHistory.push({ type: 'transfer_me', amount: amount, note: note || '', time: Date.now() });
-    saveData(true); closeModal('subOverlay'); showToast('已向 ' + appData.otherName + ' 转账 ¥' + amount);
-}
-function openTransferModal() {
-    var html = '<div style="display:flex;justify-content:center;align-items:center;position:relative;margin-bottom:12px;"><h4 style="margin:0;">转账</h4><div style="position:absolute;right:0;"><span onclick="event.stopPropagation();toggleTransferDropdown()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">&#8942;</span><div id="transferDropdownMenu" style="display:none;position:absolute;top:32px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:120px;box-shadow:0 4px 12px rgba(0,0,0,0.1);"><div onclick="receiveTransferFromOtherModal();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">收转账</div><div onclick="openTransferAmountSettings();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">对方转账金额</div><div onclick="openTransferNoteSettings();closeTransferDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">对方转账备注</div></div></div></div>';
-    html += '<div class="form-row"><label>向 ' + appData.otherName + ' 转账</label><input type="number" id="transferAmountInput" placeholder="输入金额" step="0.01" min="0.01"></div>';
-    html += '<div class="form-row"><label>备注</label><input type="text" id="transferNoteInput" placeholder="说点什么..."></div>';
-    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px;">';
-    ['5.20','13.14','52.00','131.40','520.00'].forEach(function(a){ html += '<button class="btn-sm outline" onclick="document.getElementById(\'transferAmountInput\').value=\''+a+'\'" style="font-size:12px;padding:6px 10px;">¥'+a+'</button>'; });
-    html += '</div><div class="btn-row" style="justify-content:center;margin-top:10px;"><button class="btn-sm" onclick="sendTransferToOther()">确认转账</button></div>';
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">关闭</button>';
-    openSubModal(html);
-}
-function openTransferAmountSettings() {
-    var html = '<h4>对方转账金额</h4><div class="form-row"><input type="number" id="newTransferAmount" placeholder="输入金额" step="0.01" min="0.01"><button class="btn-sm" onclick="addTransferAmount()" style="margin-top:4px;">添加</button></div><div style="max-height:180px;overflow-y:auto;" id="transferAmountList">';
-    appData.transferAmounts.forEach(function(a,i){ html += '<div class="list-item"><span>¥ '+a+'</span><button class="del-sm" onclick="delTransferAmount('+i+')">删除</button></div>'; });
-    html += '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">返回</button>';
-    openSubModal(html);
-}
-function addTransferAmount(){ var v=document.getElementById('newTransferAmount').value.trim(); if(!v||isNaN(parseFloat(v))||parseFloat(v)<=0){showToast('请输入有效金额');return;} appData.transferAmounts.push(parseFloat(v).toFixed(2));saveData(true);openTransferAmountSettings(); }
-function delTransferAmount(i){ appData.transferAmounts.splice(i,1);saveData(true);openTransferAmountSettings(); }
-function openTransferNoteSettings() {
-    var html = '<h4>对方转账备注</h4><div class="form-row"><input type="text" id="newTransferNote" placeholder="输入备注文案"><button class="btn-sm" onclick="addTransferNote()" style="margin-top:4px;">添加</button></div><div style="max-height:180px;overflow-y:auto;" id="transferNoteList">';
-    appData.transferNotes.forEach(function(n,i){ html += '<div class="list-item"><span>'+escapeHTML(n)+'</span><button class="del-sm" onclick="delTransferNote('+i+')">删除</button></div>'; });
-    html += '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">返回</button>';
-    openSubModal(html);
-}
-function addTransferNote(){ var v=document.getElementById('newTransferNote').value.trim(); if(!v){showToast('请输入备注');return;} appData.transferNotes.push(v);saveData(true);openTransferNoteSettings(); }
-function delTransferNote(i){ appData.transferNotes.splice(i,1);saveData(true);openTransferNoteSettings(); }
-function toggleTransferDropdown(){ var m=document.getElementById('transferDropdownMenu'); if(m)m.style.display=m.style.display==='block'?'none':'block'; }
-function closeTransferDropdown(){ var m=document.getElementById('transferDropdownMenu'); if(m)m.style.display='none'; }
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('#transferDropdownMenu') && !e.target.closest('[onclick*="toggleTransferDropdown"]')) {
-        closeTransferDropdown();
-    }
-    if (!e.target.closest('#replyLibMenu') && !e.target.closest('[onclick*="toggleReplyLibMenu"]')) {
-        closeReplyLibMenu();
-    }
-});
-// ========== 状态显示功能 ==========
-function updateStatus() {
-    var now = Date.now();
-    var lastTime = appData.lastStatusTime || 0;
-    
-    // 4小时 = 4 * 60 * 60 * 1000 毫秒
-    if (now - lastTime >= 4 * 60 * 60 * 1000 || !appData.currentStatus) {
-        var list = appData.statusList || ['发呆'];
-        var randomIndex = Math.floor(Math.random() * list.length);
-        appData.currentStatus = list[randomIndex];
-        appData.lastStatusTime = now;
-        saveData();
-        renderStatus();
-    }
-}
-
-function renderStatus() {
-    var statusEl = document.getElementById('otherStatus');
-    if (statusEl) {
-        statusEl.textContent = '✨ ' + (appData.currentStatus || '发呆');
-    }
-}
-
-function openStatusManageModal() {
-    closeModal('settingsOverlay');
-    var html = '<h4>对方状态词库</h4>';
-    html += '<div class="subtitle">对方会随机从这些词中选择显示状态（约4小时换一次）</div>';
-    html += '<div class="form-row">';
-    html += '<textarea id="statusListInput" rows="6" placeholder="每行一个状态词&#10;例如：&#10;看书&#10;听音乐&#10;喝咖啡"></textarea>';
-    html += '</div>';
-    html += '<div class="btn-row" style="gap:8px;flex-wrap:wrap;">';
-    html += '<button class="btn-sm" onclick="saveStatusList()">保存词库</button>';
-    html += '<button class="btn-sm outline" onclick="exportStatusList()">导出词库</button>';
-    html += '<button class="btn-sm outline" onclick="importStatusList()">导入词库</button>';
-    html += '<button class="btn-sm outline" onclick="closeModal(\'subOverlay\')">取消</button>';
-    html += '</div>';
-    openSubModal(html);
-    
-    var textarea = document.getElementById('statusListInput');
-    if (textarea && appData.statusList) {
-        textarea.value = appData.statusList.join('\n');
-    }
-}
-
-// 导出状态词库
-function exportStatusList() {
-    if (!appData.statusList || appData.statusList.length === 0) {
-        showToast('状态词库为空，无法导出');
-        return;
-    }
-    var exportData = {
-        type: 'statusList',
-        version: '1.0',
-        data: appData.statusList,
-        count: appData.statusList.length,
-        exportTime: new Date().toISOString()
-    };
-    var jsonStr = JSON.stringify(exportData, null, 2);
-    
-    // 提供两种导出方式
-    var html = '<div style="text-align:center;">' +
-        '<h4>导出状态词库</h4>' +
-        '<div class="subtitle">共 ' + appData.statusList.length + ' 个状态词</div>' +
-        '<div class="btn-row" style="gap:8px;margin:12px 0;">' +
-        '<button class="btn-sm" onclick="copyStatusListToClipboard()">复制到剪贴板</button>' +
-        '<button class="btn-sm outline" onclick="downloadStatusListFile()">下载为文件</button>' +
-        '</div>' +
-        '<textarea readonly style="width:100%;height:120px;font-size:11px;margin:8px 0;padding:8px;border-radius:6px;background:var(--item-bg);border:1px solid var(--border);">' + escapeHTML(jsonStr) + '</textarea>' +
-        '<button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>' +
-        '</div>';
-    openSubModal(html);
-}
-
-function copyStatusListToClipboard() {
-    var exportData = {
-        type: 'statusList',
-        version: '1.0',
-        data: appData.statusList,
-        count: appData.statusList.length
-    };
-    copyToClipboard(JSON.stringify(exportData, null, 2), '状态词库');
-    closeModal('subOverlay');
-}
-
-function downloadStatusListFile() {
-    var exportData = {
-        type: 'statusList',
-        version: '1.0',
-        data: appData.statusList,
-        count: appData.statusList.length,
-        exportTime: new Date().toISOString()
-    };
-    var jsonStr = JSON.stringify(exportData, null, 2);
-    var blob = new Blob([jsonStr], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'status_list_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    closeModal('subOverlay');
-    showToast('状态词库已下载');
-}
-
-// 导入状态词库
-function importStatusList() {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function() {
-        var file = input.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = JSON.parse(e.target.result);
-                var newList = null;
-                
-                // 兼容多种格式
-                if (Array.isArray(data)) {
-                    newList = data;
-                } else if (data.type === 'statusList' && Array.isArray(data.data)) {
-                    newList = data.data;
-                } else if (Array.isArray(data.statusList)) {
-                    newList = data.statusList;
-                } else if (data.data && Array.isArray(data.data)) {
-                    newList = data.data;
-                }
-                
-                if (newList && newList.length > 0) {
-                    // 过滤掉空字符串
-                    newList = newList.filter(function(item) { return item && item.trim(); });
-                    if (newList.length === 0) throw new Error('没有有效的状态词');
-                    
-                    appData.statusList = newList;
-                    saveData();
-                    showToast('导入成功，共 ' + newList.length + ' 个状态词');
-                    updateStatus();
-                    renderStatus();
-                    openStatusManageModal();
-                } else {
-                    throw new Error('格式错误或内容为空');
-                }
-            } catch(err) {
-                console.error('导入错误:', err);
-                showToast('导入失败，文件格式错误');
-            }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-
-// 导出状态词库
-function exportStatusList() {
-    if (!appData.statusList || appData.statusList.length === 0) {
-        showToast('状态词库为空，无法导出');
-        return;
-    }
-    var exportData = {
-        type: 'statusList',
-        data: appData.statusList,
-        version: '1.0'
-    };
-    copyToClipboard(JSON.stringify(exportData, null, 2), '状态词库');
-    showToast('状态词库已复制到剪贴板');
-}
-
-// 导入状态词库
-function importStatusList() {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function() {
-        var file = input.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = JSON.parse(e.target.result);
-                var newList = null;
-                
-                // 兼容两种格式：纯数组 或 {type: 'statusList', data: []}
-                if (Array.isArray(data)) {
-                    newList = data;
-                } else if (data.type === 'statusList' && Array.isArray(data.data)) {
-                    newList = data.data;
-                } else if (Array.isArray(data.statusList)) {
-                    newList = data.statusList;
-                }
-                
-                if (newList && newList.length > 0) {
-                    appData.statusList = newList;
-                    saveData();
-                    showToast('导入成功，共 ' + newList.length + ' 个状态词');
-                    // 刷新状态显示
-                    updateStatus();
-                    renderStatus();
-                    // 刷新弹窗内容
-                    openStatusManageModal();
-                } else {
-                    throw new Error('格式错误');
-                }
-            } catch(err) {
-                showToast('导入失败，文件格式错误');
-            }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-
-function saveStatusList() {
-    var textarea = document.getElementById('statusListInput');
-    if (!textarea) return;
-    var lines = textarea.value.split('\n').filter(function(l) { return l.trim(); });
-    if (lines.length === 0) {
-        showToast('至少需要一个状态词');
-        return;
-    }
-    appData.statusList = lines;
-    saveData();
-    closeModal('subOverlay');
-    showToast('状态词库已保存');
-    updateStatus();
-}
-// ==================== 语音通话功能（模拟） ====================
-var callTimeout = null;
-var isInCall = false;
-var isRinging = false;
-var callStartTime = null;
-var callTimerInterval = null;
-var isCallMinimized = false;
-var pendingCallTimeout = null;  // 改名为 pendingCallTimeout 避免歧义
-
-// 发起通话
-function startVoiceCall() {
-    if (isInCall) {
-        showToast('通话中，请稍后再试');
-        return;
-    }
-    if (isRinging) {
-        showToast('正在呼叫中...');
-        return;
-    }
-    
-    if (document.getElementById('morePanel').style.display === 'block') {
-        toggleMorePanel();
-    }
-    
-    isRinging = true;
-    addSystemMsg('你发起了通话，等待对方接听...');
-    showCallingModal();
-    
-    callTimeout = setTimeout(function() {
-        if (!isRinging) return;
-        var rand = Math.random();
-        if (rand < 0.7) {
-            addSystemMsg('对方接听了通话');
-            closeModal('subOverlay');
-            startCall();
-        } else if (rand < 0.85) {
-            addSystemMsg('对方拒绝了通话');
-            showToast('对方拒绝了通话');
-            endCallSession();
-        } else {
-            addSystemMsg('对方未接听');
-            showToast('对方未接听');
-            endCallSession();
-        }
-    }, 2000 + Math.random() * 3000);
-}
-
-function showCallingModal() {
-    var html = '<div style="text-align:center;">' +
-        '<h3>正在呼叫</h3>' +
-        '<div class="subtitle" style="margin:16px 0;">等待对方接听...</div>' +
-        '<button class="btn-sm outline" onclick="cancelCall()">取消</button>' +
-        '</div>';
-    openSubModal(html);
-}
-
-function cancelCall() {
-    if (callTimeout) clearTimeout(callTimeout);
-    addSystemMsg('你取消了通话');
-    showToast('已取消');
-    endCallSession();
-}
-
-function startCall() {
-    isInCall = true;
-    isRinging = false;
-    callStartTime = Date.now();
-    showCallInProgressModal();
-    
-    if (callTimerInterval) clearInterval(callTimerInterval);
-    callTimerInterval = setInterval(function() {
-        if (isInCall && callStartTime) {
-            var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-            var minutes = Math.floor(elapsed / 60);
-            var seconds = elapsed % 60;
-            var timeStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
-            var timerEl = document.getElementById('callTimerDisplay');
-            if (timerEl) timerEl.textContent = timeStr;
-            var floatingTimerEl = document.getElementById('floatingCallTimer');
-            if (floatingTimerEl) floatingTimerEl.textContent = timeStr;
-        }
-    }, 1000);
-    
-    scheduleRandomHangup();
-}
-
-function scheduleRandomHangup() {
-    var hangupDelay = 10000 + Math.random() * 30000;
-    callTimeout = setTimeout(function() {
-        if (isInCall) {
-            addSystemMsg('对方挂断了通话');
-            showToast('对方挂断了通话');
-            endCallSession();
-        }
-    }, hangupDelay);
-}
-
-function showCallInProgressModal() {
-    // 先关闭可能存在的弹窗
-    var subOverlay = document.getElementById('subOverlay');
-    if (subOverlay) {
-        subOverlay.classList.remove('show');
-        subOverlay.style.display = 'none';
-    }
-    
-    var html = '<div style="text-align:center;">' +
-        '<h3>通话中</h3>' +
-        '<div class="subtitle" style="margin:16px 0;">与对方通话中...</div>' +
-        '<div style="font-size:28px;font-weight:bold;margin:16px 0;" id="callTimerDisplay">0秒</div>' +
-        '<div class="btn-row" style="justify-content:center;gap:16px;">' +
-        '<button class="btn-sm" style="background:var(--danger);" onclick="hangupCall()">挂断</button>' +
-        '<button class="btn-sm outline" onclick="minimizeCall()">缩小</button>' +
-        '</div>' +
-        '</div>';
-    openSubModal(html);
-    
-    // 更新计时器显示
-    if (callStartTime) {
-        var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-        var minutes = Math.floor(elapsed / 60);
-        var seconds = elapsed % 60;
-        var timeStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
-        var timerEl = document.getElementById('callTimerDisplay');
-        if (timerEl) timerEl.textContent = timeStr;
-    }
-}
-
-function minimizeCall() {
-    if (!isInCall) return;
-    isCallMinimized = true;
-    
-    // 强制关闭弹窗
-    var subOverlay = document.getElementById('subOverlay');
-    if (subOverlay) {
-        subOverlay.classList.remove('show');
-        subOverlay.style.display = 'none';
-    }
-    document.body.style.overflow = '';
-    
-    createCallFloatingBall();
-    showToast('通话已缩小，点击小球恢复');
-}
-
-function createCallFloatingBall() {
-    var existingBall = document.getElementById('callFloatingBall');
-    if (existingBall) existingBall.remove();
-    
-    var ball = document.createElement('div');
-    ball.id = 'callFloatingBall';
-    
-    // 获取对方头像，如果没有则用文字
-    var avatarHtml = '';
-    if (appData.otherAvatar) {
-        avatarHtml = '<img src="' + appData.otherAvatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-    } else {
-        avatarHtml = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;background:var(--accent);border-radius:50%;color:var(--text);">' + (appData.otherName.charAt(0) || 'T') + '</div>';
-    }
-    
-    ball.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;">' +
-        avatarHtml +
-        '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:white;font-size:9px;text-align:center;padding:2px 0;">' +
-        '<span id="floatingCallTimer">0秒</span>' +
-        '</div></div>';
-    
-    // 获取当前位置，默认右下角
-    var leftPos = window.innerWidth - 70;
-    var topPos = window.innerHeight - 180;
-    ball.style.cssText = 'position:fixed;left:' + leftPos + 'px;top:' + topPos + 'px;width:55px;height:55px;border-radius:50%;z-index:160;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.3);';
-    ball.setAttribute('draggable', 'false');
-    
-    document.body.appendChild(ball);
-    makeDraggable(ball);
-    
-    ball.onclick = function(e) {
-        e.stopPropagation();
-        restoreCallWindow();
-    };
-}
-
-function makeDraggable(element) {
-    var isDragging = false;
-    var startX, startY, startLeft, startTop;
-    
-    function onStart(e) {
-        e.preventDefault();
-        if (e.type === 'touchstart') {
-            var touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
-        } else {
-            startX = e.clientX;
-            startY = e.clientY;
-        }
-        var rect = element.getBoundingClientRect();
-        startLeft = rect.left;
-        startTop = rect.top;
-        isDragging = true;
-        element.style.cursor = 'grabbing';
-        element.style.transition = 'none';
-        
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('touchend', onEnd);
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onEnd);
-    }
-    
-    function onMove(e) {
-        if (!isDragging) return;
-        var clientX, clientY;
-        if (e.type === 'touchmove') {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-            e.preventDefault();
-        } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-        }
-        var dx = clientX - startX;
-        var dy = clientY - startY;
-        var newLeft = startLeft + dx;
-        var newTop = startTop + dy;
-        var maxLeft = window.innerWidth - element.offsetWidth;
-        var maxTop = window.innerHeight - element.offsetHeight;
-        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-        newTop = Math.max(0, Math.min(newTop, maxTop));
-        element.style.left = newLeft + 'px';
-        element.style.top = newTop + 'px';
-        element.style.right = 'auto';
-        element.style.bottom = 'auto';
-    }
-    
-    function onEnd() {
-        isDragging = false;
-        element.style.cursor = 'grab';
-        element.style.transition = '';
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onEnd);
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onEnd);
-    }
-    
-    element.addEventListener('touchstart', onStart, { passive: false });
-    element.addEventListener('mousedown', onStart);
-    element.style.cursor = 'grab';
-}
-
-function restoreCallWindow() {
-    var ball = document.getElementById('callFloatingBall');
-    if (ball) ball.remove();
-    isCallMinimized = false;
-    
-    // 强制关闭弹窗
-    var subOverlay = document.getElementById('subOverlay');
-    if (subOverlay) {
-        subOverlay.classList.remove('show');
-        subOverlay.style.display = 'none';
-    }
-    
-    // 重新显示通话窗口
-    showCallInProgressModal();
-}
-
-function hangupCall() {
-    if (!isInCall) return;
-    var duration = Math.floor((Date.now() - callStartTime) / 1000);
-    var minutes = Math.floor(duration / 60);
-    var seconds = duration % 60;
-    var durationStr = (minutes > 0 ? minutes + '分' : '') + seconds + '秒';
-    addSystemMsg('你挂断了通话，通话时长 ' + durationStr);
-    showToast('已挂断');
-    endCallSession();
-}
-
-function endCallSession() {
-    if (callTimeout) {
-        clearTimeout(callTimeout);
-        callTimeout = null;
-    }
-    if (callTimerInterval) {
-        clearInterval(callTimerInterval);
-        callTimerInterval = null;
-    }
-    isInCall = false;
-    isRinging = false;
-    isCallMinimized = false;
-    callStartTime = null;
-    
-    // 关闭通话相关弹窗（不影响其他弹窗）
-    var subOverlay = document.getElementById('subOverlay');
-    if (subOverlay && subOverlay.classList.contains('show')) {
-        // 检查当前弹窗内容是否是通话相关的
-        var modalContent = document.querySelector('#subModal');
-        if (modalContent && (modalContent.innerText.includes('通话') || modalContent.innerText.includes('呼叫') || modalContent.innerText.includes('来电'))) {
-            subOverlay.classList.remove('show');
-            subOverlay.style.display = '';
-        }
-    }
-    document.body.style.overflow = '';
-    
-    var ball = document.getElementById('callFloatingBall');
-    if (ball) ball.remove();
-}
-
-// 对方随机发起通话
-function checkRandomIncomingCall() {
-    if (isInCall || isRinging) return;
-    if (Math.random() > 0.03) return;
-    
-    // 检查是否有其他重要弹窗打开
-    var settingsOverlay = document.getElementById('settingsOverlay');
-    if (settingsOverlay && settingsOverlay.classList.contains('show')) return;
-    
-    var photoOverlay = document.getElementById('photoOverlay');
-    if (photoOverlay && photoOverlay.classList.contains('show')) return;
-    
-    isRinging = true;
-    addSystemMsg('对方发起了通话...');
-    
-    pendingCallTimeout = setTimeout(function() {
-        if (isRinging) {
-            addSystemMsg('未接听');
-            showToast('未接听');
-            endCallSession();
-        }
-    }, 15000);
-    
-    showIncomingCallModal();
-}
-
-function showIncomingCallModal() {
-    var html = '<div style="text-align:center;">' +
-        '<h3>来电</h3>' +
-        '<div class="subtitle" style="margin:16px 0;">对方正在呼叫你...</div>' +
-        '<div class="btn-row" style="justify-content:center;gap:16px;">' +
-        '<button class="btn-sm" style="background:var(--success);" onclick="answerIncomingCall()">接听</button>' +
-        '<button class="btn-sm outline" style="color:var(--danger);" onclick="rejectIncomingCall()">拒绝</button>' +
-        '</div>' +
-        '<button class="btn-close" onclick="ignoreIncomingCall()" style="margin-top:12px;">忽略</button>' +
-        '</div>';
-    openSubModal(html);
-}
-
-function answerIncomingCall() {
-    if (pendingCallTimeout) {
-        clearTimeout(pendingCallTimeout);
-        pendingCallTimeout = null;
-    }
-    if (callTimeout) clearTimeout(callTimeout);
-    isRinging = false;
-    addSystemMsg('你接听了通话');
-    closeModal('subOverlay');
-    startCall();
-}
-
-function rejectIncomingCall() {
-    if (pendingCallTimeout) {
-        clearTimeout(pendingCallTimeout);
-        pendingCallTimeout = null;
-    }
-    if (callTimeout) clearTimeout(callTimeout);
-    addSystemMsg('你拒绝了通话');
-    showToast('已拒绝');
-    endCallSession();
-}
-
-function ignoreIncomingCall() {
-    if (pendingCallTimeout) {
-        clearTimeout(pendingCallTimeout);
-        pendingCallTimeout = null;
-    }
-    if (callTimeout) clearTimeout(callTimeout);
-    addSystemMsg('未接听');
-    showToast('未接听');
-    endCallSession();
-}
-
-// 定时检查对方发起通话（每40秒检查一次，降低频率）
-setInterval(function() {
-    checkRandomIncomingCall();
-}, 40000);
-
-// ==================== 转盘邀请功能 ====================
+// ========== 转盘邀请功能 ==========
 function sendWheelInvite() {
-    // 生成一个唯一的邀请ID
     var inviteId = 'wheel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    
-    // 构建可点击的转盘按钮消息
     var inviteHtml = '<div class="wheel-invite" data-invite-id="' + inviteId + '" style="background:var(--item-bg);border-radius:12px;padding:12px;text-align:center;cursor:pointer;" onclick="acceptWheelInvite(this)">' +
         '<div style="font-size:28px;margin-bottom:8px;"></div>' +
         '<div style="font-weight:bold;margin-bottom:4px;">转盘邀请</div>' +
         '<div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">' + appData.otherName + ' 邀请你转动幸福转盘</div>' +
         '<div style="display:inline-block;background:var(--accent);color:white;padding:6px 16px;border-radius:20px;font-size:13px;">点击转一次</div>' +
         '</div>';
-    
-    // 作为对方发送的消息显示
     addMessage(inviteHtml, 'other', false, false);
     appData.chatHistory.push({ 
         type: 'other', 
@@ -2223,23 +1087,17 @@ function sendWheelInvite() {
         time: Date.now(), 
         isWheelInvite: true, 
         inviteId: inviteId,
-        inviteStatus: 'pending'  // pending 或 used
+        inviteStatus: 'pending'
     });
     saveData();
 }
-
-// 接受转盘邀请
 function acceptWheelInvite(element) {
     var inviteDiv = element;
-    // 找到整个邀请卡片
     while (inviteDiv && !inviteDiv.classList.contains('wheel-invite')) {
         inviteDiv = inviteDiv.parentElement;
     }
     if (!inviteDiv) return;
-    
     var inviteId = inviteDiv.getAttribute('data-invite-id');
-    
-    // 检查是否已经转过
     var inviteMsg = appData.chatHistory.find(function(m) {
         return m.isWheelInvite && m.inviteId === inviteId && m.inviteStatus === 'used';
     });
@@ -2247,8 +1105,6 @@ function acceptWheelInvite(element) {
         showToast('这个转盘已经转过啦');
         return;
     }
-    
-    // 标记已使用
     for (var i = 0; i < appData.chatHistory.length; i++) {
         if (appData.chatHistory[i].isWheelInvite && appData.chatHistory[i].inviteId === inviteId) {
             appData.chatHistory[i].inviteStatus = 'used';
@@ -2256,8 +1112,6 @@ function acceptWheelInvite(element) {
         }
     }
     saveData();
-    
-    // 显示"正在转动..."
     var originalContent = inviteDiv.innerHTML;
     inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;">' +
         '<div style="font-size:24px;margin-bottom:8px;"></div>' +
@@ -2265,8 +1119,6 @@ function acceptWheelInvite(element) {
         '</div>';
     inviteDiv.style.cursor = 'default';
     inviteDiv.onclick = null;
-    
-    // 执行转盘
     setTimeout(function() {
         var items = appData.wheelItems || [];
         if (items.length === 0) {
@@ -2274,434 +1126,30 @@ function acceptWheelInvite(element) {
             showToast('转盘词库为空，请先添加');
             return;
         }
-        
-        // 随机抽取一项
         var randomIndex = Math.floor(Math.random() * items.length);
         var result = items[randomIndex];
-        
-        // 记录历史
         appData.wheelHistory.push({ item: result, time: Date.now(), source: 'invite' });
         if (appData.wheelHistory.length > 50) appData.wheelHistory.shift();
         saveData();
-        
-        // 更新邀请卡片显示结果
         inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;">' +
             '<div style="font-size:28px;margin-bottom:8px;"></div>' +
             '<div style="font-weight:bold;margin-bottom:4px;">转盘结果</div>' +
             '<div style="font-size:14px;color:var(--accent);margin-bottom:4px;">' + result + '</div>' +
             '<div style="font-size:11px;color:var(--text-system);">已存入历史记录</div>' +
             '</div>';
-        
-        // 同时在聊天中发一条结果消息（可选）
         addMessage(' 转盘结果：' + result, 'other', false, false);
         appData.chatHistory.push({ type: 'other', content: ' 转盘结果：' + result, time: Date.now() });
         saveData();
-        
         showToast('转到了：' + result);
     }, 800);
 }
-
-// 手动触发转盘邀请（供调试或更多面板使用）
 function sendWheelInviteManually() {
     sendWheelInvite();
 }
-// ==================== 购物商城（情侣购买） ====================
-var shopItems = [];  // 商品列表 [{ id, name, price }]
-var SHOP_STORAGE_KEY = 'shop_items_v1';
 
-// 加载商品数据
-function loadShopItems() {
-    var saved = localStorage.getItem(SHOP_STORAGE_KEY);
-    if (saved) {
-        try {
-            shopItems = JSON.parse(saved);
-        } catch(e) { shopItems = []; }
-    }
-    if (!shopItems.length) {
-        // 默认商品
-        shopItems = [
-            { id: 'item1', name: '红玫瑰', price: 5.20 },
-            { id: 'item2', name: '巧克力', price: 13.14 },
-            { id: 'item3', name: '小熊玩偶', price: 52.00 },
-            { id: 'item4', name: '手写信', price: 9.90 }
-        ];
-        saveShopItems();
-    }
-}
-
-function saveShopItems() {
-    localStorage.setItem(SHOP_STORAGE_KEY, JSON.stringify(shopItems));
-}
-
-// 打开购物商城弹窗
-function openShopModal() {
-    loadShopItems();
-    closeModal('settingsOverlay');
-    
-    var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
-    
-    var html = '<div style="text-align:center;">' +
-        '<h3>购物商城</h3>' +
-        '<div class="subtitle">购买商品会发送到聊天记录</div>' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:8px 12px;border-radius:10px;margin-bottom:12px;">' +
-        '<span style="font-size:13px;">允许对方随机购买</span>' +
-        '<button id="randomBuySwitchBtn" onclick="toggleOtherRandomBuySwitch()" style="width:50px;height:26px;border-radius:26px;border:none;cursor:pointer;background:' + (isEnabled ? 'var(--accent)' : '#ccc') + ';transition:0.2s;position:relative;">' +
-        '<span style="position:absolute;top:2px;left:' + (isEnabled ? '26px' : '2px') + ';width:22px;height:22px;border-radius:50%;background:white;transition:0.2s;"></span>' +
-        '</button>' +
-        '</div>' +
-        '<div class="btn-row" style="gap:8px;justify-content:center;margin-bottom:12px;">' +
-        '<button class="btn-sm" onclick="showAddItemModal()">添加商品</button>' +
-        '<button class="btn-sm outline" onclick="exportShopItems()">导出商品库</button>' +
-        '<button class="btn-sm outline" onclick="importShopItems()">导入商品库</button>' +
-        '</div>' +
-        '<div style="max-height:350px;overflow-y:auto;" id="shopItemsList">加载中...</div>' +
-        '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>' +
-        '</div>';
-    
-    openSubModal(html);
-    renderShopItemsList();
-}
-
-// 切换开关
-function toggleOtherRandomBuySwitch() {
-    var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
-    var newState = !isEnabled;
-    localStorage.setItem('other_random_buy_enabled', newState ? 'true' : 'false');
-    
-    // 更新按钮样式
-    var btn = document.getElementById('randomBuySwitchBtn');
-    if (btn) {
-        btn.style.background = newState ? 'var(--accent)' : '#ccc';
-        var span = btn.querySelector('span');
-        if (span) {
-            span.style.left = newState ? '26px' : '2px';
-        }
-    }
-    
-    showToast(newState ? '已开启对方随机购买' : '已关闭对方随机购买');
-}
-
-// 渲染商品列表
-function renderShopItemsList() {
-    var container = document.getElementById('shopItemsList');
-    if (!container) return;
-    if (!shopItems.length) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:20px;">暂无商品，点击上方添加</div>';
-        return;
-    }
-    var html = '<div style="display:flex;flex-direction:column;gap:10px;">';
-    for (var i = 0; i < shopItems.length; i++) {
-        var item = shopItems[i];
-        html += '<div style="background:var(--item-bg);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;">' +
-            '<div style="flex:1;">' +
-            '<div style="font-weight:bold;">' + escapeHTML(item.name) + '</div>' +
-            '<div style="color:var(--accent);font-size:14px;">¥ ' + item.price.toFixed(2) + '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:8px;">' +
-            '<button class="btn-sm outline" onclick="buyItem(\'' + item.id + '\')">购买</button>' +
-            '<button class="del-sm" onclick="deleteShopItem(\'' + item.id + '\')">删除</button>' +
-            '</div>' +
-            '</div>';
-    }
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-// 显示添加商品弹窗
-function showAddItemModal() {
-    var html = '<div style="text-align:center;">' +
-        '<h4>添加商品</h4>' +
-        '<div class="form-row">' +
-        '<label>商品名称</label>' +
-        '<input type="text" id="newItemName" placeholder="例如：玫瑰花">' +
-        '</div>' +
-        '<div class="form-row">' +
-        '<label>价格（元）</label>' +
-        '<input type="number" id="newItemPrice" step="0.01" placeholder="例如：5.20">' +
-        '</div>' +
-        '<div class="btn-row" style="justify-content:center;gap:8px;margin-top:12px;">' +
-        '<button class="btn-sm" onclick="addShopItem()">确认添加</button>' +
-        '<button class="btn-sm outline" onclick="closeModal(\'subOverlay\')">取消</button>' +
-        '</div>' +
-        '</div>';
-    openSubModal(html);
-}
-
-// 添加商品
-function addShopItem() {
-    var name = document.getElementById('newItemName').value.trim();
-    var price = parseFloat(document.getElementById('newItemPrice').value);
-    if (!name) {
-        showToast('请输入商品名称');
-        return;
-    }
-    if (isNaN(price) || price <= 0) {
-        showToast('请输入有效价格');
-        return;
-    }
-    var newId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    shopItems.push({
-        id: newId,
-        name: name,
-        price: price
-    });
-    saveShopItems();
-    closeModal('subOverlay');
-    openShopModal();
-    showToast('商品已添加');
-}
-
-// 删除商品
-function deleteShopItem(id) {
-    if (!confirm('确定删除该商品吗？')) return;
-    shopItems = shopItems.filter(function(item) { return item.id !== id; });
-    saveShopItems();
-    renderShopItemsList();
-    showToast('已删除');
-}
-
-// 购买商品（自己购买或对方购买）
-function buyItem(itemId, buyer) {
-    var item = shopItems.find(function(i) { return i.id === itemId; });
-    if (!item) {
-        showToast('商品不存在');
-        return;
-    }
-    
-    // buyer 参数：'me' 或 'other'，如果不传则弹窗选择
-    if (!buyer) {
-        showBuyerChoiceModal(item);
-        return;
-    }
-    
-    sendPurchaseMessage(item, buyer);
-}
-
-// 显示购买者选择弹窗
-function showBuyerChoiceModal(item) {
-    var html = '<div style="text-align:center;">' +
-        '<h4>购买商品</h4>' +
-        '<div class="subtitle">' + escapeHTML(item.name) + ' - ¥' + item.price.toFixed(2) + '</div>' +
-        '<div class="subtitle" style="margin:12px 0;">谁购买？</div>' +
-        '<div class="btn-row" style="justify-content:center;gap:16px;">' +
-        '<button class="btn-sm" onclick="buyItemWithBuyer(\'' + item.id + '\', \'me\')">我购买</button>' +
-        '<button class="btn-sm outline" onclick="buyItemWithBuyer(\'' + item.id + '\', \'other\')">对方购买</button>' +
-        '</div>' +
-        '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">取消</button>' +
-        '</div>';
-    openSubModal(html);
-}
-
-function buyItemWithBuyer(itemId, buyer) {
-    closeModal('subOverlay');
-    var item = shopItems.find(function(i) { return i.id === itemId; });
-    if (item) {
-        sendPurchaseMessage(item, buyer);
-    }
-}
-
-// 发送购买消息到聊天记录
-function sendPurchaseMessage(item, buyer) {
-    var buyerName = (buyer === 'me') ? appData.myName : appData.otherName;
-    var receiverName = (buyer === 'me') ? appData.otherName : appData.myName;
-    
-    // 添加购买卡片到聊天
-    addPurchaseCard(item, buyer);
-    
-    // 聊天记录中只保留一条系统消息
-    var systemMsg = buyerName + ' 购买了 ' + item.name + '（¥' + item.price.toFixed(2) + '）送给 ' + receiverName;
-    
-    // 检查是否已经存在相同的系统消息（避免重复）
-    var lastMsg = appData.chatHistory[appData.chatHistory.length - 1];
-    if (!lastMsg || lastMsg.content !== systemMsg) {
-        appData.chatHistory.push({
-            type: 'system',
-            content: systemMsg,
-            time: Date.now()
-        });
-    }
-    
-    showToast(buyerName + ' 购买了 ' + item.name);
-    saveData();
-}
-
-// 添加购买卡片到聊天
-function addPurchaseCard(item, buyer) {
-    var chat = document.getElementById('chat');
-    var div = document.createElement('div');
-    div.className = 'msg ' + (buyer === 'me' ? 'me' : 'other');
-    var av = getAvatarHTMLSync(buyer === 'me');
-    var handler = buyer === 'other' ? 'onclick="onOtherAvatarClick()"' : 'onclick="onMyAvatarClick()"';
-    
-    var isFromOther = (buyer === 'other');
-    var cardHTML = '<div class="transfer-card" style="border-left-color:var(--accent);"' + 
-        (isFromOther ? ' onclick="confirmReceive(this, \'' + escapeHTML(item.name) + '\', \'' + item.price + '\')" style="cursor:pointer;"' : '') + '>' +
-        '<div class="transfer-label">购买商品</div>' +
-        '<div style="font-size:16px;font-weight:bold;margin:6px 0;">' + escapeHTML(item.name) + '</div>' +
-        '<div class="transfer-amount">¥ ' + item.price.toFixed(2) + '</div>' +
-        '<div class="transfer-note">' + (buyer === 'me' ? '你购买了此商品' : (isFromOther ? '点击确认收到' : '对方购买了此商品')) + '</div>' +
-        '</div>';
-    
-    div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-// 确认收到商品
-function confirmReceive(cardElement, itemName, itemPrice) {
-    if (cardElement.querySelector('.transfer-note').textContent !== '点击确认收到') {
-        showToast('已经确认过了');
-        return;
-    }
-    cardElement.querySelector('.transfer-note').textContent = '已收到';
-    cardElement.querySelector('.transfer-note').style.color = 'var(--success)';
-    cardElement.style.cursor = 'default';
-    cardElement.onclick = null;
-    addSystemMsg('你收到了 ' + appData.otherName + ' 送的 ' + itemName);
-    showToast('已收到 ' + itemName);
-    saveData();
-}
-
-// 导出商品库
-function exportShopItems() {
-    if (!shopItems.length) {
-        showToast('商品库为空，无法导出');
-        return;
-    }
-    var exportData = {
-        type: 'shopItems',
-        version: '1.0',
-        data: shopItems,
-        count: shopItems.length
-    };
-    var jsonStr = JSON.stringify(exportData, null, 2);
-    
-    var html = '<div style="text-align:center;">' +
-        '<h4>导出商品库</h4>' +
-        '<div class="subtitle">共 ' + shopItems.length + ' 个商品</div>' +
-        '<div class="btn-row" style="gap:8px;margin:12px 0;">' +
-        '<button class="btn-sm" onclick="copyShopItemsToClipboard()">复制到剪贴板</button>' +
-        '<button class="btn-sm outline" onclick="downloadShopItemsFile()">下载为文件</button>' +
-        '</div>' +
-        '<textarea readonly style="width:100%;height:120px;font-size:11px;margin:8px 0;padding:8px;border-radius:6px;background:var(--item-bg);border:1px solid var(--border);">' + escapeHTML(jsonStr) + '</textarea>' +
-        '<button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>' +
-        '</div>';
-    openSubModal(html);
-}
-
-function copyShopItemsToClipboard() {
-    var exportData = {
-        type: 'shopItems',
-        version: '1.0',
-        data: shopItems,
-        count: shopItems.length
-    };
-    copyToClipboard(JSON.stringify(exportData, null, 2), '商品库');
-    closeModal('subOverlay');
-}
-
-function downloadShopItemsFile() {
-    var exportData = {
-        type: 'shopItems',
-        version: '1.0',
-        data: shopItems,
-        count: shopItems.length,
-        exportTime: new Date().toISOString()
-    };
-    var jsonStr = JSON.stringify(exportData, null, 2);
-    var blob = new Blob([jsonStr], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'shop_items_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    closeModal('subOverlay');
-    showToast('商品库已下载');
-}
-
-// 导入商品库
-function importShopItems() {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function() {
-        var file = input.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                var data = JSON.parse(e.target.result);
-                var newItems = null;
-                
-                if (Array.isArray(data)) {
-                    newItems = data;
-                } else if (data.type === 'shopItems' && Array.isArray(data.data)) {
-                    newItems = data.data;
-                } else if (Array.isArray(data.items)) {
-                    newItems = data.items;
-                }
-                
-                if (newItems && newItems.length > 0) {
-                    // 验证每个商品是否有 name 和 price
-                    var valid = true;
-                    for (var i = 0; i < newItems.length; i++) {
-                        if (!newItems[i].name || typeof newItems[i].price !== 'number') {
-                            valid = false;
-                            break;
-                        }
-                        // 确保有 id
-                        if (!newItems[i].id) {
-                            newItems[i].id = 'item_' + Date.now() + '_' + i;
-                        }
-                    }
-                    if (!valid) throw new Error('格式错误');
-                    
-                    shopItems = newItems;
-                    saveShopItems();
-                    showToast('导入成功，共 ' + shopItems.length + ' 个商品');
-                    openShopModal();
-                } else {
-                    throw new Error('格式错误或内容为空');
-                }
-            } catch(err) {
-                console.error('导入错误:', err);
-                showToast('导入失败，文件格式错误');
-            }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-// ==================== 对方随机购买 ====================
-
-// 对方随机购买商品
-function otherRandomBuy() {
-    // 检查开关（默认开启）
-    var isEnabled = localStorage.getItem('other_random_buy_enabled');
-    if (isEnabled === 'false') return;
-    
-    if (isInCall || isRinging) return;  // 通话中不触发
-    if (typeof shopItems === 'undefined' || !shopItems.length) return;
-    if (Math.random() > 0.1) return;  // 10% 概率，约每30秒检查一次，平均2-3分钟触发一次
-    
-    var randomIndex = Math.floor(Math.random() * shopItems.length);
-    var item = shopItems[randomIndex];
-    
-    // 对方购买
-    sendPurchaseMessage(item, 'other');
-}
-
-// 定时检查对方随机购买（每30秒检查一次）
-setInterval(function() {
-    otherRandomBuy();
-}, 30000);
 // ========== 启动 ==========
 initApp().then(function() {
     console.log('甜心助手启动成功！');
-    // 如果歌单有内容，显示音乐浮动球
     if (appData.playlist && appData.playlist.length > 0) {
         setTimeout(function() {
             if (typeof showFloatingBall === 'function') {
