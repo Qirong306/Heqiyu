@@ -1172,6 +1172,36 @@ function openSubModal(html) {
     document.getElementById('subModal').innerHTML = html; 
     openModal('subOverlay'); 
 }
+// ==================== 对方主动发消息 ====================
+function otherSendMessage() {
+    var allReplies = getAllReplies();
+    
+    if (allReplies.length === 0) {
+        showToast('还没有设置回复词库，请先去设置中添加');
+        return;
+    }
+    
+    // 随机选择一条回复
+    var randomIndex = Math.floor(Math.random() * allReplies.length);
+    var msg = allReplies[randomIndex];
+    
+    // 对方发送消息
+    addMessage(msg, 'other', false);
+    appData.chatHistory.push({ type: 'other', content: msg, time: Date.now() });
+    saveData();
+    
+    // 滚动到底部
+    var chat = document.getElementById('chat');
+    if (chat) chat.scrollTop = chat.scrollHeight;
+    
+    showToast(appData.otherName + ' 发来消息');
+    
+    // 如果页面不可见，发送通知
+    if (document.hidden && typeof sendNotification === 'function') {
+        var msgText = msg.length > 50 ? msg.substring(0, 50) + '...' : msg;
+        sendNotification(appData.otherName, msgText, window.location.href);
+    }
+}
 
 // ========== 启动 ==========
 initApp().then(function() {
