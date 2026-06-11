@@ -790,8 +790,14 @@ function addMessage(content, type, isImage, isSticker) {
     } else {
         div.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + (isImage ? '<img class="msg-image" src="' + content + '">' : content) + '<span class="msg-time">' + formatTimeShort(Date.now()) + '</span></div>';
     }
-    if (typeof bindQuoteEvent === 'function') bindQuoteEvent(div, { content: content, type: type, time: Date.now(), isImage: isImage });
+    bindQuoteEvent(div, { content: content, type: type, time: Date.now(), isImage: isImage });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
+    
+    // 如果是对方发来的消息且页面不可见，发送通知
+    if (type === 'other' && document.hidden && typeof sendNotification === 'function') {
+        var msgText = isImage ? '[图片消息]' : (content.length > 50 ? content.substring(0, 50) + '...' : content);
+        sendNotification(appData.otherName, msgText, window.location.href);
+    }
 }
 function addMessageWithQuote(content, type, quote) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
