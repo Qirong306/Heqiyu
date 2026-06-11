@@ -22,6 +22,30 @@
     <!-- 样式 -->
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- OneSignal 推送通知 -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.init({
+                appId: "da4c2265-424f-440e-9b2a-4168fca30474",
+            });
+        });
+    
+        // 发送通知的函数
+        function sendNotification(title, message, url) {
+            if (typeof OneSignal !== 'undefined' && OneSignal.Notifications) {
+                OneSignal.Notifications.sendNotification({
+                    title: title,
+                    message: message,
+                    url: url || window.location.href,
+                    icon: '/apple-touch-icon.png'
+                }).catch(function(e) {
+                    console.log('通知发送失败:', e);
+                });
+            }
+        }
+    </script>
 </head>
 <body>
 
