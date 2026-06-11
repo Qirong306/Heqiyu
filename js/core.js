@@ -1,7 +1,4 @@
 // ==================== 核心系统 ====================
-// 存储、聊天、UI、头像、照片、信件、主题、更多面板、表情包、启动
-
-// ========== 存储密钥 ==========
 var STORAGE_KEY = 'chat_app_v20';
 var STORAGE_BACKUP_KEY = 'chat_app_v20_backup';
 var DB_NAME = 'ChatAppDB';
@@ -10,9 +7,8 @@ var db = null;
 var MAX_STORAGE_MB = 50;
 var saveTimer = null;
 var saveDebounceMs = 500;
-
-// ========== 引用状态 ==========
 var quotedMessage = null;
+var autoReplyEnabled = true;
 
 // ========== IndexedDB ==========
 function openDB() {
@@ -173,7 +169,7 @@ function compressImage(file, maxWidth, maxHeight, quality) {
     });
 }
 
-// ========== 默认数据（内置自定义回复词库和状态词库） ==========
+// ========== 默认数据 ==========
 var DEFAULT_DATA = {
     myName: '我', myAvatar: '', myAvatarId: '', otherName: '甜心助手', otherAvatar: '', otherAvatarId: '',
     replyGroups: [
@@ -208,26 +204,9 @@ var DEFAULT_DATA = {
     playlist: [],
     musicFloatingImg: '',
     books: [],
-    wheelItems: [
-        '和朋友一起看日落', '收到一封手写信', '下雨天窝在被子里', '吃到想吃的蛋糕',
-        '陌生人的微笑', '听到喜欢的歌', '完成一项挑战', '闻到咖啡香'
-    ],
+    wheelItems: ['和朋友一起看日落', '收到一封手写信', '下雨天窝在被子里', '吃到想吃的蛋糕', '陌生人的微笑', '听到喜欢的歌', '完成一项挑战', '闻到咖啡香'],
     wheelHistory: [],
-    statusList: [
-        "睡眠休憩", "睡醒了", "睡回笼觉", "小憩片刻", "正在睡觉", "准备就寝", "卧床休憩", "相拥而眠", "闭目补觉",
-        "翻看书籍", "观看电视", "学习进修", "伏案读书", "处理工作", "忙于事务", "稍作停歇", "处理要事", "事务繁忙", "临时加班", "补记笔记", "剪辑日常", "翻阅小说", "临摹写字",
-        "发呆放空", "静心思索", "游玩游戏", "外出聚会", "休闲歇息", "聆听歌曲", "拍摄照片", "闲逛散心", "逗弄小猫", "居家追剧", "休闲游戏", "垂钓散心", "下棋消遣", "弹奏乐曲", "画画涂鸦", "拼搭摆件", "把玩手串", "观望天象", "拼装手工", "把玩饰品",
-        "洗漱打理", "洗漱完毕", "身处卫生间", "吹干发丝", "洗浴完毕", "修剪指甲", "搭配穿搭", "打理发型", "试穿新衣", "敷护肤膜", "基础护肤", "整理妆台", "更换衣物", "晾晒发丝",
-        "整理物件", "打扫房间", "收拾桌面", "晾晒衣物", "折叠衣物", "拖地清洁", "整理书包", "收纳衣物", "整理床铺", "规整随身物", "打理小包", "整理杂物", "简易收拾", "缝补衣物", "清洗鞋袜", "擦拭门窗", "浇灌花草", "更换床品", "清理杂物", "整理鞋帽", "晾晒被褥", "擦拭镜面", "收纳杂物", "更换拖鞋", "摆放餐具", "点燃香薰", "摆弄花草",
-        "健身运动", "按摩放松", "简单拉伸", "舒缓肩颈",
-        "用餐完毕", "悠然用餐", "置办零食", "品尝零食", "饮用奶茶", "冲泡热水", "调制饮品", "泡煮热茶", "研磨咖啡", "烹煮茶饮", "备菜做饭", "加热餐食", "清洗水果", "享用下午茶", "进食零食", "分装零食", "饮水解渴", "小口品酒", "冲泡果饮", "炖煮汤品", "静坐品茶",
-        "挑选好物", "储备零食", "购置饮品", "收取快递", "自取外卖", "采购食材", "商超采购", "市集闲逛", "小店漫步", "文具选购", "便利店闲逛",
-        "外出出行", "漫步吹风", "散步慢行", "赶路途中", "下楼丢垃圾", "外出办事", "等候碰面", "路途行进", "即将抵达", "行至半路", "马上到达", "遭遇堵车", "换乘行程", "打车出行", "返程归家", "在外奔波", "临时绕行", "赶路前行", "准备出发", "搭乘电梯", "排队等候", "临时停留", "异地出差", "外出工作", "乘坐公交", "骑行赶路", "等候车辆", "中途休整", "搭乘地铁", "短途步行", "步行赶路", "乘坐扶梯", "沿途观景", "步行归家", "驾车行驶", "楼下散步", "缓步归家", "靠墙歇息", "商超闲逛", "外出归来",
-        "寄存物件", "处理琐事", "调试设备", "居家闲歇", "开窗换气", "窗边静坐", "沐浴暖阳", "等候信号", "摆放摆件", "折叠毯被", "途经花店", "整理行囊", "整理小包", "闭门独处",
-        "卧床念想", "窗边沉思", "晚风思念", "凝神发呆", "放空念想", "整理相册", "回看合照", "眺望街景", "核对账单", "浏览动态", "月下闲赏", "静心放空", "暖手休憩", "翻看合照", "整理桌面",
-        "瘫坐放空", "慵懒休憩", "蜷身静养", "随性放松", "舒展身体", "沙发休憩", "裹毯闲坐", "日光休憩", "吹拂晚风", "身心放松",
-        "视频通话", "语音聊天", "结伴同行"
-    ],
+    statusList: ["睡眠休憩", "睡醒了", "睡回笼觉", "小憩片刻", "正在睡觉", "准备就寝", "卧床休憩", "相拥而眠", "闭目补觉", "翻看书籍", "观看电视", "学习进修", "伏案读书", "处理工作", "忙于事务", "稍作停歇", "处理要事", "事务繁忙", "临时加班", "补记笔记", "剪辑日常", "翻阅小说", "临摹写字", "发呆放空", "静心思索", "游玩游戏", "外出聚会", "休闲歇息", "聆听歌曲", "拍摄照片", "闲逛散心", "逗弄小猫", "居家追剧", "休闲游戏", "垂钓散心", "下棋消遣", "弹奏乐曲", "画画涂鸦", "拼搭摆件", "把玩手串", "观望天象", "拼装手工", "把玩饰品", "洗漱打理", "洗漱完毕", "身处卫生间", "吹干发丝", "洗浴完毕", "修剪指甲", "搭配穿搭", "打理发型", "试穿新衣", "敷护肤膜", "基础护肤", "整理妆台", "更换衣物", "晾晒发丝", "整理物件", "打扫房间", "收拾桌面", "晾晒衣物", "折叠衣物", "拖地清洁", "整理书包", "收纳衣物", "整理床铺", "规整随身物", "打理小包", "整理杂物", "简易收拾", "缝补衣物", "清洗鞋袜", "擦拭门窗", "浇灌花草", "更换床品", "清理杂物", "整理鞋帽", "晾晒被褥", "擦拭镜面", "收纳杂物", "更换拖鞋", "摆放餐具", "点燃香薰", "摆弄花草", "健身运动", "按摩放松", "简单拉伸", "舒缓肩颈", "用餐完毕", "悠然用餐", "置办零食", "品尝零食", "饮用奶茶", "冲泡热水", "调制饮品", "泡煮热茶", "研磨咖啡", "烹煮茶饮", "备菜做饭", "加热餐食", "清洗水果", "享用下午茶", "进食零食", "分装零食", "饮水解渴", "小口品酒", "冲泡果饮", "炖煮汤品", "静坐品茶", "挑选好物", "储备零食", "购置饮品", "收取快递", "自取外卖", "采购食材", "商超采购", "市集闲逛", "小店漫步", "文具选购", "便利店闲逛", "外出出行", "漫步吹风", "散步慢行", "赶路途中", "下楼丢垃圾", "外出办事", "等候碰面", "路途行进", "即将抵达", "行至半路", "马上到达", "遭遇堵车", "换乘行程", "打车出行", "返程归家", "在外奔波", "临时绕行", "赶路前行", "准备出发", "搭乘电梯", "排队等候", "临时停留", "异地出差", "外出工作", "乘坐公交", "骑行赶路", "等候车辆", "中途休整", "搭乘地铁", "短途步行", "步行赶路", "乘坐扶梯", "沿途观景", "步行归家", "驾车行驶", "楼下散步", "缓步归家", "靠墙歇息", "商超闲逛", "外出归来", "寄存物件", "处理琐事", "调试设备", "居家闲歇", "开窗换气", "窗边静坐", "沐浴暖阳", "等候信号", "摆放摆件", "折叠毯被", "途经花店", "整理行囊", "整理小包", "闭门独处", "卧床念想", "窗边沉思", "晚风思念", "凝神发呆", "放空念想", "整理相册", "回看合照", "眺望街景", "核对账单", "浏览动态", "月下闲赏", "静心放空", "暖手休憩", "翻看合照", "整理桌面", "瘫坐放空", "慵懒休憩", "蜷身静养", "随性放松", "舒展身体", "沙发休憩", "裹毯闲坐", "日光休憩", "吹拂晚风", "身心放松", "视频通话", "语音聊天", "结伴同行"],
     lastStatusTime: 0,
     currentStatus: '发呆',
     vdWordBank: []
@@ -274,7 +253,6 @@ function saveData(immediate) {
             currentStatus: appData.currentStatus
         };
         var jsonStr = JSON.stringify(saveObj);
-        
         try {
             localStorage.setItem(STORAGE_KEY, jsonStr);
             console.log('[保存] 文字数据保存成功，聊天记录数:', appData.chatHistory.length);
@@ -284,43 +262,33 @@ function saveData(immediate) {
                 showToast('存储空间不足，请清理聊天记录或导出备份后清除数据');
             }
         }
-        
         try {
             sessionStorage.setItem(STORAGE_BACKUP_KEY, jsonStr);
         } catch(e) {}
     };
-    
     if (saveTimer) clearTimeout(saveTimer);
-    if (immediate === true) {
-        doSave();
-    } else {
-        saveTimer = setTimeout(doSave, saveDebounceMs);
-    }
+    if (immediate === true) { doSave(); } 
+    else { saveTimer = setTimeout(doSave, saveDebounceMs); }
 }
 
-// ========== 数据加载 ==========
 function loadData() {
     return new Promise(function(resolve) {
         var saved = null;
         var source = 'none';
-        
         try {
             saved = localStorage.getItem(STORAGE_KEY);
             if (saved) source = 'localStorage';
         } catch(e) { saved = null; }
-        
         if (!saved) {
             try {
                 saved = sessionStorage.getItem(STORAGE_BACKUP_KEY);
                 if (saved) source = 'sessionStorage';
             } catch(e) { saved = null; }
         }
-        
         if (saved) {
             var p = safeParseJSON(saved);
             if (p && typeof p === 'object') {
                 console.log('[加载] 从 ' + source + ' 加载数据成功，聊天记录数:', p.chatHistory?.length);
-                
                 if (typeof p.myName === 'string') appData.myName = p.myName;
                 if (typeof p.myAvatarId === 'string') appData.myAvatarId = p.myAvatarId;
                 if (typeof p.otherName === 'string') appData.otherName = p.otherName;
@@ -355,14 +323,10 @@ function loadData() {
         } else {
             console.log('[加载] 无本地数据，使用默认数据');
         }
-        
-        // 兜底初始化
         if (!Array.isArray(appData.emojiIds)) appData.emojiIds = [];
         if (!Array.isArray(appData.chatHistory)) appData.chatHistory = [];
         if (!Array.isArray(appData.letters)) appData.letters = [];
-        if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) {
-            appData.replyGroups = DEFAULT_DATA.replyGroups;
-        }
+        if (!Array.isArray(appData.replyGroups) || appData.replyGroups.length === 0) { appData.replyGroups = DEFAULT_DATA.replyGroups; }
         if (!Array.isArray(appData.forumTopics)) appData.forumTopics = [];
         if (typeof appData.forumReplies !== 'object' || appData.forumReplies === null) appData.forumReplies = {};
         if (!Array.isArray(appData.forumReplyLib)) appData.forumReplyLib = DEFAULT_DATA.forumReplyLib;
@@ -380,15 +344,9 @@ function loadData() {
         if (!Array.isArray(appData.statusList) || appData.statusList.length === 0) appData.statusList = DEFAULT_DATA.statusList;
         if (typeof appData.lastStatusTime !== 'number') appData.lastStatusTime = 0;
         if (typeof appData.currentStatus !== 'string') appData.currentStatus = '发呆';
-        
         var p1 = appData.myAvatarId ? getImageFromDB('avatars', appData.myAvatarId).then(function(d) { appData.myAvatar = d || ''; }) : Promise.resolve();
         var p2 = appData.otherAvatarId ? getImageFromDB('avatars', appData.otherAvatarId).then(function(d) { appData.otherAvatar = d || ''; }) : Promise.resolve();
-        
-        Promise.all([p1, p2]).then(function() {
-            resolve();
-        }).catch(function() {
-            resolve();
-        });
+        Promise.all([p1, p2]).then(function() { resolve(); }).catch(function() { resolve(); });
     });
 }
 
@@ -405,6 +363,89 @@ function formatTime(ts) { if (!ts) return ''; var d = new Date(ts); return d.get
 function formatTimeShort(ts) { if (!ts) return ''; var d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
 function escapeHTML(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
+// ========== 低饱和颜色主题 ==========
+var colorThemes = {
+    'default': { name: '杏色', accent: '#f0c78e', accentDark: '#e8b87a', bg: '#f5f0eb', headerBg: '#faf7f4', bubbleMe: '#ffeaa7', bubbleOther: '#ffffff' },
+    'mint': { name: '薄荷', accent: '#b8d9c6', accentDark: '#a8c9b6', bg: '#f0f5f2', headerBg: '#f5faf7', bubbleMe: '#d4ecd9', bubbleOther: '#ffffff' },
+    'lavender': { name: '薰衣草', accent: '#c5c4e8', accentDark: '#b5b4d8', bg: '#f5f4fa', headerBg: '#faf9fd', bubbleMe: '#e2e1f2', bubbleOther: '#ffffff' },
+    'peach': { name: '蜜桃', accent: '#f2cec0', accentDark: '#e2beb0', bg: '#faf5f2', headerBg: '#fdfaf8', bubbleMe: '#fce4da', bubbleOther: '#ffffff' },
+    'sky': { name: '天空', accent: '#b8d8f0', accentDark: '#a8c8e0', bg: '#f0f5fa', headerBg: '#f5fafd', bubbleMe: '#d4eaf4', bubbleOther: '#ffffff' },
+    'rose': { name: '玫瑰', accent: '#f0c0c8', accentDark: '#e0b0b8', bg: '#faf2f4', headerBg: '#fdf7f9', bubbleMe: '#fce0e4', bubbleOther: '#ffffff' },
+    'matcha': { name: '抹茶', accent: '#c8d8b8', accentDark: '#b8c8a8', bg: '#f2f5ee', headerBg: '#f7faf3', bubbleMe: '#e0ecd4', bubbleOther: '#ffffff' }
+};
+
+function openColorThemeModal() {
+    closeModal('settingsOverlay');
+    var currentTheme = localStorage.getItem('color_theme') || 'default';
+    var html = '<h4>主题颜色</h4><div class="subtitle">选择你喜欢的低饱和颜色</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;">';
+    for (var key in colorThemes) {
+        var theme = colorThemes[key];
+        var isActive = (currentTheme === key);
+        html += '<div onclick="applyColorTheme(\'' + key + '\')" style="background:' + theme.accent + ';padding:12px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid ' + (isActive ? '#fff' : 'transparent') + ';box-shadow:0 1px 3px rgba(0,0,0,0.1);"><span style="color:var(--text);font-size:14px;">' + theme.name + '</span></div>';
+    }
+    html += '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>';
+    openSubModal(html);
+}
+
+function applyColorTheme(themeKey) {
+    var theme = colorThemes[themeKey];
+    if (!theme) return;
+    localStorage.setItem('color_theme', themeKey);
+    document.documentElement.style.setProperty('--accent', theme.accent);
+    document.documentElement.style.setProperty('--accent-dark', theme.accentDark);
+    document.documentElement.style.setProperty('--bg', theme.bg);
+    document.documentElement.style.setProperty('--header-bg', theme.headerBg);
+    document.documentElement.style.setProperty('--chat-bg', theme.bg);
+    document.documentElement.style.setProperty('--bubble-me', theme.bubbleMe);
+    document.documentElement.style.setProperty('--bubble-other', theme.bubbleOther);
+    showToast('已切换至 ' + theme.name + ' 主题');
+    closeModal('subOverlay');
+}
+
+function loadColorTheme() {
+    var savedTheme = localStorage.getItem('color_theme');
+    if (savedTheme && colorThemes[savedTheme]) { applyColorTheme(savedTheme); }
+}
+
+// ========== 自动回复开关 ==========
+function loadAutoReplySetting() {
+    var saved = localStorage.getItem('auto_reply_enabled');
+    autoReplyEnabled = saved !== null ? saved === 'true' : true;
+}
+
+function saveAutoReplySetting() {
+    localStorage.setItem('auto_reply_enabled', autoReplyEnabled);
+}
+
+function openAutoReplySwitchModal() {
+    closeModal('settingsOverlay');
+    var isChecked = autoReplyEnabled ? 'checked' : '';
+    var html = '<div style="text-align:center;"><h4>自动回复开关</h4><div class="subtitle">关闭后对方不会自动回复消息</div><div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:12px 16px;border-radius:12px;margin:16px 0;"><span style="font-size:15px;">对方自动回复</span><label style="position:relative;display:inline-block;width:50px;height:26px;"><input type="checkbox" id="autoReplySwitch" ' + isChecked + ' onchange="toggleAutoReply(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:0.3s;border-radius:26px;"></span><span style="position:absolute;content:"";height:22px;width:22px;left:2px;bottom:2px;background-color:white;transition:0.3s;border-radius:50%;"></span></label></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button></div>';
+    openSubModal(html);
+    setTimeout(function() {
+        var btn = document.querySelector('#subModal label');
+        if (btn && autoReplyEnabled) {
+            var bgSpan = btn.querySelector('span');
+            var circleSpan = btn.querySelector('span + span');
+            if (bgSpan) bgSpan.style.backgroundColor = 'var(--accent)';
+            if (circleSpan) circleSpan.style.transform = 'translateX(24px)';
+        }
+    }, 50);
+}
+
+function toggleAutoReply(enabled) {
+    autoReplyEnabled = enabled;
+    saveAutoReplySetting();
+    var btn = document.querySelector('#subModal label');
+    if (btn) {
+        var bgSpan = btn.querySelector('span');
+        var circleSpan = btn.querySelector('span + span');
+        if (bgSpan) bgSpan.style.backgroundColor = enabled ? 'var(--accent)' : '#ccc';
+        if (circleSpan) circleSpan.style.transform = enabled ? 'translateX(24px)' : 'translateX(0)';
+    }
+    showToast(enabled ? '已开启自动回复' : '已关闭自动回复');
+}
+
 // ========== 初始化 ==========
 function initApp() {
     return loadData().then(function() {
@@ -420,20 +461,18 @@ function initApp() {
         closeModal('settingsOverlay'); closeModal('subOverlay');
         closeModal('photoOverlay'); closeModal('letterOverlay');
         document.getElementById('morePanel').style.display = 'none';
+        loadColorTheme();
+        loadAutoReplySetting();
         return autoCleanOrphanImages();
     }).then(function(cleaned) {
         if (cleaned > 0) console.log('自动清理了 ' + cleaned + ' 个孤儿图片');
         return getStorageStats();
     }).then(function(stats) {
-        if (stats.usagePercent > 85) {
-            showToast('存储已使用 ' + stats.usagePercent + '%\n建议在数据管理中清理');
-        }
+        if (stats.usagePercent > 85) { showToast('存储已使用 ' + stats.usagePercent + '%\n建议在数据管理中清理'); }
         var lastBackupReminder = localStorage.getItem('chat_app_backup_reminder');
         var now = Date.now();
         if (!lastBackupReminder || now - parseInt(lastBackupReminder) > 7 * 24 * 60 * 60 * 1000) {
-            setTimeout(function() {
-                showToastLong('备份提醒：建议去设置 → 数据管理\n点击「全量备份下载」保存数据', 5000);
-            }, 3000);
+            setTimeout(function() { showToastLong('备份提醒：建议去设置 → 数据管理\n点击「全量备份下载」保存数据', 5000); }, 3000);
             localStorage.setItem('chat_app_backup_reminder', now.toString());
         }
     }).catch(function(e) { console.error('启动失败:', e); });
@@ -454,10 +493,7 @@ function setThemeLight() { appData.theme = 'light'; applyTheme(); saveData(); cl
 function setThemeDark() { appData.theme = 'dark'; applyTheme(); saveData(); closeModal('subOverlay'); showToast('已切换为深色模式'); }
 function openThemeModal() {
     closeModal('settingsOverlay');
-    var html = '<h4>主题模式</h4><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">';
-    html += '<button class="btn-sm ' + (appData.theme === 'light' ? '' : 'outline') + '" onclick="setThemeLight()">浅色</button>';
-    html += '<button class="btn-sm ' + (appData.theme === 'dark' ? '' : 'outline') + '" onclick="setThemeDark()">深色</button>';
-    html += '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
+    var html = '<h4>主题模式</h4><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;"><button class="btn-sm ' + (appData.theme === 'light' ? '' : 'outline') + '" onclick="setThemeLight()">浅色</button><button class="btn-sm ' + (appData.theme === 'dark' ? '' : 'outline') + '" onclick="setThemeDark()">深色</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
     openSubModal(html);
 }
 
@@ -468,10 +504,7 @@ function updateLetterBadge() {
         if (l.replied && !l.replyShown) pending++;
         if (!l.replied && l.expectedReplyTime <= Date.now()) pending++;
     });
-    if (badge) {
-        badge.style.display = pending > 0 ? 'inline-block' : 'none';
-        badge.textContent = pending + ' 封回信';
-    }
+    if (badge) { badge.style.display = pending > 0 ? 'inline-block' : 'none'; badge.textContent = pending + ' 封回信'; }
 }
 function checkPendingLetters() {
     var hasNew = false;
@@ -509,11 +542,7 @@ function sendLetter() {
     if (!content) return showToast('请写下信件内容');
     var delay = 12*60*60*1000 + Math.random() * 24*60*60*1000;
     var expectedTime = Date.now() + delay;
-    appData.letters.push({
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2,6),
-        sentContent: content, sentTime: Date.now(),
-        expectedReplyTime: expectedTime, replyContent: '', replied: false, replyShown: false
-    });
+    appData.letters.push({ id: Date.now().toString(36) + Math.random().toString(36).substr(2,6), sentContent: content, sentTime: Date.now(), expectedReplyTime: expectedTime, replyContent: '', replied: false, replyShown: false });
     saveData(); closeModal('letterOverlay');
     showToastLong('信件已寄出！\n预计 ' + formatTime(expectedTime) + ' 左右收到回信', 5000);
     updateLetterBadge();
@@ -528,9 +557,8 @@ function openLetterModal() {
 function openLetterManageModal() {
     closeModal('settingsOverlay');
     var lettersHtml = '';
-    if (!appData.letters.length) {
-        lettersHtml = '<div style="text-align:center;color:var(--text-system);padding:20px;">还没有往来信件</div>';
-    } else {
+    if (!appData.letters.length) { lettersHtml = '<div style="text-align:center;color:var(--text-system);padding:20px;">还没有往来信件</div>'; }
+    else {
         for (var i = appData.letters.length - 1; i >= 0; i--) {
             var l = appData.letters[i];
             var statusBadge = l.replied ? (l.replyShown ? '已送达' : '回信待取') : (l.expectedReplyTime > Date.now() ? '等待回信' : '回信已到');
@@ -562,10 +590,7 @@ function getAvatarHTMLSync(isMe) {
 }
 function showAvatarChanger(target) {
     var title = target === 'me' ? '更换我的头像' : '更换对方头像';
-    var html = '<h4>' + title + '</h4><div class="subtitle">选择一种方式</div><div class="photo-menu-btns">';
-    html += '<button onclick="startAvatarCapture(\'' + target + '\', true)">拍照</button>';
-    html += '<button onclick="startAvatarCapture(\'' + target + '\', false)">从相册选择</button>';
-    html += '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')">取消</button>';
+    var html = '<h4>' + title + '</h4><div class="subtitle">选择一种方式</div><div class="photo-menu-btns"><button onclick="startAvatarCapture(\'' + target + '\', true)">拍照</button><button onclick="startAvatarCapture(\'' + target + '\', false)">从相册选择</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">取消</button>';
     openSubModal(html);
 }
 function startAvatarCapture(target, useCamera) {
@@ -586,9 +611,7 @@ function startAvatarCapture(target, useCamera) {
                 }
                 return saveData();
             });
-        }).then(function() { return renderChatHistory(); })
-        .then(function() { showToast((target === 'me' ? '我的' : '对方') + '头像已更新'); })
-        .catch(function() { showToast('头像保存失败'); });
+        }).then(function() { return renderChatHistory(); }).then(function() { showToast((target === 'me' ? '我的' : '对方') + '头像已更新'); }).catch(function() { showToast('头像保存失败'); });
     };
     input.click();
 }
@@ -596,12 +619,7 @@ function onOtherAvatarClick() { showAvatarChanger('other'); }
 function onMyAvatarClick() { showAvatarChanger('me'); }
 function openNicknameModal() {
     closeModal('settingsOverlay');
-    var html = '<h4>昵称 头像</h4>';
-    html += '<div class="form-row"><label>我的昵称</label><input type="text" id="editMyName" value="' + appData.myName.replace(/"/g,'&quot;') + '"></div>';
-    html += '<div class="btn-row"><button class="btn-sm" onclick="saveMyNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'me\')">换我的头像</button></div>';
-    html += '<div class="form-row" style="margin-top:12px;"><label>对方昵称</label><input type="text" id="editOtherName" value="' + appData.otherName.replace(/"/g,'&quot;') + '"></div>';
-    html += '<div class="btn-row"><button class="btn-sm" onclick="saveOtherNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'other\')">换对方头像</button></div>';
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>';
+    var html = '<h4>昵称 头像</h4><div class="form-row"><label>我的昵称</label><input type="text" id="editMyName" value="' + appData.myName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveMyNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'me\')">换我的头像</button></div><div class="form-row" style="margin-top:12px;"><label>对方昵称</label><input type="text" id="editOtherName" value="' + appData.otherName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveOtherNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'other\')">换对方头像</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>';
     openSubModal(html);
 }
 function saveMyNameFromModal() {
@@ -641,14 +659,13 @@ function handlePhotoFile(file) {
 }
 function checkStorageAfterUpload() {
     getStorageStats().then(function(stats) {
-        if (stats.usagePercent > 85) {
-            showToastLong('存储已使用 ' + stats.usagePercent + '%\n建议到数据管理清理聊天记录', 5000);
-        }
+        if (stats.usagePercent > 85) { showToastLong('存储已使用 ' + stats.usagePercent + '%\n建议到数据管理清理聊天记录', 5000); }
     });
 }
 
 // ========== 聊天 ==========
 function triggerAutoReply() {
+    if (!autoReplyEnabled) return;
     var replyCount = Math.floor(Math.random() * 3) + 1;
     function sendNext(index) {
         if (index >= replyCount) return;
@@ -673,9 +690,7 @@ function triggerAutoReply() {
                     }
                     if (sent !== false) sendNext(index + 1);
                 });
-            } else {
-                sendNext(index + 1);
-            }
+            } else { sendNext(index + 1); }
         }, 500 + Math.random() * 800);
     }
     sendNext(0);
@@ -714,9 +729,7 @@ function sendRandomReply() {
         var content = selectedReplies.join(' ');
         var shouldQuote = Math.random() < 0.3;
         var quoteMsg = null;
-        if (shouldQuote) {
-            quoteMsg = getRandomHistoryMessage();
-        }
+        if (shouldQuote) { quoteMsg = getRandomHistoryMessage(); }
         if (quoteMsg) {
             addMessageWithQuote(content, 'other', quoteMsg);
             appData.chatHistory.push({ type: 'other', content: content, time: Date.now(), quote: quoteMsg });
@@ -740,21 +753,12 @@ function sendRandomReply() {
 function getRandomHistoryMessage() {
     var history = appData.chatHistory || [];
     var textMessages = history.filter(function(msg) {
-        return (msg.type === 'me' || msg.type === 'other') && 
-               msg.content && 
-               typeof msg.content === 'string' &&
-               msg.content.length > 0 &&
-               msg.content.indexOf('<img') === -1;
+        return (msg.type === 'me' || msg.type === 'other') && msg.content && typeof msg.content === 'string' && msg.content.length > 0 && msg.content.indexOf('<img') === -1;
     });
     if (textMessages.length === 0) return null;
     var randomIndex = Math.floor(Math.random() * textMessages.length);
     var msg = textMessages[randomIndex];
-    return {
-        content: msg.content,
-        type: msg.type,
-        time: msg.time,
-        isImage: false
-    };
+    return { content: msg.content, type: msg.type, time: msg.time, isImage: false };
 }
 function sendMsg() {
     var input = document.getElementById('msgInput'); 
@@ -776,9 +780,7 @@ function sendMsg() {
         if (typeof sendWheelInvite === 'function') sendWheelInvite();
         return;
     }
-    setTimeout(function() { 
-        if (typeof triggerAutoReply === 'function') triggerAutoReply(); 
-    }, 400 + Math.random() * 1000);
+    setTimeout(function() { if (typeof triggerAutoReply === 'function') triggerAutoReply(); }, 400 + Math.random() * 1000);
 }
 function addMessage(content, type, isImage, isSticker) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
@@ -792,8 +794,6 @@ function addMessage(content, type, isImage, isSticker) {
     }
     bindQuoteEvent(div, { content: content, type: type, time: Date.now(), isImage: isImage });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
-    
-    // 如果是对方发来的消息且页面不可见，发送通知
     if (type === 'other' && document.hidden && typeof sendNotification === 'function') {
         var msgText = isImage ? '[图片消息]' : (content.length > 50 ? content.substring(0, 50) + '...' : content);
         sendNotification(appData.otherName, msgText, window.location.href);
@@ -880,8 +880,7 @@ function renderChatHistory() {
                 cardHTML += '<div class="transfer-label">' + (m.type === 'transfer_me' ? '向 ' + appData.otherName + ' 转账' : appData.otherName + ' 向你转账') + '</div>';
                 cardHTML += '<div class="transfer-amount">¥ ' + m.amount + '</div>';
                 if (m.note) cardHTML += '<div class="transfer-note">' + escapeHTML(m.note) + '</div>';
-                cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div>';
-                cardHTML += '</div>';
+                cardHTML += '<div class="transfer-status">' + (m.type === 'transfer_me' ? '已转账' : '已收款') + '</div></div>';
                 d.innerHTML = '<div class="avatar-wrap" ' + handler + '>' + av + '</div><div class="bubble">' + cardHTML + '<span class="msg-time">' + formatTimeShort(m.time) + '</span></div>';
                 chat.appendChild(d); resolve();
             } else if (m.type === 'system') {
@@ -982,16 +981,9 @@ function openEmojiManageModal() {
     renderEmojiManageGrid();
 }
 function renderEmojiManageGrid() {
-    var grid = document.getElementById('emojiManageGrid'); 
-    if (!grid) return;
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
-    grid.style.gap = '12px';
-    grid.style.padding = '8px';
-    if (!appData.emojiIds.length) { 
-        grid.innerHTML = '<div style="text-align:center;color:var(--text-system);grid-column:1/-1;padding:20px;">暂无表情包</div>'; 
-        return; 
-    }
+    var grid = document.getElementById('emojiManageGrid'); if (!grid) return;
+    grid.style.display = 'grid'; grid.style.gridTemplateColumns = 'repeat(3, 1fr)'; grid.style.gap = '12px'; grid.style.padding = '8px';
+    if (!appData.emojiIds.length) { grid.innerHTML = '<div style="text-align:center;color:var(--text-system);grid-column:1/-1;padding:20px;">暂无表情包</div>'; return; }
     grid.innerHTML = '';
     appData.emojiIds.forEach(function(id, idx) {
         getImageFromDB('images', id).then(function(url) {
@@ -1057,15 +1049,8 @@ function showToastLong(msg, duration) {
 
 // ========== 事件监听 ==========
 document.addEventListener('click', function(e) {
-    if (e.target.id === 'forumDetailOverlay') { 
-        e.stopPropagation(); 
-        if (typeof closeTopicDetail === 'function') closeTopicDetail(); 
-        return; 
-    }
-    if (e.target.id === 'forumOverlay') { 
-        if (typeof closeForum === 'function') closeForum(); 
-        return; 
-    }
+    if (e.target.id === 'forumDetailOverlay') { e.stopPropagation(); if (typeof closeTopicDetail === 'function') closeTopicDetail(); return; }
+    if (e.target.id === 'forumOverlay') { if (typeof closeForum === 'function') closeForum(); return; }
     if (e.target.id === 'settingsOverlay') closeModal('settingsOverlay');
     if (e.target.id === 'subOverlay') closeModal('subOverlay');
     if (e.target.id === 'photoOverlay') closeModal('photoOverlay');
@@ -1090,37 +1075,18 @@ function vdAddMessage(content, type) {
 // ========== 转盘邀请功能 ==========
 function sendWheelInvite() {
     var inviteId = 'wheel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    var inviteHtml = '<div class="wheel-invite" data-invite-id="' + inviteId + '" style="background:var(--item-bg);border-radius:12px;padding:12px;text-align:center;cursor:pointer;" onclick="acceptWheelInvite(this)">' +
-        '<div style="font-size:28px;margin-bottom:8px;"></div>' +
-        '<div style="font-weight:bold;margin-bottom:4px;">转盘邀请</div>' +
-        '<div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">' + appData.otherName + ' 邀请你转动幸福转盘</div>' +
-        '<div style="display:inline-block;background:var(--accent);color:white;padding:6px 16px;border-radius:20px;font-size:13px;">点击转一次</div>' +
-        '</div>';
+    var inviteHtml = '<div class="wheel-invite" data-invite-id="' + inviteId + '" style="background:var(--item-bg);border-radius:12px;padding:12px;text-align:center;cursor:pointer;" onclick="acceptWheelInvite(this)"><div style="font-size:28px;margin-bottom:8px;"></div><div style="font-weight:bold;margin-bottom:4px;">转盘邀请</div><div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">' + appData.otherName + ' 邀请你转动幸福转盘</div><div style="display:inline-block;background:var(--accent);color:white;padding:6px 16px;border-radius:20px;font-size:13px;">点击转一次</div></div>';
     addMessage(inviteHtml, 'other', false, false);
-    appData.chatHistory.push({ 
-        type: 'other', 
-        content: inviteHtml, 
-        time: Date.now(), 
-        isWheelInvite: true, 
-        inviteId: inviteId,
-        inviteStatus: 'pending'
-    });
+    appData.chatHistory.push({ type: 'other', content: inviteHtml, time: Date.now(), isWheelInvite: true, inviteId: inviteId, inviteStatus: 'pending' });
     saveData();
 }
 function acceptWheelInvite(element) {
     var inviteDiv = element;
-    while (inviteDiv && !inviteDiv.classList.contains('wheel-invite')) {
-        inviteDiv = inviteDiv.parentElement;
-    }
+    while (inviteDiv && !inviteDiv.classList.contains('wheel-invite')) { inviteDiv = inviteDiv.parentElement; }
     if (!inviteDiv) return;
     var inviteId = inviteDiv.getAttribute('data-invite-id');
-    var inviteMsg = appData.chatHistory.find(function(m) {
-        return m.isWheelInvite && m.inviteId === inviteId && m.inviteStatus === 'used';
-    });
-    if (inviteMsg) {
-        showToast('这个转盘已经转过啦');
-        return;
-    }
+    var inviteMsg = appData.chatHistory.find(function(m) { return m.isWheelInvite && m.inviteId === inviteId && m.inviteStatus === 'used'; });
+    if (inviteMsg) { showToast('这个转盘已经转过啦'); return; }
     for (var i = 0; i < appData.chatHistory.length; i++) {
         if (appData.chatHistory[i].isWheelInvite && appData.chatHistory[i].inviteId === inviteId) {
             appData.chatHistory[i].inviteStatus = 'used';
@@ -1129,74 +1095,42 @@ function acceptWheelInvite(element) {
     }
     saveData();
     var originalContent = inviteDiv.innerHTML;
-    inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;">' +
-        '<div style="font-size:24px;margin-bottom:8px;"></div>' +
-        '<div style="font-size:12px;">正在转动...</div>' +
-        '</div>';
+    inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;"><div style="font-size:24px;margin-bottom:8px;"></div><div style="font-size:12px;">正在转动...</div></div>';
     inviteDiv.style.cursor = 'default';
     inviteDiv.onclick = null;
     setTimeout(function() {
         var items = appData.wheelItems || [];
-        if (items.length === 0) {
-            inviteDiv.innerHTML = originalContent;
-            showToast('转盘词库为空，请先添加');
-            return;
-        }
+        if (items.length === 0) { inviteDiv.innerHTML = originalContent; showToast('转盘词库为空，请先添加'); return; }
         var randomIndex = Math.floor(Math.random() * items.length);
         var result = items[randomIndex];
         appData.wheelHistory.push({ item: result, time: Date.now(), source: 'invite' });
         if (appData.wheelHistory.length > 50) appData.wheelHistory.shift();
         saveData();
-        inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;">' +
-            '<div style="font-size:28px;margin-bottom:8px;"></div>' +
-            '<div style="font-weight:bold;margin-bottom:4px;">转盘结果</div>' +
-            '<div style="font-size:14px;color:var(--accent);margin-bottom:4px;">' + result + '</div>' +
-            '<div style="font-size:11px;color:var(--text-system);">已存入历史记录</div>' +
-            '</div>';
+        inviteDiv.innerHTML = '<div style="text-align:center;padding:12px;"><div style="font-size:28px;margin-bottom:8px;"></div><div style="font-weight:bold;margin-bottom:4px;">转盘结果</div><div style="font-size:14px;color:var(--accent);margin-bottom:4px;">' + result + '</div><div style="font-size:11px;color:var(--text-system);">已存入历史记录</div></div>';
         addMessage(' 转盘结果：' + result, 'other', false, false);
         appData.chatHistory.push({ type: 'other', content: ' 转盘结果：' + result, time: Date.now() });
         saveData();
         showToast('转到了：' + result);
     }, 800);
 }
-function sendWheelInviteManually() {
-    sendWheelInvite();
-}
+function sendWheelInviteManually() { sendWheelInvite(); }
 
 // ========== 打开设置 ==========
-function openSettings() { 
-    openModal('settingsOverlay'); 
-}
+function openSettings() { openModal('settingsOverlay'); }
+function openSubModal(html) { document.getElementById('subModal').innerHTML = html; openModal('subOverlay'); }
 
-function openSubModal(html) { 
-    document.getElementById('subModal').innerHTML = html; 
-    openModal('subOverlay'); 
-}
-// ==================== 对方主动发消息 ====================
+// ========== 对方主动发消息 ==========
 function otherSendMessage() {
     var allReplies = getAllReplies();
-    
-    if (allReplies.length === 0) {
-        showToast('还没有设置回复词库，请先去设置中添加');
-        return;
-    }
-    
-    // 随机选择一条回复
+    if (allReplies.length === 0) { showToast('还没有设置回复词库，请先去设置中添加'); return; }
     var randomIndex = Math.floor(Math.random() * allReplies.length);
     var msg = allReplies[randomIndex];
-    
-    // 对方发送消息
     addMessage(msg, 'other', false);
     appData.chatHistory.push({ type: 'other', content: msg, time: Date.now() });
     saveData();
-    
-    // 滚动到底部
     var chat = document.getElementById('chat');
     if (chat) chat.scrollTop = chat.scrollHeight;
-    
     showToast(appData.otherName + ' 发来消息');
-    
-    // 如果页面不可见，发送通知
     if (document.hidden && typeof sendNotification === 'function') {
         var msgText = msg.length > 50 ? msg.substring(0, 50) + '...' : msg;
         sendNotification(appData.otherName, msgText, window.location.href);
@@ -1207,12 +1141,6 @@ function otherSendMessage() {
 initApp().then(function() {
     console.log('甜心助手启动成功！');
     if (appData.playlist && appData.playlist.length > 0) {
-        setTimeout(function() {
-            if (typeof showFloatingBall === 'function') {
-                showFloatingBall();
-            }
-        }, 1000);
+        setTimeout(function() { if (typeof showFloatingBall === 'function') { showFloatingBall(); } }, 1000);
     }
-}).catch(function(e) {
-    console.error('启动失败:', e);
-});
+}).catch(function(e) { console.error('启动失败:', e); });
