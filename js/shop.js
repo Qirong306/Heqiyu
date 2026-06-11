@@ -263,6 +263,11 @@ function sendPurchaseMessage(item, buyer) {
     }
     showToast(buyerName + ' 购买了 ' + item.name);
     saveData();
+    
+    // 如果是对方购买且页面不可见，发送通知
+    if (buyer === 'other' && document.hidden && typeof sendNotification === 'function') {
+        sendNotification('购物通知', buyerName + ' 购买了 ' + item.name, window.location.href);
+    }
 }
 
 function addPurchaseCard(item, buyer) {
