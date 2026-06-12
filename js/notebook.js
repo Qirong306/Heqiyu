@@ -547,7 +547,7 @@ function importTemplates() {
 // 对方随机发布日常
 function otherRandomAddEntry() {
     if (notebookData.myTemplates.length === 0) return;
-    if (Math.random() > 0.01) return;
+    if (Math.random() > 0.3) return;
     
     var randomIndex = Math.floor(Math.random() * notebookData.myTemplates.length);
     var content = notebookData.myTemplates[randomIndex];
