@@ -8,7 +8,6 @@ var MAX_STORAGE_MB = 50;
 var saveTimer = null;
 var saveDebounceMs = 500;
 var quotedMessage = null;
-var autoReplyEnabled = true;
 
 // ========== IndexedDB ==========
 function openDB() {
@@ -413,43 +412,89 @@ function loadColorTheme() {
     if (savedTheme && colorThemes[savedTheme]) { applyColorTheme(savedTheme); }
 }
 
-// ========== 自动回复开关 ==========
-function loadAutoReplySetting() {
-    var saved = localStorage.getItem('auto_reply_enabled');
-    autoReplyEnabled = saved !== null ? saved === 'true' : true;
+// ========== 回复开关（控制对方是否回复你） ==========
+var replyEnabled = true;
+
+function loadReplySetting() {
+    var saved = localStorage.getItem('reply_enabled');
+    replyEnabled = saved !== null ? saved === 'true' : true;
 }
 
-function saveAutoReplySetting() {
-    localStorage.setItem('auto_reply_enabled', autoReplyEnabled);
+function saveReplySetting() {
+    localStorage.setItem('reply_enabled', replyEnabled);
 }
 
-function openAutoReplySwitchModal() {
+function openReplySwitchModal() {
     closeModal('settingsOverlay');
-    var isChecked = autoReplyEnabled ? 'checked' : '';
-    var html = '<div style="text-align:center;"><h4>自动回复开关</h4><div class="subtitle">关闭后对方不会自动回复消息</div><div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:12px 16px;border-radius:12px;margin:16px 0;"><span style="font-size:15px;">对方自动回复</span><label style="position:relative;display:inline-block;width:50px;height:26px;"><input type="checkbox" id="autoReplySwitch" ' + isChecked + ' onchange="toggleAutoReply(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:0.3s;border-radius:26px;"></span><span style="position:absolute;content:"";height:22px;width:22px;left:2px;bottom:2px;background-color:white;transition:0.3s;border-radius:50%;"></span></label></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button></div>';
+    var isChecked = replyEnabled ? 'checked' : '';
+    var html = '<div style="text-align:center;"><h4>回复开关</h4><div class="subtitle">关闭后对方不会回复你的消息</div><div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:12px 16px;border-radius:12px;margin:16px 0;"><span style="font-size:15px;">对方回复</span><label style="position:relative;display:inline-block;width:50px;height:26px;"><input type="checkbox" id="replySwitch" ' + isChecked + ' onchange="toggleReply(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:0.3s;border-radius:26px;"></span><span style="position:absolute;content:"";height:22px;width:22px;left:2px;bottom:2px;background-color:white;transition:0.3s;border-radius:50%;"></span></label></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button></div>';
     openSubModal(html);
     setTimeout(function() {
-        var btn = document.querySelector('#subModal label');
-        if (btn && autoReplyEnabled) {
-            var bgSpan = btn.querySelector('span');
-            var circleSpan = btn.querySelector('span + span');
-            if (bgSpan) bgSpan.style.backgroundColor = 'var(--accent)';
-            if (circleSpan) circleSpan.style.transform = 'translateX(24px)';
+        var cb = document.getElementById('replySwitch');
+        if (cb && replyEnabled) {
+            var spans = document.querySelectorAll('#subModal label span');
+            if (spans[0]) spans[0].style.backgroundColor = 'var(--accent)';
+            if (spans[1]) spans[1].style.transform = 'translateX(24px)';
         }
     }, 50);
 }
 
-function toggleAutoReply(enabled) {
-    autoReplyEnabled = enabled;
-    saveAutoReplySetting();
-    var btn = document.querySelector('#subModal label');
-    if (btn) {
-        var bgSpan = btn.querySelector('span');
-        var circleSpan = btn.querySelector('span + span');
-        if (bgSpan) bgSpan.style.backgroundColor = enabled ? 'var(--accent)' : '#ccc';
-        if (circleSpan) circleSpan.style.transform = enabled ? 'translateX(24px)' : 'translateX(0)';
-    }
-    showToast(enabled ? '已开启自动回复' : '已关闭自动回复');
+function toggleReply(enabled) {
+    replyEnabled = enabled;
+    saveReplySetting();
+    var spans = document.querySelectorAll('#subModal label span');
+    if (spans[0]) spans[0].style.backgroundColor = enabled ? 'var(--accent)' : '#ccc';
+    if (spans[1]) spans[1].style.transform = enabled ? 'translateX(24px)' : 'translateX(0)';
+    showToast(enabled ? '已开启回复' : '已关闭回复');
+}
+
+// ========== 主动发消息开关（控制对方是否定时主动找你） ==========
+var activeMsgEnabled = true;
+var activeMsgInterval = null;
+
+function loadActiveMsgSetting() {
+    var saved = localStorage.getItem('active_msg_enabled');
+    activeMsgEnabled = saved !== null ? saved === 'true' : true;
+}
+
+function saveActiveMsgSetting() {
+    localStorage.setItem('active_msg_enabled', activeMsgEnabled);
+}
+
+function openActiveMsgSwitchModal() {
+    closeModal('settingsOverlay');
+    var isChecked = activeMsgEnabled ? 'checked' : '';
+    var html = '<div style="text-align:center;"><h4>主动发消息开关</h4><div class="subtitle">开启后对方会主动找你聊天</div><div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:12px 16px;border-radius:12px;margin:16px 0;"><span style="font-size:15px;">对方主动发消息</span><label style="position:relative;display:inline-block;width:50px;height:26px;"><input type="checkbox" id="activeMsgSwitch" ' + isChecked + ' onchange="toggleActiveMsg(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:0.3s;border-radius:26px;"></span><span style="position:absolute;content:"";height:22px;width:22px;left:2px;bottom:2px;background-color:white;transition:0.3s;border-radius:50%;"></span></label></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button></div>';
+    openSubModal(html);
+    setTimeout(function() {
+        var cb = document.getElementById('activeMsgSwitch');
+        if (cb && activeMsgEnabled) {
+            var spans = document.querySelectorAll('#subModal label span');
+            if (spans[0]) spans[0].style.backgroundColor = 'var(--accent)';
+            if (spans[1]) spans[1].style.transform = 'translateX(24px)';
+        }
+    }, 50);
+}
+
+function toggleActiveMsg(enabled) {
+    activeMsgEnabled = enabled;
+    saveActiveMsgSetting();
+    var spans = document.querySelectorAll('#subModal label span');
+    if (spans[0]) spans[0].style.backgroundColor = enabled ? 'var(--accent)' : '#ccc';
+    if (spans[1]) spans[1].style.transform = enabled ? 'translateX(24px)' : 'translateX(0)';
+    showToast(enabled ? '已开启主动发消息' : '已关闭主动发消息');
+}
+
+// 启动对方主动发消息定时器
+function startActiveMsgTimer() {
+    if (activeMsgInterval) clearInterval(activeMsgInterval);
+    var interval = 120000 + Math.random() * 180000;
+    activeMsgInterval = setInterval(function() {
+        if (!activeMsgEnabled) return;
+        if (typeof otherSendMessage === 'function') {
+            otherSendMessage();
+        }
+    }, interval);
 }
 
 // ========== 初始化 ==========
@@ -468,7 +513,9 @@ function initApp() {
         closeModal('photoOverlay'); closeModal('letterOverlay');
         document.getElementById('morePanel').style.display = 'none';
         loadColorTheme();
-        loadAutoReplySetting();
+        loadReplySetting();
+        loadActiveMsgSetting();
+        startActiveMsgTimer();
         return autoCleanOrphanImages();
     }).then(function(cleaned) {
         if (cleaned > 0) console.log('自动清理了 ' + cleaned + ' 个孤儿图片');
@@ -671,7 +718,7 @@ function checkStorageAfterUpload() {
 
 // ========== 聊天 ==========
 function triggerAutoReply() {
-    if (!autoReplyEnabled) return;
+    if (!replyEnabled) return;
     var replyCount = Math.floor(Math.random() * 3) + 1;
     function sendNext(index) {
         if (index >= replyCount) return;
