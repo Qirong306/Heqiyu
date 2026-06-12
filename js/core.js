@@ -481,55 +481,6 @@ function startActiveMsgTimer() {
     }, interval);
 }
 
-// ========== 主动发消息开关（控制对方是否定时主动找你） ==========
-var activeMsgEnabled = true;
-var activeMsgInterval = null;
-
-function loadActiveMsgSetting() {
-    var saved = localStorage.getItem('active_msg_enabled');
-    activeMsgEnabled = saved !== null ? saved === 'true' : true;
-}
-
-function saveActiveMsgSetting() {
-    localStorage.setItem('active_msg_enabled', activeMsgEnabled);
-}
-
-function openActiveMsgSwitchModal() {
-    closeModal('settingsOverlay');
-    var isChecked = activeMsgEnabled ? 'checked' : '';
-    var html = '<div style="text-align:center;"><h4>主动发消息开关</h4><div class="subtitle">开启后对方会主动找你聊天</div><div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:12px 16px;border-radius:12px;margin:16px 0;"><span style="font-size:15px;">对方主动发消息</span><label style="position:relative;display:inline-block;width:50px;height:26px;"><input type="checkbox" id="activeMsgSwitch" ' + isChecked + ' onchange="toggleActiveMsg(this.checked)" style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:0.3s;border-radius:26px;"></span><span style="position:absolute;content:"";height:22px;width:22px;left:2px;bottom:2px;background-color:white;transition:0.3s;border-radius:50%;"></span></label></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button></div>';
-    openSubModal(html);
-    setTimeout(function() {
-        var cb = document.getElementById('activeMsgSwitch');
-        if (cb && activeMsgEnabled) {
-            var spans = document.querySelectorAll('#subModal label span');
-            if (spans[0]) spans[0].style.backgroundColor = 'var(--accent)';
-            if (spans[1]) spans[1].style.transform = 'translateX(24px)';
-        }
-    }, 50);
-}
-
-function toggleActiveMsg(enabled) {
-    activeMsgEnabled = enabled;
-    saveActiveMsgSetting();
-    var spans = document.querySelectorAll('#subModal label span');
-    if (spans[0]) spans[0].style.backgroundColor = enabled ? 'var(--accent)' : '#ccc';
-    if (spans[1]) spans[1].style.transform = enabled ? 'translateX(24px)' : 'translateX(0)';
-    showToast(enabled ? '已开启主动发消息' : '已关闭主动发消息');
-}
-
-// 启动对方主动发消息定时器
-function startActiveMsgTimer() {
-    if (activeMsgInterval) clearInterval(activeMsgInterval);
-    var interval = 120000 + Math.random() * 180000;
-    activeMsgInterval = setInterval(function() {
-        if (!activeMsgEnabled) return;
-        if (typeof otherSendMessage === 'function') {
-            otherSendMessage();
-        }
-    }, interval);
-}
-
 // ========== 初始化 ==========
 function initApp() {
     return loadData().then(function() {
@@ -546,7 +497,7 @@ function initApp() {
         closeModal('photoOverlay'); closeModal('letterOverlay');
         document.getElementById('morePanel').style.display = 'none';
         loadColorTheme();
-        loadReplySetting();
+        loadReplySettings();
         startActiveMsgTimer();
         return autoCleanOrphanImages();
     }).then(function(cleaned) {
