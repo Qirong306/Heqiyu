@@ -18,8 +18,9 @@ function loadNotebookData() {
         } catch(e) { console.error('加载记事本失败:', e); }
     }
     if (notebookData.myTemplates.length === 0) {
-        // 内置80个词条模板
+        // 原有80个词条 + 新增40条情侣互动词
         notebookData.myTemplates = [
+            // 原有词条（保留）
             "今天心情很好", "今天有点累", "今天很开心", "今天有点难过", "今天很充实",
             "今天很无聊", "今天很兴奋", "今天很平静", "今天很感动", "今天很期待",
             "今天工作效率很高", "今天加班了", "今天学到了新东西", "今天完成了任务", "今天被表扬了",
@@ -35,7 +36,110 @@ function loadNotebookData() {
             "今天天气很好", "今天下雨了", "今天出太阳了", "今天很热", "今天很冷",
             "今天刮风了", "今天下雪了", "今天阴天", "今天彩虹出现了", "今天晚霞很美",
             "今天摸鱼了", "今天发呆了", "今天打游戏赢了", "今天追剧了", "今天睡懒觉了",
-            "今天犯困了", "今天笑了很久", "今天很可爱", "今天被夸了", "今天运气很好"
+            "今天犯困了", "今天笑了很久", "今天很可爱", "今天被夸了", "今天运气很好",
+            // ========== 新增：情侣互动词库（40条）==========
+            // 一起做的事
+            "我们一起吃了火锅", "我们一起看了电影", "我们一起散了步", "我们一起喝了奶茶", 
+            "我们一起做了饭", "我们一起逛了超市", "我们一起晒太阳", "我们一起听了歌", 
+            "我们一起打了游戏", "我们一起发了呆",
+            // 甜言蜜语
+            "你刚才那句话好甜", "你笑起来真好看", "我喜欢听你说话", "你让我今天很开心", 
+            "你抱一下就好了", "你摸摸我的头好不好", "你今天特别可爱", "我又想你了", 
+            "你在身边真好", "你是我今天的动力",
+            // 早晚安
+            "早安，今天也要开心", "晚安，梦里见", "早点睡，不许熬夜", "醒来第一个想到你", 
+            "今天也梦到你了", "睡醒记得想我",
+            // 撒娇/情绪
+            "我今天有一点点不开心", "想被你夸一下", "你理理我嘛", "我刚刚笑出声了", 
+            "我今天有一点累", "我好无聊，你在干嘛", "今天有没有想我", "我想粘着你",
+            // 关心/互动邀请
+            "记得喝水", "别太累了", "按时吃饭了吗", "今天也要好好休息", 
+            "你开心我就开心", "来陪我聊聊天",
+            // ========== 长句子·安慰/情绪照顾 ==========
+"不用硬撑，累了就靠着我，我扛得住你",
+"你不需要永远积极，偶尔丧气也没关系，我照样喜欢你",
+"今天要是受了委屈，回来我帮你骂回去",
+"你所有的情绪波动，我都接得住，放心发泄",
+"不需要强颜欢笑，在我这里你可以做真实的自己",
+"不开心就不开心，我陪你一起不开心，然后再一起开心起来",
+"你哭也好闹也好，我都在旁边陪着，不会走",
+"别把自己绷太紧，你已经做得很好了，够够的",
+
+// ========== 长句子·日常关怀 ==========
+"今天降温了，外套穿厚一点，别着凉",
+"出门前记得带伞，我看天气预报说要下雨",
+"冰箱里有水果，记得吃，再不吃就坏了",
+"你昨晚是不是又熬夜了，黑眼圈都出来了",
+"我给你点了外卖，大概半小时到，趁热吃",
+"枕头底下给你塞了暖宝宝，手冷的时候捂一下",
+"你今天走路步数还没达标，快起来溜达两圈",
+
+// ========== 长句子·睡前晚安 ==========
+"晚安，不许偷偷看手机了，我看着你呢",
+"关灯了，被子盖好，梦里记得想我",
+"今天辛苦了，好好睡一觉，明天又是新的一天",
+"你先睡，我再看你一会儿就去睡",
+"睡吧，所有的烦恼今晚都归我管，明天再还给你",
+"闭上眼睛，我数三下，你就睡着了，一、二、三，晚安",
+
+// ========== 长句子·恋爱表白 ==========
+"你是我一天中最期待的那条消息",
+"跟你在一起，连发发呆都觉得有意思",
+"别人再好都没用，你在我这里就是满分",
+"我好像比昨天更喜欢你了，这不科学",
+"你不在的时候，我连手机都不想看，就等你出现",
+"你不用做什么特别的事，站在那里我就心动了",
+"你大概不知道，你随便一句关心我能开心一整天",
+
+// ========== 长句子·鼓励打气 ==========
+"慢慢来，不着急，我会一直等你",
+"你比你自己想象的要厉害得多，相信我",
+"做不好也没关系，下次再来，我陪你练",
+"不用跟别人比，你今天的自己比昨天进步了就行",
+"你只管往前冲，剩下的交给我来兜底",
+
+// ========== 长句子·撒娇粘人 ==========
+"我在你手机里装了监控，发现你今天没怎么想我",
+"你不理我的时候，我就假装你很忙，其实我在偷偷委屈",
+"今天我有一点点想你，不对，是很大一点点",
+"你能不能主动找我一下，每次都我先找你，我不要面子吗",
+
+// ========== 长句子·随性浪漫 ==========
+"今天天气很好，适合想你，也适合被你想起",
+"不用说话，就这样待着，我就觉得很舒服",
+"你听，外面下雨了，刚好有借口不出门，陪你聊天",
+// ========== 长句子·关心/陪伴（30条）==========
+"下班路上车多，慢慢开，不用赶时间",
+"要是工作压力大了，随时跟我吐槽，我一直听着",
+"中午别光啃外卖，记得多吃点有营养的",
+"文件处理不完就留到明天，身体熬坏了得不偿失",
+"等你忙完这周，咱们挑个周末好好出去放松一下",
+"在公司受了气不用憋着，回家尽管冲我撒脾气",
+"记得多起身走动走动，别一整天钉在工位上",
+"不管今天业绩如何，你在我这里永远值得被偏爱",
+"就算工作再繁琐，也别忘了照顾好自己的情绪",
+"我已经提前备好夜宵，就等我的太太回家了",
+"不用事事追求完美，在我这里，你怎样都很好",
+"职场上该争取的大胆争取，我做你最硬的底气",
+"要是觉得累了，就给自己放个小假，我全力支持",
+"哪怕每天只有一小会儿空闲，我也等着跟你聊聊天，嗯，望妻石是这样的",
+"今天辛苦了，给你留了一盏灯，热汤在锅里",
+"不用急着回复我，你先忙，忙完记得想我就行",
+"你认真工作的样子很帅，但累倒的样子我会心疼",
+"不管多晚，我都等你回家了再睡",
+"你不需要总是那么坚强，在我面前可以随便哭随便笑",
+"今天有没有被人欺负？有的话我去找他理论",
+"你开心的时候我陪你笑，你难过的时候我肩膀借你",
+"不用把所有压力都扛在自己身上，分我一半",
+"你值得被温柔对待，尤其是被你自己",
+"累了就停下来，我陪你一起摆烂也行",
+"你不用成为谁的超人，做我的小朋友就够了",
+"今天也很喜欢你，明天也是，后天也是",
+"你的碎碎念我全部都爱听，一句都不会觉得烦",
+"你不需要完美，你只需要是你自己",
+"不管世界多大，你回头我就在",
+"你不是一个人，我一直在你身后"
+        
         ];
         saveNotebookData();
     }
@@ -114,37 +218,101 @@ function renderNotebookPreview() {
     return html;
 }
 
-// 显示添加我的日常弹窗
+// ========== 新版：多选词条发布日常 ==========
+var selectedTemplates = [];
+
 function showAddMyEntryModal() {
     loadNotebookData();
-    
+    selectedTemplates = [];
+    renderMultiSelectTemplateModal();
+}
+
+function renderMultiSelectTemplateModal() {
     var templatesHtml = '';
-    if (notebookData.myTemplates.length > 0) {
-        templatesHtml = '<div style="margin-top:8px;"><div class="subtitle" style="font-size:11px;">快捷词条</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
-        for (var i = 0; i < notebookData.myTemplates.length; i++) {
-            var t = notebookData.myTemplates[i];
-            templatesHtml += '<button class="btn-sm outline" onclick="document.getElementById(\'newEntryContent\').value=\'' + escapeHTML(t).replace(/'/g, "\\'") + '\'" style="font-size:10px;padding:4px 8px;">' + escapeHTML(t) + '</button>';
-        }
-        templatesHtml += '</div></div>';
+    var allTemplates = notebookData.myTemplates;
+    
+    for (var i = 0; i < allTemplates.length; i++) {
+        var t = allTemplates[i];
+        var isSelected = selectedTemplates.indexOf(i) !== -1;
+        templatesHtml += '<button class="template-tag ' + (isSelected ? 'selected' : '') + '" data-idx="' + i + '" onclick="toggleTemplateSelect(' + i + ')">' + escapeHTML(t) + '</button>';
     }
+    
+    var previewContent = selectedTemplates.map(function(idx) { return allTemplates[idx]; }).join('。');
+    if (previewContent) previewContent += '。';
     
     var html = '<div style="text-align:center;">' +
         '<h4>写我的日常</h4>' +
-        '<div class="subtitle">记录今天的点滴</div>' +
-        '<div class="form-row">' +
-        '<textarea id="newEntryContent" placeholder="写下你的日常..." style="min-height:100px;"></textarea>' +
+        '<div class="subtitle">点击词条多选，自动组合成日常（可手动修改）</div>' +
+        '<div style="margin-bottom:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+        '<button class="btn-sm outline" onclick="randomSelectTemplates()">🎲 随机选1-10条</button>' +
+        '<button class="btn-sm outline" onclick="clearSelectedTemplates()">清空已选</button>' +
         '</div>' +
+        '<div class="template-grid" style="max-height:200px;overflow-y:auto;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:8px;background:var(--item-bg);border-radius:12px;">' +
         templatesHtml +
+        '</div>' +
+        '<div class="form-row">' +
+        '<label>预览 / 编辑内容</label>' +
+        '<textarea id="newEntryContent" placeholder="选中的词条会组合到这里，你也可以手动修改..." style="min-height:80px;">' + escapeHTML(previewContent) + '</textarea>' +
+        '</div>' +
         '<div class="btn-row" style="justify-content:center;gap:8px;margin-top:12px;">' +
-        '<button class="btn-sm" onclick="addMyEntry()">发布</button>' +
+        '<button class="btn-sm" onclick="addMyEntryFromMultiSelect()">发布</button>' +
         '<button class="btn-sm outline" onclick="closeModal(\'subOverlay\')">取消</button>' +
         '</div>' +
         '</div>';
     openSubModal(html);
+    
+    // 监听 textarea 变化，允许用户手动编辑
+    var textarea = document.getElementById('newEntryContent');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            // 用户手动编辑时，不清空 selectedTemplates，只是内容不同步回选中的词条
+            // 保持选中状态不变，最终以 textarea 内容为准
+        });
+    }
 }
 
-// 添加我的日常
-function addMyEntry() {
+function toggleTemplateSelect(idx) {
+    var pos = selectedTemplates.indexOf(idx);
+    if (pos === -1) {
+        if (selectedTemplates.length >= 10) {
+            showToast('最多选择10条词句');
+            return;
+        }
+        selectedTemplates.push(idx);
+    } else {
+        selectedTemplates.splice(pos, 1);
+    }
+    renderMultiSelectTemplateModal();
+}
+
+function clearSelectedTemplates() {
+    selectedTemplates = [];
+    renderMultiSelectTemplateModal();
+}
+
+function randomSelectTemplates() {
+    var allCount = notebookData.myTemplates.length;
+    if (allCount === 0) {
+        showToast('词条库为空');
+        return;
+    }
+    var randomCount = Math.floor(Math.random() * 10) + 1; // 1-10条
+    randomCount = Math.min(randomCount, allCount);
+    
+    var shuffled = [];
+    for (var i = 0; i < allCount; i++) shuffled.push(i);
+    for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+    }
+    selectedTemplates = shuffled.slice(0, randomCount);
+    renderMultiSelectTemplateModal();
+    showToast('已随机选择 ' + randomCount + ' 条词句');
+}
+
+function addMyEntryFromMultiSelect() {
     var content = document.getElementById('newEntryContent').value.trim();
     if (!content) {
         showToast('请填写日常内容');
@@ -155,7 +323,8 @@ function addMyEntry() {
         id: 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         content: content,
         time: Date.now(),
-        comments: []
+        comments: [],
+        templateIds: selectedTemplates.slice() // 记录选了哪些词条（可选）
     };
     notebookData.myEntries.unshift(entry);
     if (notebookData.myEntries.length > 100) notebookData.myEntries.pop();
@@ -288,7 +457,7 @@ function addComment(entryId, type) {
     viewEntryDetail(entryId, type);
 }
 
-// 显示词条库管理
+// 显示词条库管理（保留原有功能，同时支持新增）
 function showMyTemplatesModal() {
     loadNotebookData();
     
@@ -302,7 +471,7 @@ function showMyTemplatesModal() {
     
     var html = '<div style="text-align:center;">' +
         '<h4>我的词条库</h4>' +
-        '<div class="subtitle">对方发布日常时可选择这些词条</div>' +
+        '<div class="subtitle">可多选组合成日常，支持随机1-10条</div>' +
         '<div class="form-row">' +
         '<input type="text" id="newTemplateInput" placeholder="输入新词条">' +
         '<button class="btn-sm" onclick="addTemplate()" style="margin-top:4px;">添加</button>' +
@@ -344,37 +513,90 @@ function sendNotebookToChat(name, content) {
     addSystemMsg(msg);
 }
 
-// 对方添加日常（供对方使用词条库）
+// 对方添加日常（支持多选组合）
 function showOtherAddEntryModal() {
     loadNotebookData();
-    
+    selectedTemplates = [];
+    renderOtherMultiSelectModal();
+}
+
+function renderOtherMultiSelectModal() {
     var templatesHtml = '';
-    if (notebookData.myTemplates.length > 0) {
-        templatesHtml = '<div style="margin-top:8px;"><div class="subtitle" style="font-size:11px;">快捷词条（来自对方词库）</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
-        for (var i = 0; i < notebookData.myTemplates.length; i++) {
-            var t = notebookData.myTemplates[i];
-            templatesHtml += '<button class="btn-sm outline" onclick="document.getElementById(\'otherEntryContent\').value=\'' + escapeHTML(t).replace(/'/g, "\\'") + '\'" style="font-size:10px;padding:4px 8px;">' + escapeHTML(t) + '</button>';
-        }
-        templatesHtml += '</div></div>';
+    var allTemplates = notebookData.myTemplates;
+    
+    for (var i = 0; i < allTemplates.length; i++) {
+        var t = allTemplates[i];
+        var isSelected = selectedTemplates.indexOf(i) !== -1;
+        templatesHtml += '<button class="template-tag ' + (isSelected ? 'selected' : '') + '" data-idx="' + i + '" onclick="toggleOtherTemplateSelect(' + i + ')">' + escapeHTML(t) + '</button>';
     }
+    
+    var previewContent = selectedTemplates.map(function(idx) { return allTemplates[idx]; }).join('。');
+    if (previewContent) previewContent += '。';
     
     var html = '<div style="text-align:center;">' +
         '<h4>写日常</h4>' +
-        '<div class="subtitle">记录你的日常</div>' +
-        '<div class="form-row">' +
-        '<textarea id="otherEntryContent" placeholder="写下你的日常..." style="min-height:100px;"></textarea>' +
+        '<div class="subtitle">点击词条多选，自动组合（可手动修改）</div>' +
+        '<div style="margin-bottom:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+        '<button class="btn-sm outline" onclick="randomSelectOtherTemplates()">🎲 随机选1-10条</button>' +
+        '<button class="btn-sm outline" onclick="clearOtherSelectedTemplates()">清空已选</button>' +
         '</div>' +
+        '<div class="template-grid" style="max-height:200px;overflow-y:auto;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:8px;background:var(--item-bg);border-radius:12px;">' +
         templatesHtml +
+        '</div>' +
+        '<div class="form-row">' +
+        '<label>预览 / 编辑内容</label>' +
+        '<textarea id="otherEntryContent" style="min-height:80px;">' + escapeHTML(previewContent) + '</textarea>' +
+        '</div>' +
         '<div class="btn-row" style="justify-content:center;gap:8px;margin-top:12px;">' +
-        '<button class="btn-sm" onclick="addOtherEntry()">发布</button>' +
+        '<button class="btn-sm" onclick="addOtherEntryFromMultiSelect()">发布</button>' +
         '<button class="btn-sm outline" onclick="closeModal(\'subOverlay\')">取消</button>' +
         '</div>' +
         '</div>';
     openSubModal(html);
 }
 
-// 对方添加日常
-function addOtherEntry() {
+function toggleOtherTemplateSelect(idx) {
+    var pos = selectedTemplates.indexOf(idx);
+    if (pos === -1) {
+        if (selectedTemplates.length >= 10) {
+            showToast('最多选择10条词句');
+            return;
+        }
+        selectedTemplates.push(idx);
+    } else {
+        selectedTemplates.splice(pos, 1);
+    }
+    renderOtherMultiSelectModal();
+}
+
+function clearOtherSelectedTemplates() {
+    selectedTemplates = [];
+    renderOtherMultiSelectModal();
+}
+
+function randomSelectOtherTemplates() {
+    var allCount = notebookData.myTemplates.length;
+    if (allCount === 0) {
+        showToast('词条库为空');
+        return;
+    }
+    var randomCount = Math.floor(Math.random() * 10) + 1;
+    randomCount = Math.min(randomCount, allCount);
+    
+    var shuffled = [];
+    for (var i = 0; i < allCount; i++) shuffled.push(i);
+    for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+    }
+    selectedTemplates = shuffled.slice(0, randomCount);
+    renderOtherMultiSelectModal();
+    showToast('已随机选择 ' + randomCount + ' 条词句');
+}
+
+function addOtherEntryFromMultiSelect() {
     var content = document.getElementById('otherEntryContent').value.trim();
     if (!content) {
         showToast('请填写日常内容');
@@ -385,7 +607,8 @@ function addOtherEntry() {
         id: 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         content: content,
         time: Date.now(),
-        comments: []
+        comments: [],
+        templateIds: selectedTemplates.slice()
     };
     notebookData.otherEntries.unshift(entry);
     if (notebookData.otherEntries.length > 100) notebookData.otherEntries.pop();
@@ -544,19 +767,31 @@ function importTemplates() {
     input.click();
 }
 
-// 对方随机发布日常
+// 对方随机发布日常（支持多词组合）
 function otherRandomAddEntry() {
     if (notebookData.myTemplates.length === 0) return;
     if (Math.random() > 0.3) return;
     
-    var randomIndex = Math.floor(Math.random() * notebookData.myTemplates.length);
-    var content = notebookData.myTemplates[randomIndex];
+    var randomCount = Math.floor(Math.random() * 5) + 1; // 1-5条
+    randomCount = Math.min(randomCount, notebookData.myTemplates.length);
+    
+    var shuffled = [];
+    for (var i = 0; i < notebookData.myTemplates.length; i++) shuffled.push(i);
+    for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+    }
+    var selectedIdx = shuffled.slice(0, randomCount);
+    var content = selectedIdx.map(function(idx) { return notebookData.myTemplates[idx]; }).join('。') + '。';
     
     var entry = {
         id: 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         content: content,
         time: Date.now(),
-        comments: []
+        comments: [],
+        templateIds: selectedIdx
     };
     notebookData.otherEntries.unshift(entry);
     if (notebookData.otherEntries.length > 100) notebookData.otherEntries.pop();
@@ -565,7 +800,45 @@ function otherRandomAddEntry() {
     sendNotebookToChat(appData.otherName, content);
 }
 
-// 定时检查对方随机发布（每2分钟检查一次）
+// 定时检查对方随机发布
 setInterval(function() {
     otherRandomAddEntry();
 }, 120000);
+
+// 添加样式（多选标签样式）
+(function addTemplateTagStyles() {
+    if (document.getElementById('notebook-tag-styles')) return;
+    var style = document.createElement('style');
+    style.id = 'notebook-tag-styles';
+    style.textContent = `
+        .template-tag {
+            padding: 8px 14px;
+            background: var(--item-bg);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-main);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .template-tag:active {
+            transform: scale(0.95);
+        }
+        .template-tag.selected {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--text);
+        }
+        .template-grid {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .template-grid::-webkit-scrollbar {
+            width: 3px;
+        }
+    `;
+    document.head.appendChild(style);
+})();
