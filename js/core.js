@@ -364,19 +364,162 @@ function escapeHTML(str) { if (!str) return ''; return str.replace(/&/g,'&amp;')
 
 // ========== 低饱和颜色主题 ==========
 var colorThemes = {
-    'default': { name: '杏色', accent: '#f0c78e', accentDark: '#e8b87a', bg: '#f5f0eb', headerBg: '#faf7f4', bubbleMe: '#ffeaa7', bubbleOther: '#ffffff', border: '#e8d5c4' },
-    'mint': { name: '薄荷', accent: '#b8d9c6', accentDark: '#a8c9b6', bg: '#f0f5f2', headerBg: '#f5faf7', bubbleMe: '#d4ecd9', bubbleOther: '#ffffff', border: '#d0e0d4' },
-    'lavender': { name: '薰衣草', accent: '#c5c4e8', accentDark: '#b5b4d8', bg: '#f5f4fa', headerBg: '#faf9fd', bubbleMe: '#e2e1f2', bubbleOther: '#ffffff', border: '#d8d8e8' },
-    'peach': { name: '蜜桃', accent: '#f2cec0', accentDark: '#e2beb0', bg: '#faf5f2', headerBg: '#fdfaf8', bubbleMe: '#fce4da', bubbleOther: '#ffffff', border: '#ecd8d0' },
-    'sky': { name: '天空', accent: '#b8d8f0', accentDark: '#a8c8e0', bg: '#f0f5fa', headerBg: '#f5fafd', bubbleMe: '#d4eaf4', bubbleOther: '#ffffff', border: '#d0e0ec' },
-    'rose': { name: '玫瑰', accent: '#f0c0c8', accentDark: '#e0b0b8', bg: '#faf2f4', headerBg: '#fdf7f9', bubbleMe: '#fce0e4', bubbleOther: '#ffffff', border: '#e8d0d8' },
-    'matcha': { name: '抹茶', accent: '#c8d8b8', accentDark: '#b8c8a8', bg: '#f2f5ee', headerBg: '#f7faf3', bubbleMe: '#e0ecd4', bubbleOther: '#ffffff', border: '#d4e0c8' },
-    // 新增5种低饱和色
-    'oat': { name: '燕麦', accent: '#e0d0b8', accentDark: '#d0c0a8', bg: '#faf8f2', headerBg: '#fdfbf7', bubbleMe: '#f0e8d8', bubbleOther: '#ffffff', border: '#e0d8c8' },
-    'misty': { name: '雾蓝', accent: '#b8c8d8', accentDark: '#a8b8c8', bg: '#f2f5f8', headerBg: '#f7fafc', bubbleMe: '#d8e4ec', bubbleOther: '#ffffff', border: '#d0dce4' },
-    'sage': { name: '鼠尾草', accent: '#b8c8b0', accentDark: '#a8b8a0', bg: '#f2f5f0', headerBg: '#f7faf5', bubbleMe: '#dce4d4', bubbleOther: '#ffffff', border: '#d4dccc' },
-    'dusty': { name: ' dusty 粉', accent: '#d8c0c0', accentDark: '#c8b0b0', bg: '#faf5f5', headerBg: '#fdf9f9', bubbleMe: '#f0e0e0', bubbleOther: '#ffffff', border: '#e8d8d8' },
-    'stone': { name: '石灰色', accent: '#c8c0b8', accentDark: '#b8b0a8', bg: '#f5f5f2', headerBg: '#fafaf7', bubbleMe: '#e8e4dc', bubbleOther: '#ffffff', border: '#e0dcd4' }
+    'default': {
+        name: '杏色',
+        accent: '#f0c78e',
+        accentDark: '#e8b87a',
+        bg: '#f5f0eb',
+        headerBg: '#faf7f4',
+        bubbleMe: '#ffeaa7',
+        bubbleOther: '#ffffff',
+        border: '#e8d5c4',
+        inputBg: '#faf7f4',
+        inputBox: '#ffffff',
+        text: '#4a3728'
+    },
+    'mint': {
+        name: '薄荷',
+        accent: '#b8d9c6',
+        accentDark: '#a8c9b6',
+        bg: '#f0f5f2',
+        headerBg: '#f5faf7',
+        bubbleMe: '#d4ecd9',
+        bubbleOther: '#ffffff',
+        border: '#d0e0d4',
+        inputBg: '#f5faf7',
+        inputBox: '#ffffff',
+        text: '#2a4a3a'
+    },
+    'lavender': {
+        name: '薰衣草',
+        accent: '#c5c4e8',
+        accentDark: '#b5b4d8',
+        bg: '#f5f4fa',
+        headerBg: '#faf9fd',
+        bubbleMe: '#e2e1f2',
+        bubbleOther: '#ffffff',
+        border: '#d8d8e8',
+        inputBg: '#faf9fd',
+        inputBox: '#ffffff',
+        text: '#3a3a5a'
+    },
+    'peach': {
+        name: '蜜桃',
+        accent: '#f2cec0',
+        accentDark: '#e2beb0',
+        bg: '#faf5f2',
+        headerBg: '#fdfaf8',
+        bubbleMe: '#fce4da',
+        bubbleOther: '#ffffff',
+        border: '#ecd8d0',
+        inputBg: '#fdfaf8',
+        inputBox: '#ffffff',
+        text: '#5a3a3a'
+    },
+    'sky': {
+        name: '天空',
+        accent: '#b8d8f0',
+        accentDark: '#a8c8e0',
+        bg: '#f0f5fa',
+        headerBg: '#f5fafd',
+        bubbleMe: '#d4eaf4',
+        bubbleOther: '#ffffff',
+        border: '#d0e0ec',
+        inputBg: '#f5fafd',
+        inputBox: '#ffffff',
+        text: '#2a4a5a'
+    },
+    'rose': {
+        name: '玫瑰',
+        accent: '#f0c0c8',
+        accentDark: '#e0b0b8',
+        bg: '#faf2f4',
+        headerBg: '#fdf7f9',
+        bubbleMe: '#fce0e4',
+        bubbleOther: '#ffffff',
+        border: '#e8d0d8',
+        inputBg: '#fdf7f9',
+        inputBox: '#ffffff',
+        text: '#5a3a4a'
+    },
+    'matcha': {
+        name: '抹茶',
+        accent: '#c8d8b8',
+        accentDark: '#b8c8a8',
+        bg: '#f2f5ee',
+        headerBg: '#f7faf3',
+        bubbleMe: '#e0ecd4',
+        bubbleOther: '#ffffff',
+        border: '#d4e0c8',
+        inputBg: '#f7faf3',
+        inputBox: '#ffffff',
+        text: '#3a4a2a'
+    },
+    'oat': {
+        name: '燕麦',
+        accent: '#e0d0b8',
+        accentDark: '#d0c0a8',
+        bg: '#faf8f2',
+        headerBg: '#fdfbf7',
+        bubbleMe: '#f0e8d8',
+        bubbleOther: '#ffffff',
+        border: '#e0d8c8',
+        inputBg: '#fdfbf7',
+        inputBox: '#ffffff',
+        text: '#4a3a2a'
+    },
+    'misty': {
+        name: '雾蓝',
+        accent: '#b8c8d8',
+        accentDark: '#a8b8c8',
+        bg: '#f2f5f8',
+        headerBg: '#f7fafc',
+        bubbleMe: '#d8e4ec',
+        bubbleOther: '#ffffff',
+        border: '#d0dce4',
+        inputBg: '#f7fafc',
+        inputBox: '#ffffff',
+        text: '#2a3a4a'
+    },
+    'sage': {
+        name: '鼠尾草',
+        accent: '#b8c8b0',
+        accentDark: '#a8b8a0',
+        bg: '#f2f5f0',
+        headerBg: '#f7faf5',
+        bubbleMe: '#dce4d4',
+        bubbleOther: '#ffffff',
+        border: '#d4dccc',
+        inputBg: '#f7faf5',
+        inputBox: '#ffffff',
+        text: '#3a4a3a'
+    },
+    'dusty': {
+        name: 'dusty粉',
+        accent: '#d8c0c0',
+        accentDark: '#c8b0b0',
+        bg: '#faf5f5',
+        headerBg: '#fdf9f9',
+        bubbleMe: '#f0e0e0',
+        bubbleOther: '#ffffff',
+        border: '#e8d8d8',
+        inputBg: '#fdf9f9',
+        inputBox: '#ffffff',
+        text: '#4a3a3a'
+    },
+    'stone': {
+        name: '石灰色',
+        accent: '#c8c0b8',
+        accentDark: '#b8b0a8',
+        bg: '#f5f5f2',
+        headerBg: '#fafaf7',
+        bubbleMe: '#e8e4dc',
+        bubbleOther: '#ffffff',
+        border: '#e0dcd4',
+        inputBg: '#fafaf7',
+        inputBox: '#ffffff',
+        text: '#3a3a3a'
+    }
 };
 
 function openColorThemeModal() {
@@ -403,6 +546,10 @@ function applyColorTheme(themeKey) {
     document.documentElement.style.setProperty('--chat-bg', theme.bg);
     document.documentElement.style.setProperty('--bubble-me', theme.bubbleMe);
     document.documentElement.style.setProperty('--bubble-other', theme.bubbleOther);
+    // 新增以下三行
+    document.documentElement.style.setProperty('--input-bg', theme.inputBg || theme.headerBg);
+    document.documentElement.style.setProperty('--input-box', theme.inputBox || '#ffffff');
+    document.documentElement.style.setProperty('--text', theme.text || '#4a3728');
     showToast('已切换至 ' + theme.name + ' 主题');
     closeModal('subOverlay');
 }
