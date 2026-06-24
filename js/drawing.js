@@ -214,7 +214,9 @@ var RandomDrawing = {
         var ctx = canvas.getContext('2d');
         
         // 背景色
-        ctx.fillStyle = '#FFF9F0';
+        // 从 CSS 变量读取当前背景色
+        var bgColor = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#f5f0eb';
+        ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, 250, 250);
         
         // 随机决定组合数量（2或3种元素）
