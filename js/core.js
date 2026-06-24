@@ -654,19 +654,30 @@ function startAvatarCapture(target, useCamera) {
 function onOtherAvatarClick() { showAvatarChanger('other'); }
 function onMyAvatarClick() { showAvatarChanger('me'); }
 function openNicknameModal() {
-    closeModal('settingsOverlay');
-    var html = '<h4>昵称 头像</h4><div class="form-row"><label>我的昵称</label><input type="text" id="editMyName" value="' + appData.myName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveMyNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'me\')">换我的头像</button></div><div class="form-row" style="margin-top:12px;"><label>对方昵称</label><input type="text" id="editOtherName" value="' + appData.otherName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveOtherNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'other\')">换对方头像</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>';
+    var html = '<h4>昵称 头像</h4><div class="subtitle">修改后会自动保存</div><div class="form-row"><label>我的昵称</label><input type="text" id="editMyName" value="' + appData.myName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveMyNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'me\')">换我的头像</button></div><div class="form-row" style="margin-top:12px;"><label>对方昵称</label><input type="text" id="editOtherName" value="' + appData.otherName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveOtherNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'other\')">换对方头像</button></div><div class="btn-row" style="justify-content:center;margin-top:12px;"><button class="btn-sm outline" onclick="closeNicknameModal()">返回设置</button></div>';
     openSubModal(html);
+}
+function closeNicknameModal() {
+    // 关闭当前子弹窗，然后重新打开小窝设置
+    closeModal('subOverlay');
+    // 延迟一点点再打开设置，让弹窗动画自然
+    setTimeout(function() {
+        openSettings();
+    }, 150);
 }
 function saveMyNameFromModal() {
     var v = document.getElementById('editMyName').value.trim();
     if (!v) return showToast('请输入昵称');
-    appData.myName = v; saveData(); renderChatHistory(); closeModal('subOverlay'); showToast('昵称已更新');
+    appData.myName = v; saveData(); renderChatHistory(); showToast('昵称已更新');
+    // 只刷新当前弹窗内容，不关闭
+    openNicknameModal();
 }
 function saveOtherNameFromModal() {
     var v = document.getElementById('editOtherName').value.trim();
     if (!v) return showToast('请输入昵称');
-    appData.otherName = v; saveData(); updateHeader(); renderChatHistory(); closeModal('subOverlay'); showToast('昵称已更新');
+    appData.otherName = v; saveData(); updateHeader(); renderChatHistory(); showToast('昵称已更新');
+    // 只刷新当前弹窗内容，不关闭
+    openNicknameModal();
 }
 
 // ========== 照片 ==========
