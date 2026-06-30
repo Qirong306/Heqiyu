@@ -658,10 +658,9 @@ function openColorThemeModal() {
 function applyColorTheme(themeKey) {
     var theme = colorThemes[themeKey];
     if (!theme) return;
-    
     localStorage.setItem('color_theme', themeKey);
     
-    // 设置所有 CSS 变量
+    // 设置所有 CSS 变量（与 style.css 中的 :root 对应）
     document.documentElement.style.setProperty('--accent', theme.accent);
     document.documentElement.style.setProperty('--accent-dark', theme.accentDark);
     document.documentElement.style.setProperty('--bg', theme.bg);
@@ -672,8 +671,6 @@ function applyColorTheme(themeKey) {
     document.documentElement.style.setProperty('--input-bg', theme.inputBg || theme.headerBg);
     document.documentElement.style.setProperty('--input-box', theme.inputBox || '#ffffff');
     document.documentElement.style.setProperty('--text', theme.text || '#4a3728');
-    
-    // 补充的 CSS 变量（与 style.css 对应）
     document.documentElement.style.setProperty('--border', theme.border || '#e8d5c4');
     document.documentElement.style.setProperty('--item-bg', theme.itemBg || '#faf7f4');
     document.documentElement.style.setProperty('--text-secondary', theme.textSecondary || '#8b7355');
