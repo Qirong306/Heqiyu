@@ -375,7 +375,17 @@ var colorThemes = {
         border: '#e8d5c4',
         inputBg: '#faf7f4',
         inputBox: '#ffffff',
-        text: '#4a3728'
+        text: '#4a3728',
+        itemBg: '#faf7f4',
+        textSecondary: '#8b7355',
+        textSystem: '#b8a99a',
+        textTime: '#b8a99a',
+        danger: '#e8a0a0',
+        dangerDark: '#d48888',
+        success: '#6b8f5e',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(74,55,40,0.92)',
+        toastText: '#ffffff'
     },
     'mint': {
         name: '薄荷',
@@ -388,7 +398,17 @@ var colorThemes = {
         border: '#d0e0d4',
         inputBg: '#f5faf7',
         inputBox: '#ffffff',
-        text: '#2a4a3a'
+        text: '#2a4a3a',
+        itemBg: '#f5faf7',
+        textSecondary: '#5a7a6a',
+        textSystem: '#8aaa9a',
+        textTime: '#8aaa9a',
+        danger: '#d4a0a0',
+        dangerDark: '#c48888',
+        success: '#5a8a5e',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(42,74,58,0.92)',
+        toastText: '#ffffff'
     },
     'lavender': {
         name: '薰衣草',
@@ -401,7 +421,17 @@ var colorThemes = {
         border: '#d8d8e8',
         inputBg: '#faf9fd',
         inputBox: '#ffffff',
-        text: '#3a3a5a'
+        text: '#3a3a5a',
+        itemBg: '#faf9fd',
+        textSecondary: '#6a6a8a',
+        textSystem: '#9a9aba',
+        textTime: '#9a9aba',
+        danger: '#d4c0d4',
+        dangerDark: '#c4b0c4',
+        success: '#6a7a8a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(58,58,90,0.92)',
+        toastText: '#ffffff'
     },
     'peach': {
         name: '蜜桃',
@@ -414,7 +444,17 @@ var colorThemes = {
         border: '#ecd8d0',
         inputBg: '#fdfaf8',
         inputBox: '#ffffff',
-        text: '#5a3a3a'
+        text: '#5a3a3a',
+        itemBg: '#fdfaf8',
+        textSecondary: '#8a6a5a',
+        textSystem: '#ba9a8a',
+        textTime: '#ba9a8a',
+        danger: '#e8b8b0',
+        dangerDark: '#d8a8a0',
+        success: '#7a7a5e',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(90,58,58,0.92)',
+        toastText: '#ffffff'
     },
     'sky': {
         name: '天空',
@@ -427,7 +467,17 @@ var colorThemes = {
         border: '#d0e0ec',
         inputBg: '#f5fafd',
         inputBox: '#ffffff',
-        text: '#2a4a5a'
+        text: '#2a4a5a',
+        itemBg: '#f5fafd',
+        textSecondary: '#5a7a8a',
+        textSystem: '#8aaaba',
+        textTime: '#8aaaba',
+        danger: '#b0c8d4',
+        dangerDark: '#a0b8c4',
+        success: '#5a7a7a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(42,74,90,0.92)',
+        toastText: '#ffffff'
     },
     'rose': {
         name: '玫瑰',
@@ -440,7 +490,17 @@ var colorThemes = {
         border: '#e8d0d8',
         inputBg: '#fdf7f9',
         inputBox: '#ffffff',
-        text: '#5a3a4a'
+        text: '#5a3a4a',
+        itemBg: '#fdf7f9',
+        textSecondary: '#8a6a7a',
+        textSystem: '#ba9aaa',
+        textTime: '#ba9aaa',
+        danger: '#e8c0c8',
+        dangerDark: '#d8b0b8',
+        success: '#7a6a7a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(90,58,74,0.92)',
+        toastText: '#ffffff'
     },
     'matcha': {
         name: '抹茶',
@@ -453,7 +513,17 @@ var colorThemes = {
         border: '#d4e0c8',
         inputBg: '#f7faf3',
         inputBox: '#ffffff',
-        text: '#3a4a2a'
+        text: '#3a4a2a',
+        itemBg: '#f7faf3',
+        textSecondary: '#6a7a5a',
+        textSystem: '#9aaa8a',
+        textTime: '#9aaa8a',
+        danger: '#c8d4b8',
+        dangerDark: '#b8c4a8',
+        success: '#5a7a4a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(58,74,42,0.92)',
+        toastText: '#ffffff'
     },
     'oat': {
         name: '燕麦',
@@ -466,7 +536,17 @@ var colorThemes = {
         border: '#e0d8c8',
         inputBg: '#fdfbf7',
         inputBox: '#ffffff',
-        text: '#4a3a2a'
+        text: '#4a3a2a',
+        itemBg: '#fdfbf7',
+        textSecondary: '#8a7a5a',
+        textSystem: '#baaa8a',
+        textTime: '#baaa8a',
+        danger: '#e0d0c0',
+        dangerDark: '#d0c0b0',
+        success: '#7a7a5a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(74,58,42,0.92)',
+        toastText: '#ffffff'
     },
     'misty': {
         name: '雾蓝',
@@ -479,7 +559,17 @@ var colorThemes = {
         border: '#d0dce4',
         inputBg: '#f7fafc',
         inputBox: '#ffffff',
-        text: '#2a3a4a'
+        text: '#2a3a4a',
+        itemBg: '#f7fafc',
+        textSecondary: '#5a6a7a',
+        textSystem: '#8a9aaa',
+        textTime: '#8a9aaa',
+        danger: '#c0d0d8',
+        dangerDark: '#b0c0c8',
+        success: '#5a7a7a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(42,58,74,0.92)',
+        toastText: '#ffffff'
     },
     'sage': {
         name: '鼠尾草',
@@ -492,7 +582,17 @@ var colorThemes = {
         border: '#d4dccc',
         inputBg: '#f7faf5',
         inputBox: '#ffffff',
-        text: '#3a4a3a'
+        text: '#3a4a3a',
+        itemBg: '#f7faf5',
+        textSecondary: '#6a7a5a',
+        textSystem: '#9aaa8a',
+        textTime: '#9aaa8a',
+        danger: '#c8d4c0',
+        dangerDark: '#b8c4b0',
+        success: '#5a7a5a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(58,74,58,0.92)',
+        toastText: '#ffffff'
     },
     'dusty': {
         name: 'dusty粉',
@@ -505,7 +605,17 @@ var colorThemes = {
         border: '#e8d8d8',
         inputBg: '#fdf9f9',
         inputBox: '#ffffff',
-        text: '#4a3a3a'
+        text: '#4a3a3a',
+        itemBg: '#fdf9f9',
+        textSecondary: '#8a6a6a',
+        textSystem: '#ba9a9a',
+        textTime: '#ba9a9a',
+        danger: '#e8d0d0',
+        dangerDark: '#d8c0c0',
+        success: '#7a6a6a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(74,58,58,0.92)',
+        toastText: '#ffffff'
     },
     'stone': {
         name: '石灰色',
@@ -518,7 +628,17 @@ var colorThemes = {
         border: '#e0dcd4',
         inputBg: '#fafaf7',
         inputBox: '#ffffff',
-        text: '#3a3a3a'
+        text: '#3a3a3a',
+        itemBg: '#fafaf7',
+        textSecondary: '#6a6a6a',
+        textSystem: '#9a9a9a',
+        textTime: '#9a9a9a',
+        danger: '#d0d0c8',
+        dangerDark: '#c0c0b8',
+        success: '#6a6a5a',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(58,58,58,0.92)',
+        toastText: '#ffffff'
     }
 };
 
@@ -538,7 +658,10 @@ function openColorThemeModal() {
 function applyColorTheme(themeKey) {
     var theme = colorThemes[themeKey];
     if (!theme) return;
+    
     localStorage.setItem('color_theme', themeKey);
+    
+    // 设置所有 CSS 变量
     document.documentElement.style.setProperty('--accent', theme.accent);
     document.documentElement.style.setProperty('--accent-dark', theme.accentDark);
     document.documentElement.style.setProperty('--bg', theme.bg);
@@ -546,10 +669,23 @@ function applyColorTheme(themeKey) {
     document.documentElement.style.setProperty('--chat-bg', theme.bg);
     document.documentElement.style.setProperty('--bubble-me', theme.bubbleMe);
     document.documentElement.style.setProperty('--bubble-other', theme.bubbleOther);
-    // 新增以下三行
     document.documentElement.style.setProperty('--input-bg', theme.inputBg || theme.headerBg);
     document.documentElement.style.setProperty('--input-box', theme.inputBox || '#ffffff');
     document.documentElement.style.setProperty('--text', theme.text || '#4a3728');
+    
+    // 补充的 CSS 变量（与 style.css 对应）
+    document.documentElement.style.setProperty('--border', theme.border || '#e8d5c4');
+    document.documentElement.style.setProperty('--item-bg', theme.itemBg || '#faf7f4');
+    document.documentElement.style.setProperty('--text-secondary', theme.textSecondary || '#8b7355');
+    document.documentElement.style.setProperty('--text-system', theme.textSystem || '#b8a99a');
+    document.documentElement.style.setProperty('--text-time', theme.textTime || '#b8a99a');
+    document.documentElement.style.setProperty('--panel-bg', theme.panelBg || '#ffffff');
+    document.documentElement.style.setProperty('--danger', theme.danger || '#e8a0a0');
+    document.documentElement.style.setProperty('--danger-dark', theme.dangerDark || '#d48888');
+    document.documentElement.style.setProperty('--success', theme.success || '#6b8f5e');
+    document.documentElement.style.setProperty('--toast-bg', theme.toastBg || 'rgba(74,55,40,0.92)');
+    document.documentElement.style.setProperty('--toast-text', theme.toastText || '#ffffff');
+    
     showToast('已切换至 ' + theme.name + ' 主题');
     closeModal('subOverlay');
 }
