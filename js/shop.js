@@ -388,6 +388,14 @@ function otherRandomBuy() {
     if (isEnabled === 'false') return;
     if (typeof isInCall !== 'undefined' && (isInCall || isRinging)) return;
     if (typeof shopItems === 'undefined' || !shopItems.length) return;
+    
+    // ========== 暖屋联动：5% 概率触发暖屋随机购买 ==========
+    if (Math.random() < 0.05 && typeof cozyOtherRandomBuy === 'function') {
+        cozyOtherRandomBuy();
+        return;
+    }
+    // ========== 暖屋联动结束 ==========
+    
     if (Math.random() > 0.1) return;
     
     var randomIndex = Math.floor(Math.random() * shopItems.length);
