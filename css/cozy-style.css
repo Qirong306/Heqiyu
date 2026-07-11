@@ -26,6 +26,7 @@
     border-bottom: 2px solid #e8d5c4;
     flex-shrink: 0;
     z-index: 10;
+    min-height: 52px;
 }
 .cozy-header-left {
     display: flex;
@@ -38,20 +39,25 @@
     letter-spacing: 2px;
 }
 .cozy-header-weather {
-    font-size: 13px;
+    font-size: 12px;
     color: #8b7355;
+    background: rgba(139, 115, 85, 0.12);
+    padding: 2px 10px;
+    border-radius: 10px;
 }
 .cozy-header-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
 }
 .cozy-header-actions button {
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 16px;
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 4px 8px;
     border-radius: 50%;
+    color: #4a3728;
     transition: background 0.2s;
 }
 .cozy-header-actions button:active {
@@ -63,9 +69,6 @@
     background: rgba(232, 168, 124, 0.15);
     padding: 4px 12px;
     border-radius: 16px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
 }
 
 /* ===== 暖屋主体 ===== */
@@ -105,21 +108,7 @@
     background: linear-gradient(180deg, #f5a08a 0%, #e8b89a 40%, #d5c8b8 70%);
 }
 
-/* 太阳 / 月亮 / 云 */
-.weather-icon {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 48px;
-    z-index: 1;
-    animation: weatherFloat 4s ease-in-out infinite;
-}
-@keyframes weatherFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-/* 雨滴 */
+/* ===== 雨滴 ===== */
 .rain-container {
     position: absolute;
     top: 0;
@@ -133,15 +122,16 @@
 .rain-drop {
     position: absolute;
     width: 2px;
-    background: rgba(180, 210, 240, 0.6);
+    background: rgba(180, 210, 240, 0.5);
+    border-radius: 1px;
     animation: rainFall linear infinite;
 }
 @keyframes rainFall {
-    0% { transform: translateY(-20px) rotate(10deg); opacity: 0.6; }
-    100% { transform: translateY(calc(100vh + 20px)) rotate(10deg); opacity: 0.2; }
+    0% { transform: translateY(-20px); opacity: 0.5; }
+    100% { transform: translateY(calc(100vh + 20px)); opacity: 0.1; }
 }
 
-/* 雪花 */
+/* ===== 雪花 ===== */
 .snow-container {
     position: absolute;
     top: 0;
@@ -154,16 +144,16 @@
 }
 .snow-flake {
     position: absolute;
-    color: rgba(255,255,255,0.8);
-    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
     animation: snowFall linear infinite;
 }
 @keyframes snowFall {
-    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.8; }
-    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.3; }
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.7; }
+    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.2; }
 }
 
-/* 星星（夜晚） */
+/* ===== 星星（夜晚） ===== */
 .star-container {
     position: absolute;
     top: 0;
@@ -175,34 +165,34 @@
 }
 .star {
     position: absolute;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.6);
     font-size: 12px;
     animation: starTwinkle 2s ease-in-out infinite alternate;
 }
 @keyframes starTwinkle {
-    0% { opacity: 0.3; transform: scale(0.8); }
+    0% { opacity: 0.2; transform: scale(0.8); }
     100% { opacity: 1; transform: scale(1.2); }
 }
 
-/* ===== 窗户层 ===== */
+/* ===== 窗户 ===== */
 .cozy-window {
     position: absolute;
     top: 50px;
     left: 50%;
     transform: translateX(-50%);
-    width: 65%;
-    height: 35%;
+    width: 60%;
+    height: 32%;
     z-index: 2;
     pointer-events: none;
 }
 .window-frame {
     width: 100%;
     height: 100%;
-    background: rgba(200, 220, 240, 0.15);
+    background: rgba(200, 220, 240, 0.1);
     border: 8px solid #d5c0a8;
     border-radius: 16px;
     position: relative;
-    box-shadow: inset 0 0 40px rgba(200, 220, 240, 0.1);
+    box-shadow: inset 0 0 40px rgba(200, 220, 240, 0.05);
 }
 .window-frame.arch {
     border-radius: 80px 80px 16px 16px;
@@ -217,7 +207,7 @@
     left: 50%;
     width: 2px;
     height: 100%;
-    background: rgba(180, 160, 140, 0.3);
+    background: rgba(180, 160, 140, 0.25);
 }
 .window-frame.grid::after {
     content: '';
@@ -226,7 +216,7 @@
     left: 0;
     width: 100%;
     height: 2px;
-    background: rgba(180, 160, 140, 0.3);
+    background: rgba(180, 160, 140, 0.25);
 }
 .window-frame.french {
     border-radius: 8px;
@@ -236,10 +226,7 @@
 .window-frame.bay {
     border-radius: 16px 16px 4px 4px;
     border-color: #dcc8b0;
-    box-shadow: 0 -4px 20px rgba(200, 180, 160, 0.2);
 }
-
-/* 窗外景色（窗户内部） */
 .window-view {
     position: absolute;
     top: 0;
@@ -250,30 +237,14 @@
     overflow: hidden;
     z-index: -1;
 }
-.window-view .sky {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 70%;
-}
-.window-view .ground {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 30%;
-    background: #8ba87a;
-    border-radius: 0 0 inherit inherit;
-}
 
-/* ===== 地板层 ===== */
+/* ===== 地板 ===== */
 .cozy-floor {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 25%;
+    height: 22%;
     z-index: 2;
     pointer-events: none;
 }
@@ -306,31 +277,25 @@
     pointer-events: auto;
 }
 
-/* 家具通用卡片 */
 .furniture-item {
     position: absolute;
-    background: rgba(255, 248, 240, 0.7);
+    background: rgba(255, 248, 240, 0.75);
     backdrop-filter: blur(2px);
-    border-radius: 16px;
-    padding: 8px 10px;
+    border-radius: 14px;
+    padding: 6px 8px;
     text-align: center;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    border: 2px solid rgba(200, 180, 160, 0.3);
-    min-width: 50px;
+    border: 2px solid rgba(200, 180, 160, 0.25);
+    min-width: 44px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .furniture-item:active {
     transform: scale(0.92);
 }
-.furniture-item .f-icon {
-    font-size: 28px;
-    display: block;
-}
 .furniture-item .f-name {
-    font-size: 9px;
-    color: #8b7355;
-    margin-top: 2px;
+    font-size: 11px;
+    color: #4a3728;
 }
 .furniture-item .f-badge {
     position: absolute;
@@ -348,13 +313,13 @@
 }
 
 /* 家具位置 */
-.f-sofa { bottom: 22%; left: 8%; width: 18%; }
-.f-bed { bottom: 20%; right: 8%; width: 22%; }
-.f-bookshelf { top: 40%; left: 3%; width: 12%; }
-.f-desk { bottom: 22%; left: 35%; width: 16%; }
-.f-flower { top: 42%; right: 15%; width: 12%; }
-.f-doll { top: 45%; right: 28%; width: 12%; }
-.f-pillow { bottom: 32%; right: 12%; width: 14%; }
+.f-sofa { bottom: 22%; left: 6%; width: 16%; }
+.f-bed { bottom: 20%; right: 6%; width: 20%; }
+.f-bookshelf { top: 38%; left: 3%; width: 12%; }
+.f-desk { bottom: 22%; left: 34%; width: 14%; }
+.f-flower { top: 40%; right: 14%; width: 11%; }
+.f-doll { top: 44%; right: 28%; width: 11%; }
+.f-pillow { bottom: 32%; right: 10%; width: 13%; }
 
 /* ===== 弹幕层 ===== */
 .cozy-danmaku-layer {
@@ -362,7 +327,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 80px;
+    height: 70px;
     z-index: 5;
     pointer-events: none;
     overflow: hidden;
@@ -370,19 +335,19 @@
 .cozy-danmaku {
     position: absolute;
     white-space: nowrap;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
-    padding: 4px 14px;
-    border-radius: 20px;
-    background: rgba(0,0,0,0.35);
+    padding: 3px 14px;
+    border-radius: 18px;
+    background: rgba(0,0,0,0.3);
     backdrop-filter: blur(4px);
     color: white;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
     animation: danmakuFly linear forwards;
     pointer-events: none;
 }
 .cozy-danmaku.from-me {
-    background: rgba(240, 199, 142, 0.7);
+    background: rgba(232, 168, 124, 0.75);
     color: #4a3728;
 }
 .cozy-danmaku.from-other {
@@ -396,50 +361,13 @@
     100% { transform: translateX(-200px); opacity: 0; }
 }
 
-/* ===== 底部功能栏 ===== */
-.cozy-footer {
-    background: rgba(245, 237, 228, 0.95);
-    padding: 8px 12px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    border-top: 2px solid #e8d5c4;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    flex-shrink: 0;
-    z-index: 10;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-.cozy-footer button {
-    background: rgba(255, 248, 240, 0.8);
-    border: 2px solid #e8d5c4;
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 12px;
-    font-family: inherit;
-    color: #4a3728;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-}
-.cozy-footer button:active {
-    transform: scale(0.92);
-    background: #e8d5c4;
-}
-.cozy-footer button .icon {
-    font-size: 16px;
-}
-
-/* ===== 弹幕输入条 ===== */
+/* ===== 专注输入条 ===== */
 .cozy-focus-bar {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.45);
     backdrop-filter: blur(8px);
     padding: 10px 14px;
     display: none;
@@ -455,14 +383,17 @@
     padding: 8px 14px;
     border-radius: 20px;
     border: none;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.12);
     color: white;
     font-size: 14px;
     font-family: inherit;
     outline: none;
 }
 .cozy-focus-bar input::placeholder {
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.4);
+}
+.cozy-focus-bar input:focus {
+    background: rgba(255,255,255,0.18);
 }
 .cozy-focus-bar button {
     padding: 8px 16px;
@@ -471,18 +402,93 @@
     background: #e8a87c;
     color: white;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
 }
+.cozy-focus-bar button:active {
+    transform: scale(0.92);
+}
 
-/* ===== 弹窗（商城/留言/奖励） ===== */
+/* ===== 底部功能栏 ===== */
+.cozy-footer {
+    background: rgba(245, 237, 228, 0.95);
+    padding: 8px 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    border-top: 2px solid #e8d5c4;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-shrink: 0;
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.cozy-footer button {
+    background: rgba(255, 248, 240, 0.7);
+    border: 2px solid #e8d5c4;
+    border-radius: 18px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-family: inherit;
+    color: #4a3728;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.cozy-footer button:active {
+    transform: scale(0.92);
+    background: #e8d5c4;
+}
+.cozy-footer button .icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+}
+/* CSS 绘制图标 - 纯几何图形 */
+.icon-shop {
+    background: radial-gradient(circle at 30% 30%, #d4b8a0 20%, transparent 20%),
+                radial-gradient(circle at 70% 30%, #d4b8a0 20%, transparent 20%),
+                radial-gradient(circle at 50% 70%, #d4b8a0 25%, transparent 25%);
+}
+.icon-message {
+    background: radial-gradient(circle at 50% 40%, #d4b8a0 30%, transparent 30%);
+    border: 2px solid #d4b8a0;
+    border-radius: 4px;
+}
+.icon-focus {
+    background: radial-gradient(circle at 50% 50%, #d4b8a0 35%, transparent 35%);
+    border: 2px solid #d4b8a0;
+    border-radius: 50%;
+}
+.icon-gift {
+    background: radial-gradient(circle at 50% 30%, #d4b8a0 20%, transparent 20%),
+                radial-gradient(circle at 50% 70%, #d4b8a0 25%, transparent 25%);
+    border: 2px solid #d4b8a0;
+    border-radius: 4px;
+}
+.icon-settings {
+    background: radial-gradient(circle at 50% 30%, #d4b8a0 15%, transparent 15%),
+                radial-gradient(circle at 30% 70%, #d4b8a0 12%, transparent 12%),
+                radial-gradient(circle at 70% 70%, #d4b8a0 12%, transparent 12%);
+    border: 2px solid #d4b8a0;
+    border-radius: 50%;
+}
+
+/* ===== 弹窗 ===== */
 .cozy-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.35);
     z-index: 500;
     display: none;
     justify-content: center;
@@ -500,14 +506,14 @@
     max-height: 70vh;
     overflow-y: auto;
     padding: 20px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
     border: 2px solid #e8d5c4;
 }
 .cozy-modal h3 {
     text-align: center;
     color: #4a3728;
     font-size: 18px;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     letter-spacing: 1px;
 }
 .cozy-modal .sub {
@@ -521,43 +527,47 @@
 .shop-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 .shop-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
+    padding: 8px 12px;
     background: #fffcf8;
-    border-radius: 14px;
+    border-radius: 12px;
     border: 2px solid #e8d5c4;
     transition: border-color 0.2s;
 }
 .shop-item .info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
-.shop-item .info .icon { font-size: 24px; }
-.shop-item .info .name { font-size: 14px; color: #4a3728; }
-.shop-item .info .price { font-size: 12px; color: #e8a87c; }
+.shop-item .info .name {
+    font-size: 13px;
+    color: #4a3728;
+}
+.shop-item .info .price {
+    font-size: 11px;
+    color: #8b7355;
+}
 .shop-item .btn-buy {
-    padding: 4px 14px;
-    border-radius: 14px;
+    padding: 3px 12px;
+    border-radius: 12px;
     border: none;
     background: #e8a87c;
     color: white;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
 }
-.shop-item .btn-buy:active { transform: scale(0.92); }
+.shop-item .btn-buy:active {
+    transform: scale(0.92);
+}
 .shop-item .btn-buy.owned {
     background: #c8b8a8;
-    cursor: default;
-}
-.shop-item .btn-buy.locked {
-    background: #d5d0c8;
     cursor: default;
 }
 
@@ -565,7 +575,7 @@
 .msg-list {
     max-height: 200px;
     overflow-y: auto;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 .msg-item {
     padding: 8px 12px;
@@ -596,31 +606,22 @@
     border: 2px dashed #e8d5c4;
     margin: 10px 0;
 }
-.reward-display .big {
-    font-size: 32px;
-    margin-bottom: 6px;
-}
 .reward-display .text {
-    font-size: 18px;
-    color: #4a3728;
+    font-size: 14px;
+    color: #8b7355;
 }
 
-/* ===== 关闭按钮 ===== */
-.cozy-close-btn {
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    z-index: 15;
-    background: rgba(255,255,255,0.3);
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    color: #4a3728;
-    padding: 4px 10px;
-    border-radius: 50%;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s;
+/* ===== 滚动条 ===== */
+.cozy-modal::-webkit-scrollbar,
+.msg-list::-webkit-scrollbar {
+    width: 3px;
 }
-.cozy-close-btn:active {
-    background: rgba(255,255,255,0.6);
+.cozy-modal::-webkit-scrollbar-track,
+.msg-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.cozy-modal::-webkit-scrollbar-thumb,
+.msg-list::-webkit-scrollbar-thumb {
+    background: #e8d5c4;
+    border-radius: 3px;
 }
