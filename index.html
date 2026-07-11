@@ -97,6 +97,7 @@
         <div class="more-item-text" onclick="toggleMorePanel();openSettings();">设置</div>
         <div class="more-item-text" onclick="toggleMorePanel();VideoDanmaku.open()">视频弹幕</div>
         <div class="more-item-text" onclick="toggleMorePanel();openTransferModal();">转账</div>
+        <div class="more-item-text" onclick="toggleMorePanel();openCozySpace();">暖屋</div>
     </div>
     <div class="more-panel-upload-row">
         <input type="file" id="moreFileInput" accept="image/*" style="display:none" onchange="uploadToMorePanel()">
@@ -123,6 +124,7 @@
             <div class="card" onclick="openNotebookModal()">情侣记事本</div>
             <div class="card" onclick="openColorThemeModal()">主题颜色</div>
             <div class="card" onclick="openReplySwitchModal()">回复开关</div>
+            <div class="card" onclick="openCozySettings()">暖屋设置</div>
         </div>
         <button class="btn-close" onclick="closeModal('settingsOverlay')">关闭</button>
     </div>
