@@ -208,7 +208,44 @@ var DEFAULT_DATA = {
     statusList: ["睡眠休憩", "睡醒了", "睡回笼觉", "小憩片刻", "正在睡觉", "准备就寝", "卧床休憩", "相拥而眠", "闭目补觉", "翻看书籍", "观看电视", "学习进修", "伏案读书", "处理工作", "忙于事务", "稍作停歇", "处理要事", "事务繁忙", "临时加班", "补记笔记", "剪辑日常", "翻阅小说", "临摹写字", "发呆放空", "静心思索", "游玩游戏", "外出聚会", "休闲歇息", "聆听歌曲", "拍摄照片", "闲逛散心", "逗弄小猫", "居家追剧", "休闲游戏", "垂钓散心", "下棋消遣", "弹奏乐曲", "画画涂鸦", "拼搭摆件", "把玩手串", "观望天象", "拼装手工", "把玩饰品", "洗漱打理", "洗漱完毕", "身处卫生间", "吹干发丝", "洗浴完毕", "修剪指甲", "搭配穿搭", "打理发型", "试穿新衣", "敷护肤膜", "基础护肤", "整理妆台", "更换衣物", "晾晒发丝", "整理物件", "打扫房间", "收拾桌面", "晾晒衣物", "折叠衣物", "拖地清洁", "整理书包", "收纳衣物", "整理床铺", "规整随身物", "打理小包", "整理杂物", "简易收拾", "缝补衣物", "清洗鞋袜", "擦拭门窗", "浇灌花草", "更换床品", "清理杂物", "整理鞋帽", "晾晒被褥", "擦拭镜面", "收纳杂物", "更换拖鞋", "摆放餐具", "点燃香薰", "摆弄花草", "健身运动", "按摩放松", "简单拉伸", "舒缓肩颈", "用餐完毕", "悠然用餐", "置办零食", "品尝零食", "饮用奶茶", "冲泡热水", "调制饮品", "泡煮热茶", "研磨咖啡", "烹煮茶饮", "备菜做饭", "加热餐食", "清洗水果", "享用下午茶", "进食零食", "分装零食", "饮水解渴", "小口品酒", "冲泡果饮", "炖煮汤品", "静坐品茶", "挑选好物", "储备零食", "购置饮品", "收取快递", "自取外卖", "采购食材", "商超采购", "市集闲逛", "小店漫步", "文具选购", "便利店闲逛", "外出出行", "漫步吹风", "散步慢行", "赶路途中", "下楼丢垃圾", "外出办事", "等候碰面", "路途行进", "即将抵达", "行至半路", "马上到达", "遭遇堵车", "换乘行程", "打车出行", "返程归家", "在外奔波", "临时绕行", "赶路前行", "准备出发", "搭乘电梯", "排队等候", "临时停留", "异地出差", "外出工作", "乘坐公交", "骑行赶路", "等候车辆", "中途休整", "搭乘地铁", "短途步行", "步行赶路", "乘坐扶梯", "沿途观景", "步行归家", "驾车行驶", "楼下散步", "缓步归家", "靠墙歇息", "商超闲逛", "外出归来", "寄存物件", "处理琐事", "调试设备", "居家闲歇", "开窗换气", "窗边静坐", "沐浴暖阳", "等候信号", "摆放摆件", "折叠毯被", "途经花店", "整理行囊", "整理小包", "闭门独处", "卧床念想", "窗边沉思", "晚风思念", "凝神发呆", "放空念想", "整理相册", "回看合照", "眺望街景", "核对账单", "浏览动态", "月下闲赏", "静心放空", "暖手休憩", "翻看合照", "整理桌面", "瘫坐放空", "慵懒休憩", "蜷身静养", "随性放松", "舒展身体", "沙发休憩", "裹毯闲坐", "日光休憩", "吹拂晚风", "身心放松", "视频通话", "语音聊天", "结伴同行"],
     lastStatusTime: 0,
     currentStatus: '发呆',
-    vdWordBank: []
+    vdWordBank: [],
+    cozyRoom: {
+    weather: 'sunny',
+    window: 'arch',
+    floor: 'wood',
+    sofa: 'fabric',
+    bed: 'wooden',
+    bookshelf: 'tall',
+    desk: 'simple',
+    flower: 'wicker',
+    doll: 'bear',
+    pillow: 'round',
+    pillowColor: '#ffb7c5',
+    warmth: 100,  // 初始温暖值
+    purchased: {
+        weather: ['sunny'],
+        window: ['arch'],
+        floor: ['wood'],
+        sofa: ['fabric'],
+        bed: ['wooden'],
+        bookshelf: ['tall'],
+        desk: ['simple'],
+        flower: ['wicker'],
+        doll: ['bear'],
+        pillow: ['round']
+    },
+    messages: [],
+    daily: {
+        lastDate: '',
+        claimed: false,
+        pool: ['温暖值 +10', '温暖值 +20', '温暖值 +5', '小星星 ✨', '家具折扣券'],
+        todayReward: ''
+    },
+    focus: {
+        danmaku: []
+    },
+    otherPurchases: []
+    }
 };
 
 var appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -318,6 +355,15 @@ function loadData() {
                 if (Array.isArray(p.statusList)) appData.statusList = p.statusList;
                 if (typeof p.lastStatusTime === 'number') appData.lastStatusTime = p.lastStatusTime;
                 if (typeof p.currentStatus === 'string') appData.currentStatus = p.currentStatus;
+                if (typeof p.cozyRoom === 'object' && p.cozyRoom !== null) {
+    appData.cozyRoom = p.cozyRoom;
+    // 确保子字段存在
+    if (!appData.cozyRoom.purchased) appData.cozyRoom.purchased = {};
+    if (!appData.cozyRoom.messages) appData.cozyRoom.messages = [];
+    if (!appData.cozyRoom.daily) appData.cozyRoom.daily = { lastDate: '', claimed: false, pool: [], todayReward: '' };
+    if (!appData.cozyRoom.focus) appData.cozyRoom.focus = { danmaku: [] };
+    if (!appData.cozyRoom.otherPurchases) appData.cozyRoom.otherPurchases = [];
+                }
             }
         } else {
             console.log('[加载] 无本地数据，使用默认数据');
