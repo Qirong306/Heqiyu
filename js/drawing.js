@@ -1,7 +1,15 @@
-// ==================== 随机画图模块（支持组合绘制，图形随机位置） ====================
+// ==================== 随机画图模块（支持组合绘制，图形随机位置 + 字母支持） ====================
 var RandomDrawing = {
     // 规则图形库
     shapes: ['circle', 'square', 'triangle', 'star', 'heart'],
+    
+    // 26个英文字母（大小写）
+    letters: [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+    ],
     
     // 生成随机整数
     randomInt: function(min, max) {
@@ -55,25 +63,22 @@ var RandomDrawing = {
     drawRandomLines: function(ctx, width, height, color, lineWidth) {
         ctx.strokeStyle = color;
         ctx.lineWidth = lineWidth;
-        var linesCount = this.randomInt(8, 18);  // 8-18条线
+        var linesCount = this.randomInt(8, 18);
     
         for (var i = 0; i < linesCount; i++) {
-            var lineType = this.randomInt(1, 6);  // 1-6 种线条类型
+            var lineType = this.randomInt(1, 6);
             ctx.beginPath();
         
-            // 随机起点
             var startX = Math.random() * width;
             var startY = Math.random() * height;
             ctx.moveTo(startX, startY);
         
             if (lineType === 1) {
-                // 直线/斜线：直接连接到随机终点
                 var endX = Math.random() * width;
                 var endY = Math.random() * height;
                 ctx.lineTo(endX, endY);
             } 
             else if (lineType === 2) {
-                // 折线（2-3个转折点）
                 var points = this.randomInt(2, 4);
                 var currentX = startX;
                 var currentY = startY;
@@ -86,7 +91,6 @@ var RandomDrawing = {
                 }
             }
             else if (lineType === 3) {
-                // 贝塞尔曲线（光滑曲线）
                 var cp1x = startX + this.randomInt(-50, 50);
                 var cp1y = startY + this.randomInt(-50, 50);
                 var cp2x = startX + this.randomInt(-30, 80);
@@ -96,7 +100,6 @@ var RandomDrawing = {
                 ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
             }
             else if (lineType === 4) {
-                // 二次贝塞尔曲线（抛物线形）
                 var cpX = startX + this.randomInt(-60, 60);
                 var cpY = startY + this.randomInt(-80, 80);
                 var endX = startX + this.randomInt(-50, 50);
@@ -104,7 +107,6 @@ var RandomDrawing = {
                 ctx.quadraticCurveTo(cpX, cpY, endX, endY);
             }
             else if (lineType === 5) {
-                // 波浪曲线（小幅度摆动）
                 var steps = this.randomInt(5, 12);
                 var stepX = this.randomInt(10, 25);
                 var stepY = this.randomInt(-15, 15);
@@ -122,7 +124,6 @@ var RandomDrawing = {
                 }
             }
             else {
-                // 环形/螺旋片段
                 var centerX = startX;
                 var centerY = startY;
                 var radius = this.randomInt(10, 40);
@@ -133,6 +134,25 @@ var RandomDrawing = {
         
             ctx.stroke();
         }
+    },
+    
+    // 绘制单个字母（支持大小写）
+    drawLetter: function(ctx, width, height, letter, color, lineWidth, xOffset, yOffset) {
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = lineWidth;
+        
+        var centerX = width / 2 + (xOffset || 0);
+        var centerY = height / 2 + (yOffset || 0);
+        var fontSize = Math.min(width, height) * 0.35;
+        
+        ctx.font = 'bold ' + fontSize + 'px "Arial", "Helvetica", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 先描边再填充，让字母更清晰
+        ctx.strokeText(letter, centerX, centerY);
+        ctx.fillText(letter, centerX, centerY);
     },
     
     // 绘制规则图形
@@ -214,7 +234,6 @@ var RandomDrawing = {
         var ctx = canvas.getContext('2d');
         
         // 背景色
-        // 从 CSS 变量读取当前背景色
         var bgColor = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#f5f0eb';
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, 250, 250);
@@ -223,10 +242,11 @@ var RandomDrawing = {
         var elementCount = this.randomInt(2, 3);
         var usedTypes = [];
         var lineWidth = this.randomInt(2, 6);
+        var usedLetters = []; // 记录已使用的字母，避免重复
         
         for (var i = 0; i < elementCount; i++) {
             // 随机选择类型，避免重复
-            var availableTypes = ['shape', 'wave', 'spiral', 'randomLines'];
+            var availableTypes = ['shape', 'wave', 'spiral', 'randomLines', 'letter'];
             if (usedTypes.length > 0) {
                 availableTypes = availableTypes.filter(function(t) { return usedTypes.indexOf(t) === -1; });
             }
@@ -237,7 +257,6 @@ var RandomDrawing = {
             
             if (type === 'shape') {
                 var shape = this.shapes[Math.floor(Math.random() * this.shapes.length)];
-                // 完全随机位置：-80 到 80 之间随机偏移
                 var xOffset = this.randomInt(-80, 80);
                 var yOffset = this.randomInt(-80, 80);
                 this.drawShape(ctx, 250, 250, shape, mainColor, lineWidth, xOffset, yOffset);
@@ -247,6 +266,19 @@ var RandomDrawing = {
                 this.drawSpiral(ctx, 250, 250, mainColor, lineWidth);
             } else if (type === 'randomLines') {
                 this.drawRandomLines(ctx, 250, 250, mainColor, lineWidth);
+            } else if (type === 'letter') {
+                // 随机选择一个字母（大小写混合）
+                var letter = this.letters[Math.floor(Math.random() * this.letters.length)];
+                // 避免重复字母（最多尝试10次）
+                var attempts = 0;
+                while (usedLetters.indexOf(letter) !== -1 && attempts < 10) {
+                    letter = this.letters[Math.floor(Math.random() * this.letters.length)];
+                    attempts++;
+                }
+                usedLetters.push(letter);
+                var xOffset = this.randomInt(-80, 80);
+                var yOffset = this.randomInt(-80, 80);
+                this.drawLetter(ctx, 250, 250, letter, mainColor, lineWidth, xOffset, yOffset);
             }
         }
         
@@ -262,9 +294,65 @@ var RandomDrawing = {
         return canvas.toDataURL('image/png');
     },
     
-    // 对外接口
+    // 对外接口 - 生成随机图画
     getRandomDrawing: function() {
         return RandomDrawing.generateCanvas();
+    },
+    
+    // 对外接口 - 生成指定字母的图画
+    getLetterDrawing: function(letter) {
+        var canvas = document.createElement('canvas');
+        canvas.width = 250;
+        canvas.height = 250;
+        var ctx = canvas.getContext('2d');
+        
+        var bgColor = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#f5f0eb';
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, 250, 250);
+        
+        var lineWidth = this.randomInt(2, 6);
+        var mainColor = this.randomColor();
+        
+        // 绘制指定的字母
+        this.drawLetter(ctx, 250, 250, letter, mainColor, lineWidth, 0, 0);
+        
+        // 底部标注
+        ctx.font = '12px "Segoe UI"';
+        ctx.fillStyle = '#555555';
+        ctx.fillText('字母: ' + letter + ' | 粗细: ' + lineWidth + 'px', 10, 235);
+        
+        ctx.getImageData(0, 0, 250, 250);
+        return canvas.toDataURL('image/png');
+    },
+    
+    // 对外接口 - 生成多个字母的图画
+    getMultiLetterDrawing: function(letters) {
+        var canvas = document.createElement('canvas');
+        canvas.width = 250;
+        canvas.height = 250;
+        var ctx = canvas.getContext('2d');
+        
+        var bgColor = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#f5f0eb';
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, 250, 250);
+        
+        var lineWidth = this.randomInt(2, 6);
+        var positions = [
+            [-60, -60], [60, -60], [-60, 60], [60, 60], [0, 0]
+        ];
+        
+        for (var i = 0; i < Math.min(letters.length, 5); i++) {
+            var color = this.randomColor();
+            var pos = positions[i % positions.length];
+            this.drawLetter(ctx, 250, 250, letters[i], color, lineWidth, pos[0], pos[1]);
+        }
+        
+        ctx.font = '12px "Segoe UI"';
+        ctx.fillStyle = '#555555';
+        ctx.fillText('字母: ' + letters.join('') + ' | 粗细: ' + lineWidth + 'px', 10, 235);
+        
+        ctx.getImageData(0, 0, 250, 250);
+        return canvas.toDataURL('image/png');
     }
 };
 
@@ -290,8 +378,69 @@ function sendDrawingAsOther() {
     img.src = imgData;
 }
 
+// 发送指定字母的图画
+function sendLetterDrawing(letter) {
+    if (letter.length !== 1 || !/[a-zA-Z]/.test(letter)) {
+        console.warn('请传入一个英文字母');
+        return;
+    }
+    var imgData = RandomDrawing.getLetterDrawing(letter);
+    var img = new Image();
+    img.onload = function() {
+        var imgHtml = '<img src="' + imgData + '" style="max-width:200px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">';
+        if (typeof addMessage === 'function') {
+            addMessage(imgHtml, 'other', true, false);
+            if (typeof appData !== 'undefined' && appData.chatHistory) {
+                appData.chatHistory.push({
+                    type: 'other',
+                    content: imgHtml,
+                    time: Date.now(),
+                    isDrawing: true
+                });
+                if (typeof saveData === 'function') saveData();
+            }
+        }
+    };
+    img.src = imgData;
+}
+
+// 发送多个字母的图画
+function sendMultiLetterDrawing(letters) {
+    if (!letters || letters.length === 0) {
+        console.warn('请传入字母数组');
+        return;
+    }
+    var validLetters = letters.filter(function(l) { return /[a-zA-Z]/.test(l); });
+    if (validLetters.length === 0) return;
+    
+    var imgData = RandomDrawing.getMultiLetterDrawing(validLetters);
+    var img = new Image();
+    img.onload = function() {
+        var imgHtml = '<img src="' + imgData + '" style="max-width:200px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">';
+        if (typeof addMessage === 'function') {
+            addMessage(imgHtml, 'other', true, false);
+            if (typeof appData !== 'undefined' && appData.chatHistory) {
+                appData.chatHistory.push({
+                    type: 'other',
+                    content: imgHtml,
+                    time: Date.now(),
+                    isDrawing: true
+                });
+                if (typeof saveData === 'function') saveData();
+            }
+        }
+    };
+    img.src = imgData;
+}
+
 // 导出到全局
 window.RandomDrawing = RandomDrawing;
 window.sendDrawingAsOther = sendDrawingAsOther;
+window.sendLetterDrawing = sendLetterDrawing;
+window.sendMultiLetterDrawing = sendMultiLetterDrawing;
 
-console.log('随机画图模块已加载（支持组合绘制，图形随机位置）');
+console.log('随机画图模块已加载（支持组合绘制，图形随机位置 + 26个英文字母大小写）');
+console.log('使用方法:');
+console.log('  - sendDrawingAsOther()      : 随机组合图画');
+console.log('  - sendLetterDrawing("A")    : 绘制单个字母');
+console.log('  - sendMultiLetterDrawing(["H","i"]) : 绘制多个字母');
