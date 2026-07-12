@@ -96,6 +96,10 @@ function buyFromShop(category, id) {
     
     openCozyShop();
     renderCozyRoom();
+    // 刷新 Canvas
+    if (typeof renderCozyCanvas === 'function') {
+        setTimeout(renderCozyCanvas, 50);
+    }
     updateWarmthDisplay();
     
     if (category === 'weather') {
@@ -117,7 +121,10 @@ function switchFromShop(category, id) {
     
     openCozyShop();
     renderCozyRoom();
-    
+    // 刷新 Canvas
+    if (typeof renderCozyCanvas === 'function') {
+        setTimeout(renderCozyCanvas, 50);
+    }
     if (category === 'weather') {
         updateWeatherDisplay();
     }
