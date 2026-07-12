@@ -1,4 +1,5 @@
-/* ========== 暖屋全屏样式 ========== */
+/* ========== 暖屋全屏样式（优化版：立体感 + CSS图形家具） ========== */
+
 .cozy-overlay {
     position: fixed;
     top: 0;
@@ -18,15 +19,16 @@
 
 /* ===== 顶部栏 ===== */
 .cozy-header {
-    background: rgba(245, 237, 228, 0.92);
-    padding: 10px 16px;
+    background: rgba(245, 237, 228, 0.95);
+    padding: 8px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 2px solid #e8d5c4;
     flex-shrink: 0;
     z-index: 10;
-    min-height: 52px;
+    min-height: 48px;
+    backdrop-filter: blur(8px);
 }
 .cozy-header-left {
     display: flex;
@@ -34,41 +36,99 @@
     gap: 10px;
 }
 .cozy-header-title {
-    font-size: 20px;
+    font-size: 18px;
     color: #4a3728;
     letter-spacing: 2px;
 }
 .cozy-header-weather {
     font-size: 12px;
     color: #8b7355;
-    background: rgba(139, 115, 85, 0.12);
-    padding: 2px 10px;
-    border-radius: 10px;
+    background: rgba(139, 115, 85, 0.15);
+    padding: 2px 12px;
+    border-radius: 12px;
 }
 .cozy-header-actions {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.cozy-header-actions button {
-    background: none;
+.cozy-header-warmth {
+    font-size: 12px;
+    color: #e8a87c;
+    background: rgba(232, 168, 124, 0.18);
+    padding: 3px 12px;
+    border-radius: 14px;
+}
+.cozy-close-btn {
+    background: rgba(0,0,0,0.06);
     border: none;
     font-size: 16px;
     cursor: pointer;
-    padding: 4px 8px;
+    padding: 4px 10px;
     border-radius: 50%;
     color: #4a3728;
     transition: background 0.2s;
 }
-.cozy-header-actions button:active {
-    background: rgba(0,0,0,0.06);
+.cozy-close-btn:active {
+    background: rgba(0,0,0,0.12);
 }
-.cozy-header-warmth {
-    font-size: 13px;
-    color: #e8a87c;
-    background: rgba(232, 168, 124, 0.15);
-    padding: 4px 12px;
-    border-radius: 16px;
+
+/* ===== 迷你音乐播放器 ===== */
+.cozy-music-mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,248,240,0.6);
+    border-radius: 20px;
+    padding: 3px 10px 3px 6px;
+    border: 1px solid #e8d5c4;
+}
+.cozy-music-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.music-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background: radial-gradient(circle at 40% 35%, #d4b8a0 20%, transparent 20%),
+                radial-gradient(circle at 60% 35%, #d4b8a0 20%, transparent 20%),
+                radial-gradient(circle at 50% 60%, #d4b8a0 15%, transparent 15%);
+    border-radius: 50%;
+}
+.cozy-music-name {
+    font-size: 11px;
+    color: #4a3728;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cozy-music-controls {
+    display: none;
+    gap: 4px;
+    align-items: center;
+}
+.cozy-music-controls.show {
+    display: flex;
+}
+.cozy-music-cmd {
+    background: none;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    color: #8b7355;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+.cozy-music-cmd:active {
+    background: rgba(0,0,0,0.06);
 }
 
 /* ===== 暖屋主体 ===== */
@@ -79,120 +139,68 @@
     min-height: 0;
 }
 
-/* ===== 天气层（背景） ===== */
+/* ===== 天气层（背景 + 立体感） ===== */
 .cozy-weather-layer {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    transition: background 1s;
+    transition: background 1.5s;
     z-index: 0;
 }
 .cozy-weather-layer.weather-sunny {
-    background: linear-gradient(180deg, #fdd9b5 0%, #fce4d6 40%, #f5ede4 70%);
+    background: radial-gradient(ellipse at 30% 20%, #fce4d6 0%, #fdd9b5 30%, #f5ede4 70%, #ede0d4 100%);
 }
 .cozy-weather-layer.weather-cloudy {
-    background: linear-gradient(180deg, #d5d5d5 0%, #e8e0d8 50%, #f5ede4 80%);
+    background: radial-gradient(ellipse at 50% 20%, #e8e0d8 0%, #d5d5d5 40%, #d0c8c0 70%, #c8c0b8 100%);
 }
 .cozy-weather-layer.weather-rainy {
-    background: linear-gradient(180deg, #8a9ba8 0%, #a8b8c8 50%, #d5d0c8 80%);
+    background: radial-gradient(ellipse at 50% 20%, #a8b8c8 0%, #8a9ba8 40%, #7a8a98 70%, #6a7a88 100%);
 }
 .cozy-weather-layer.weather-snowy {
-    background: linear-gradient(180deg, #d8dce0 0%, #e8ecf0 50%, #f0ece8 80%);
+    background: radial-gradient(ellipse at 50% 20%, #e8ecf0 0%, #d8dce0 40%, #d0d4d8 70%, #c8ccd0 100%);
 }
 .cozy-weather-layer.weather-night {
-    background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 50%, #3d3d5c 80%);
+    background: radial-gradient(ellipse at 50% 20%, #2d2d44 0%, #1a1a2e 50%, #0d0d1a 100%);
 }
 .cozy-weather-layer.weather-sunset {
-    background: linear-gradient(180deg, #f5a08a 0%, #e8b89a 40%, #d5c8b8 70%);
+    background: radial-gradient(ellipse at 30% 20%, #f5a08a 0%, #e8b89a 35%, #d5c8b8 65%, #c8b8a8 100%);
 }
 
-/* ===== 雨滴 ===== */
-.rain-container {
+/* 地面阴影（立体感） */
+.cozy-weather-layer::after {
+    content: '';
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    overflow: hidden;
+    height: 40%;
+    background: linear-gradient(0deg, rgba(0,0,0,0.06) 0%, transparent 100%);
     pointer-events: none;
-    z-index: 1;
-}
-.rain-drop {
-    position: absolute;
-    width: 2px;
-    background: rgba(180, 210, 240, 0.5);
-    border-radius: 1px;
-    animation: rainFall linear infinite;
-}
-@keyframes rainFall {
-    0% { transform: translateY(-20px); opacity: 0.5; }
-    100% { transform: translateY(calc(100vh + 20px)); opacity: 0.1; }
 }
 
-/* ===== 雪花 ===== */
-.snow-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1;
-}
-.snow-flake {
-    position: absolute;
-    color: rgba(255,255,255,0.7);
-    font-size: 14px;
-    animation: snowFall linear infinite;
-}
-@keyframes snowFall {
-    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.7; }
-    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.2; }
-}
-
-/* ===== 星星（夜晚） ===== */
-.star-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: 1;
-}
-.star {
-    position: absolute;
-    color: rgba(255,255,255,0.6);
-    font-size: 12px;
-    animation: starTwinkle 2s ease-in-out infinite alternate;
-}
-@keyframes starTwinkle {
-    0% { opacity: 0.2; transform: scale(0.8); }
-    100% { opacity: 1; transform: scale(1.2); }
-}
-
-/* ===== 窗户 ===== */
+/* ===== 窗户（带玻璃反光） ===== */
 .cozy-window {
     position: absolute;
-    top: 50px;
+    top: 40px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60%;
-    height: 32%;
+    width: 58%;
+    height: 30%;
     z-index: 2;
     pointer-events: none;
 }
 .window-frame {
     width: 100%;
     height: 100%;
-    background: rgba(200, 220, 240, 0.1);
+    background: rgba(180, 200, 220, 0.15);
     border: 8px solid #d5c0a8;
     border-radius: 16px;
     position: relative;
-    box-shadow: inset 0 0 40px rgba(200, 220, 240, 0.05);
+    box-shadow: 
+        inset 0 0 60px rgba(180, 200, 220, 0.08),
+        0 4px 20px rgba(0,0,0,0.06);
 }
 .window-frame.arch {
     border-radius: 80px 80px 16px 16px;
@@ -207,7 +215,7 @@
     left: 50%;
     width: 2px;
     height: 100%;
-    background: rgba(180, 160, 140, 0.25);
+    background: rgba(180, 160, 140, 0.2);
 }
 .window-frame.grid::after {
     content: '';
@@ -216,7 +224,7 @@
     left: 0;
     width: 100%;
     height: 2px;
-    background: rgba(180, 160, 140, 0.25);
+    background: rgba(180, 160, 140, 0.2);
 }
 .window-frame.french {
     border-radius: 8px;
@@ -226,6 +234,7 @@
 .window-frame.bay {
     border-radius: 16px 16px 4px 4px;
     border-color: #dcc8b0;
+    box-shadow: 0 -4px 30px rgba(200, 180, 160, 0.15);
 }
 .window-view {
     position: absolute;
@@ -237,8 +246,19 @@
     overflow: hidden;
     z-index: -1;
 }
+/* 玻璃反光 */
+.window-glare {
+    position: absolute;
+    top: -20%;
+    left: -20%;
+    width: 60%;
+    height: 60%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 60%);
+    transform: rotate(25deg);
+    pointer-events: none;
+}
 
-/* ===== 地板 ===== */
+/* ===== 地板（立体木纹） ===== */
 .cozy-floor {
     position: absolute;
     bottom: 0;
@@ -249,17 +269,19 @@
     pointer-events: none;
 }
 .cozy-floor.floor-wood {
-    background: repeating-linear-gradient(90deg, #d4b8a0 0px, #d4b8a0 2px, #c8a890 2px, #c8a890 20px);
+    background: repeating-linear-gradient(90deg, #d4b8a0 0px, #d4b8a0 2px, #c8a890 2px, #c8a890 18px);
+    box-shadow: inset 0 8px 20px rgba(0,0,0,0.05);
 }
 .cozy-floor.floor-carpet {
-    background: #d5c0b0;
-    border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+    background: radial-gradient(ellipse at 50% 100%, #d5c0b0 0%, #c8b0a0 100%);
+    border-radius: 50% 50% 0 0 / 15% 15% 0 0;
 }
 .cozy-floor.floor-tile {
     background: repeating-conic-gradient(#e0d8d0 0% 25%, #d5cdc5 0% 50%) 0 0 / 40px 40px;
 }
 .cozy-floor.floor-tatami {
-    background: repeating-linear-gradient(0deg, #d4c8b0 0px, #d4c8b0 2px, #c8bc9a 2px, #c8bc9a 30px);
+    background: repeating-linear-gradient(0deg, #d4c8b0 0px, #d4c8b0 2px, #c8bc9a 2px, #c8bc9a 28px);
+    box-shadow: inset 0 4px 16px rgba(0,0,0,0.04);
 }
 
 /* ===== 家具层 ===== */
@@ -277,31 +299,38 @@
     pointer-events: auto;
 }
 
+/* 家具卡片 - 立体感 */
 .furniture-item {
     position: absolute;
-    background: rgba(255, 248, 240, 0.75);
-    backdrop-filter: blur(2px);
-    border-radius: 14px;
-    padding: 6px 8px;
+    background: rgba(255, 248, 240, 0.7);
+    backdrop-filter: blur(4px);
+    border-radius: 16px;
+    padding: 6px 8px 8px 8px;
     text-align: center;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 2px solid rgba(200, 180, 160, 0.25);
+    transition: transform 0.25s, box-shadow 0.25s;
+    border: 2px solid rgba(200, 180, 160, 0.2);
+    box-shadow: 
+        0 4px 16px rgba(0,0,0,0.04),
+        0 1px 4px rgba(0,0,0,0.02),
+        inset 0 1px 0 rgba(255,255,255,0.6);
     min-width: 44px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .furniture-item:active {
-    transform: scale(0.92);
+    transform: scale(0.94);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .furniture-item .f-name {
-    font-size: 11px;
+    font-size: 10px;
     color: #4a3728;
+    display: block;
+    margin-top: 3px;
 }
 .furniture-item .f-badge {
     position: absolute;
     top: -6px;
     right: -6px;
-    font-size: 10px;
+    font-size: 9px;
     background: #e8a87c;
     color: white;
     border-radius: 50%;
@@ -310,16 +339,423 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 6px rgba(232,168,124,0.3);
+}
+
+/* ===== CSS 图形家具 ===== */
+.f-graphic {
+    width: 100%;
+    height: 32px;
+    margin: 0 auto;
+    border-radius: 4px;
+    position: relative;
+}
+
+/* 沙发 */
+.f-graphic-sofa {
+    background: #d4b8a0;
+    border-radius: 6px 6px 2px 2px;
+    height: 22px;
+    box-shadow: 0 -2px 0 #c8a890, 0 4px 8px rgba(0,0,0,0.06);
+}
+.f-graphic-sofa::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 10%;
+    width: 25%;
+    height: 10px;
+    background: #d4b8a0;
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 -2px 0 #c8a890;
+}
+.f-graphic-sofa::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 10%;
+    width: 25%;
+    height: 10px;
+    background: #d4b8a0;
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 -2px 0 #c8a890;
+}
+.f-graphic-sofa-leather {
+    background: #b8a090;
+    border-radius: 6px 6px 2px 2px;
+    height: 22px;
+    box-shadow: 0 -2px 0 #a89080, 0 4px 8px rgba(0,0,0,0.08);
+}
+.f-graphic-sofa-leather::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 10%;
+    width: 25%;
+    height: 10px;
+    background: #b8a090;
+    border-radius: 4px 4px 0 0;
+}
+.f-graphic-sofa-leather::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 10%;
+    width: 25%;
+    height: 10px;
+    background: #b8a090;
+    border-radius: 4px 4px 0 0;
+}
+.f-graphic-sofa-lounge {
+    background: #dcc8b8;
+    border-radius: 12px 12px 4px 4px;
+    height: 18px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* 床 */
+.f-graphic-bed {
+    background: #d4c0b0;
+    border-radius: 8px 8px 2px 2px;
+    height: 26px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.f-graphic-bed::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    width: 30%;
+    height: 12px;
+    background: #dcc8b8;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.f-graphic-bed-wooden {
+    background: #d4b8a0;
+    border-radius: 4px 4px 2px 2px;
+    height: 24px;
+    border-bottom: 3px solid #c8a890;
+}
+.f-graphic-bed-wooden::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    width: 28%;
+    height: 10px;
+    background: #dcc8b8;
+    border-radius: 4px;
+}
+.f-graphic-bed-upholstered {
+    background: #c8b0a8;
+    border-radius: 10px 10px 2px 2px;
+    height: 26px;
+    box-shadow: inset 0 -4px 0 #b8a098;
+}
+.f-graphic-bed-upholstered::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    width: 30%;
+    height: 12px;
+    background: #dcc8c0;
+    border-radius: 6px;
+}
+.f-graphic-bed-iron {
+    background: transparent;
+    height: 26px;
+    border: 2px solid #a09088;
+    border-radius: 2px;
+}
+.f-graphic-bed-iron::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    width: 28%;
+    height: 10px;
+    background: #dcc8b8;
+    border-radius: 4px;
+}
+.f-graphic-bed-tatami {
+    background: #d4c8b0;
+    border-radius: 2px;
+    height: 20px;
+    border: 2px solid #c8bca0;
+}
+
+/* 书架 */
+.f-graphic-bookshelf {
+    background: #d4c0b0;
+    height: 32px;
+    border-radius: 2px;
+    border: 1px solid #c8b8a8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.f-graphic-bookshelf::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    background: #c8b8a8;
+    box-shadow: 0 8px 0 #c8b8a8;
+}
+.f-graphic-bookshelf-tall {
+    background: #d4c0b0;
+    height: 34px;
+    border-radius: 2px;
+    border: 1px solid #c8b8a8;
+}
+.f-graphic-bookshelf-tall::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    background: #c8b8a8;
+    box-shadow: 0 10px 0 #c8b8a8, 0 20px 0 #c8b8a8;
+}
+.f-graphic-bookshelf-wall {
+    background: transparent;
+    height: 28px;
+    border-top: 2px solid #c8b8a8;
+    border-bottom: 2px solid #c8b8a8;
+}
+.f-graphic-bookshelf-wall::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #c8b8a8;
+    box-shadow: 0 8px 0 #c8b8a8;
+}
+.f-graphic-bookshelf-short {
+    background: #d4c0b0;
+    height: 20px;
+    border-radius: 2px;
+    border: 1px solid #c8b8a8;
+}
+
+/* 书桌 */
+.f-graphic-desk {
+    background: #d4b8a0;
+    height: 18px;
+    border-radius: 2px 2px 0 0;
+    box-shadow: 0 4px 0 #c8a890, 0 8px 12px rgba(0,0,0,0.04);
+}
+.f-graphic-desk-simple {
+    background: #d4b8a0;
+    height: 16px;
+    border-radius: 2px 2px 0 0;
+    box-shadow: 0 4px 0 #c8a890, 0 6px 10px rgba(0,0,0,0.04);
+}
+.f-graphic-desk-vintage {
+    background: #c8b098;
+    height: 18px;
+    border-radius: 4px 4px 0 0;
+    box-shadow: 0 4px 0 #b8a088, 0 6px 12px rgba(0,0,0,0.06);
+    border: 1px solid #b8a088;
+}
+.f-graphic-desk-modern {
+    background: #d0c8c0;
+    height: 14px;
+    border-radius: 2px;
+    box-shadow: 0 4px 0 #c0b8b0, 0 4px 10px rgba(0,0,0,0.04);
+}
+
+/* 花篮 */
+.f-graphic-flower {
+    background: #c8b8a0;
+    height: 18px;
+    border-radius: 2px 2px 8px 8px;
+    box-shadow: 0 4px 0 #b8a890, 0 4px 8px rgba(0,0,0,0.04);
+}
+.f-graphic-flower::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 20%;
+    width: 60%;
+    height: 14px;
+    background: radial-gradient(circle at 30% 40%, #e8a87c 20%, transparent 20%),
+                radial-gradient(circle at 50% 30%, #f0b88a 20%, transparent 20%),
+                radial-gradient(circle at 70% 40%, #e8a87c 20%, transparent 20%),
+                radial-gradient(circle at 50% 50%, #f0b88a 15%, transparent 15%);
+}
+.f-graphic-flower-wicker {
+    background: #c8b8a0;
+    height: 16px;
+    border-radius: 2px 2px 8px 8px;
+    box-shadow: 0 4px 0 #b8a890;
+}
+.f-graphic-flower-wicker::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 20%;
+    width: 60%;
+    height: 14px;
+    background: radial-gradient(circle at 30% 40%, #e8a87c 20%, transparent 20%),
+                radial-gradient(circle at 50% 30%, #f0b88a 20%, transparent 20%),
+                radial-gradient(circle at 70% 40%, #e8a87c 20%, transparent 20%);
+}
+.f-graphic-flower-glass {
+    background: rgba(180, 200, 220, 0.3);
+    height: 20px;
+    border-radius: 2px 2px 8px 8px;
+    border: 2px solid rgba(180, 200, 220, 0.4);
+}
+.f-graphic-flower-glass::after {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 25%;
+    width: 50%;
+    height: 14px;
+    background: radial-gradient(circle at 30% 40%, #e8a87c 20%, transparent 20%),
+                radial-gradient(circle at 50% 30%, #f0b88a 20%, transparent 20%),
+                radial-gradient(circle at 70% 40%, #e8a87c 20%, transparent 20%);
+}
+.f-graphic-flower-ceramic {
+    background: #c8b8b0;
+    height: 18px;
+    border-radius: 4px 4px 8px 8px;
+    box-shadow: 0 4px 0 #b8a8a0, inset 0 -2px 4px rgba(0,0,0,0.06);
+}
+.f-graphic-flower-ceramic::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 20%;
+    width: 60%;
+    height: 14px;
+    background: radial-gradient(circle at 30% 40%, #f0b88a 20%, transparent 20%),
+                radial-gradient(circle at 50% 30%, #f5c8a0 20%, transparent 20%),
+                radial-gradient(circle at 70% 40%, #f0b88a 20%, transparent 20%);
+}
+
+/* 玩偶 */
+.f-graphic-doll {
+    background: radial-gradient(circle at 50% 45%, #c8b8a8 40%, transparent 40%);
+    height: 28px;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+}
+.f-graphic-doll::after {
+    content: '';
+    position: absolute;
+    top: 0px;
+    left: 25%;
+    width: 50%;
+    height: 30%;
+    background: radial-gradient(circle at 35% 50%, #d4c0b0 25%, transparent 25%),
+                radial-gradient(circle at 65% 50%, #d4c0b0 25%, transparent 25%);
+}
+.f-graphic-doll-bear {
+    background: radial-gradient(circle at 50% 45%, #c8b8a8 40%, transparent 40%);
+    height: 28px;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+}
+.f-graphic-doll-bear::after {
+    content: '';
+    position: absolute;
+    top: 0px;
+    left: 25%;
+    width: 50%;
+    height: 30%;
+    background: radial-gradient(circle at 35% 50%, #d4c0b0 25%, transparent 25%),
+                radial-gradient(circle at 65% 50%, #d4c0b0 25%, transparent 25%);
+}
+.f-graphic-doll-rabbit {
+    background: radial-gradient(circle at 50% 45%, #e0d0c0 40%, transparent 40%);
+    height: 28px;
+    border-radius: 50%;
+}
+.f-graphic-doll-rabbit::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 20%;
+    width: 25%;
+    height: 16px;
+    background: #e0d0c0;
+    border-radius: 50% 50% 0 0;
+    box-shadow: 28px 0 0 #e0d0c0;
+}
+.f-graphic-doll-cat {
+    background: radial-gradient(circle at 50% 45%, #d4c0b0 40%, transparent 40%);
+    height: 28px;
+    border-radius: 50%;
+}
+.f-graphic-doll-cat::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 10%;
+    width: 30%;
+    height: 30%;
+    background: radial-gradient(circle at 50% 50%, #d4c0b0 25%, transparent 25%),
+                radial-gradient(circle at 50% 50%, #d4c0b0 25%, transparent 25%) 55% 0;
+}
+.f-graphic-doll-dog {
+    background: radial-gradient(circle at 50% 45%, #d0c0b0 40%, transparent 40%);
+    height: 28px;
+    border-radius: 50%;
+}
+.f-graphic-doll-dog::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 10%;
+    width: 40%;
+    height: 20%;
+    background: #d0c0b0;
+    border-radius: 50% 50% 0 0;
+    box-shadow: 55% 0 0 #d0c0b0;
+}
+
+/* 枕头 */
+.f-graphic-pillow {
+    background: #f0dcc8;
+    height: 18px;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.04), inset 0 -4px 0 #e8d0bc;
+}
+.f-graphic-pillow-round {
+    background: #f0dcc8;
+    height: 18px;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.04), inset 0 -4px 0 #e8d0bc;
+}
+.f-graphic-pillow-square {
+    background: #f0dcc8;
+    height: 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.04), inset 0 -4px 0 #e8d0bc;
+}
+.f-graphic-pillow-long {
+    background: #f0dcc8;
+    height: 12px;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.04), inset 0 -4px 0 #e8d0bc;
 }
 
 /* 家具位置 */
-.f-sofa { bottom: 22%; left: 6%; width: 16%; }
-.f-bed { bottom: 20%; right: 6%; width: 20%; }
-.f-bookshelf { top: 38%; left: 3%; width: 12%; }
-.f-desk { bottom: 22%; left: 34%; width: 14%; }
-.f-flower { top: 40%; right: 14%; width: 11%; }
-.f-doll { top: 44%; right: 28%; width: 11%; }
-.f-pillow { bottom: 32%; right: 10%; width: 13%; }
+.f-sofa { bottom: 22%; left: 5%; width: 18%; }
+.f-bed { bottom: 20%; right: 5%; width: 22%; }
+.f-bookshelf { top: 36%; left: 2%; width: 12%; }
+.f-desk { bottom: 22%; left: 33%; width: 16%; }
+.f-flower { top: 38%; right: 12%; width: 12%; }
+.f-doll { top: 42%; right: 26%; width: 12%; }
+.f-pillow { bottom: 30%; right: 8%; width: 14%; }
 
 /* ===== 弹幕层 ===== */
 .cozy-danmaku-layer {
@@ -327,7 +763,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 70px;
+    height: 60px;
     z-index: 5;
     pointer-events: none;
     overflow: hidden;
@@ -335,23 +771,24 @@
 .cozy-danmaku {
     position: absolute;
     white-space: nowrap;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     padding: 3px 14px;
-    border-radius: 18px;
+    border-radius: 16px;
     background: rgba(0,0,0,0.3);
     backdrop-filter: blur(4px);
     color: white;
     text-shadow: 0 1px 4px rgba(0,0,0,0.2);
     animation: danmakuFly linear forwards;
     pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .cozy-danmaku.from-me {
-    background: rgba(232, 168, 124, 0.75);
+    background: rgba(232, 168, 124, 0.8);
     color: #4a3728;
 }
 .cozy-danmaku.from-other {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.75);
     color: #4a3728;
 }
 @keyframes danmakuFly {
@@ -367,8 +804,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(0,0,0,0.45);
-    backdrop-filter: blur(8px);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
     padding: 10px 14px;
     display: none;
     gap: 8px;
@@ -393,7 +830,7 @@
     color: rgba(255,255,255,0.4);
 }
 .cozy-focus-bar input:focus {
-    background: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.2);
 }
 .cozy-focus-bar button {
     padding: 8px 16px;
@@ -407,6 +844,10 @@
 }
 .cozy-focus-bar button:active {
     transform: scale(0.92);
+}
+.cozy-focus-close {
+    background: rgba(255,255,255,0.1) !important;
+    padding: 8px 12px !important;
 }
 
 /* ===== 底部功能栏 ===== */
@@ -422,6 +863,7 @@
     z-index: 10;
     flex-wrap: wrap;
     gap: 4px;
+    backdrop-filter: blur(4px);
 }
 .cozy-footer button {
     background: rgba(255, 248, 240, 0.7);
@@ -435,32 +877,34 @@
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
 }
 .cozy-footer button:active {
     transform: scale(0.92);
     background: #e8d5c4;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
-.cozy-footer button .icon {
+.cozy-footer button .icon-shop,
+.cozy-footer button .icon-msg,
+.cozy-footer button .icon-focus,
+.cozy-footer button .icon-gift,
+.cozy-footer button .icon-setting {
     display: inline-block;
-    width: 18px;
-    height: 18px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
+    border-radius: 3px;
 }
-/* CSS 绘制图标 - 纯几何图形 */
 .icon-shop {
     background: radial-gradient(circle at 30% 30%, #d4b8a0 20%, transparent 20%),
                 radial-gradient(circle at 70% 30%, #d4b8a0 20%, transparent 20%),
                 radial-gradient(circle at 50% 70%, #d4b8a0 25%, transparent 25%);
 }
-.icon-message {
+.icon-msg {
     background: radial-gradient(circle at 50% 40%, #d4b8a0 30%, transparent 30%);
     border: 2px solid #d4b8a0;
-    border-radius: 4px;
 }
 .icon-focus {
     background: radial-gradient(circle at 50% 50%, #d4b8a0 35%, transparent 35%);
@@ -471,9 +915,8 @@
     background: radial-gradient(circle at 50% 30%, #d4b8a0 20%, transparent 20%),
                 radial-gradient(circle at 50% 70%, #d4b8a0 25%, transparent 25%);
     border: 2px solid #d4b8a0;
-    border-radius: 4px;
 }
-.icon-settings {
+.icon-setting {
     background: radial-gradient(circle at 50% 30%, #d4b8a0 15%, transparent 15%),
                 radial-gradient(circle at 30% 70%, #d4b8a0 12%, transparent 12%),
                 radial-gradient(circle at 70% 70%, #d4b8a0 12%, transparent 12%);
@@ -493,7 +936,7 @@
     display: none;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
 }
 .cozy-modal-overlay.show {
     display: flex;
@@ -506,7 +949,7 @@
     max-height: 70vh;
     overflow-y: auto;
     padding: 20px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.15);
     border: 2px solid #e8d5c4;
 }
 .cozy-modal h3 {
@@ -537,7 +980,8 @@
     background: #fffcf8;
     border-radius: 12px;
     border: 2px solid #e8d5c4;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
 }
 .shop-item .info {
     display: flex;
@@ -562,12 +1006,14 @@
     font-family: inherit;
     font-size: 11px;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(232,168,124,0.2);
 }
 .shop-item .btn-buy:active {
     transform: scale(0.92);
 }
 .shop-item .btn-buy.owned {
     background: #c8b8a8;
+    box-shadow: none;
     cursor: default;
 }
 
@@ -585,6 +1031,7 @@
     font-size: 13px;
     color: #4a3728;
     border-left: 3px solid #e8a87c;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
 }
 .msg-item .from {
     font-weight: bold;
@@ -605,10 +1052,73 @@
     border-radius: 16px;
     border: 2px dashed #e8d5c4;
     margin: 10px 0;
+    box-shadow: inset 0 2px 12px rgba(0,0,0,0.02);
 }
 .reward-display .text {
     font-size: 14px;
     color: #8b7355;
+}
+
+/* ===== 天气特效 ===== */
+.rain-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+.rain-drop {
+    position: absolute;
+    width: 2px;
+    background: rgba(180, 210, 240, 0.5);
+    border-radius: 1px;
+    animation: rainFall linear infinite;
+}
+@keyframes rainFall {
+    0% { transform: translateY(-20px); opacity: 0.5; }
+    100% { transform: translateY(calc(100vh + 20px)); opacity: 0.1; }
+}
+.snow-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+.snow-flake {
+    position: absolute;
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.7; }
+    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.2; }
+}
+.star-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+.star {
+    position: absolute;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    animation: starTwinkle 2s ease-in-out infinite alternate;
+}
+@keyframes starTwinkle {
+    0% { opacity: 0.2; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1.2); }
 }
 
 /* ===== 滚动条 ===== */
