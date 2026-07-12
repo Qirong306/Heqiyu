@@ -1,16 +1,18 @@
 // ==================== 暖屋数据初始化 ====================
 
-// 所有家具配置（纯文字，图标用 CSS 绘制）
+// 只保留墙、窗、地面的配置
 const COZY_FURNITURE_CONFIG = {
-    weather: {
-        label: '窗外天气',
+    wall: {
+        label: '墙面',
         options: [
-            { id: 'sunny', name: '晴天', price: 0 },
-            { id: 'cloudy', name: '多云', price: 5 },
-            { id: 'rainy', name: '下雨', price: 8 },
-            { id: 'snowy', name: '下雪', price: 10 },
-            { id: 'night', name: '夜晚', price: 12 },
-            { id: 'sunset', name: '晚霞', price: 15 }
+            { id: 'warm', name: '暖杏色', price: 0 },
+            { id: 'mint', name: '薄荷绿', price: 8 },
+            { id: 'lavender', name: '薰衣草', price: 8 },
+            { id: 'peach', name: '蜜桃粉', price: 8 },
+            { id: 'sky', name: '天空蓝', price: 8 },
+            { id: 'cream', name: '奶油白', price: 6 },
+            { id: 'sage', name: '鼠尾草', price: 10 },
+            { id: 'dusty', name: '玫瑰灰', price: 10 }
         ]
     },
     window: {
@@ -19,90 +21,29 @@ const COZY_FURNITURE_CONFIG = {
             { id: 'arch', name: '拱形窗', price: 0 },
             { id: 'grid', name: '方格窗', price: 6 },
             { id: 'french', name: '法式窗', price: 10 },
-            { id: 'bay', name: '飘窗', price: 14 }
+            { id: 'bay', name: '飘窗', price: 14 },
+            { id: 'round', name: '圆窗', price: 12 },
+            { id: 'gothic', name: '哥特窗', price: 16 }
         ]
     },
     floor: {
-        label: '地板',
+        label: '地面',
         options: [
             { id: 'wood', name: '木地板', price: 0 },
             { id: 'carpet', name: '地毯', price: 6 },
             { id: 'tile', name: '瓷砖', price: 8 },
-            { id: 'tatami', name: '榻榻米', price: 10 }
-        ]
-    },
-    sofa: {
-        label: '沙发',
-        options: [
-            { id: 'fabric', name: '布艺沙发', price: 0 },
-            { id: 'leather', name: '皮质沙发', price: 10 },
-            { id: 'lounge', name: '懒人沙发', price: 8 }
-        ]
-    },
-    bed: {
-        label: '双人床',
-        options: [
-            { id: 'wooden', name: '木质床', price: 0 },
-            { id: 'upholstered', name: '软包床', price: 12 },
-            { id: 'iron', name: '铁艺床', price: 10 },
-            { id: 'tatami', name: '榻榻米床', price: 14 }
-        ]
-    },
-    bookshelf: {
-        label: '书架',
-        options: [
-            { id: 'tall', name: '落地书架', price: 0 },
-            { id: 'wall', name: '壁挂书架', price: 8 },
-            { id: 'short', name: '矮柜书架', price: 6 }
-        ]
-    },
-    desk: {
-        label: '书桌',
-        options: [
-            { id: 'simple', name: '简约书桌', price: 0 },
-            { id: 'vintage', name: '复古书桌', price: 10 },
-            { id: 'modern', name: '现代书桌', price: 8 }
-        ]
-    },
-    flower: {
-        label: '花篮',
-        options: [
-            { id: 'wicker', name: '藤编花篮', price: 0 },
-            { id: 'glass', name: '玻璃花瓶', price: 6 },
-            { id: 'ceramic', name: '陶瓷花盆', price: 8 }
-        ]
-    },
-    doll: {
-        label: '玩偶',
-        options: [
-            { id: 'bear', name: '小熊', price: 0 },
-            { id: 'rabbit', name: '小兔', price: 6 },
-            { id: 'cat', name: '小猫', price: 6 },
-            { id: 'dog', name: '小狗', price: 6 }
-        ]
-    },
-    pillow: {
-        label: '枕头',
-        options: [
-            { id: 'round', name: '圆形枕', price: 0 },
-            { id: 'square', name: '方形枕', price: 4 },
-            { id: 'long', name: '长条枕', price: 6 }
+            { id: 'tatami', name: '榻榻米', price: 10 },
+            { id: 'marble', name: '大理石', price: 14 },
+            { id: 'brick', name: '砖地', price: 8 }
         ]
     }
 };
 
 // 默认已拥有的（免费初始）
 const DEFAULT_OWNED = {
-    weather: ['sunny'],
+    wall: ['warm'],
     window: ['arch'],
-    floor: ['wood'],
-    sofa: ['fabric'],
-    bed: ['wooden'],
-    bookshelf: ['tall'],
-    desk: ['simple'],
-    flower: ['wicker'],
-    doll: ['bear'],
-    pillow: ['round']
+    floor: ['wood']
 };
 
 // 默认奖励池
@@ -122,42 +63,21 @@ function initCozyData() {
     if (appData.cozyRoom) return;
     
     appData.cozyRoom = {
-        // 当前激活的样式
-        weather: 'sunny',
+        wall: 'warm',
         window: 'arch',
         floor: 'wood',
-        sofa: 'fabric',
-        bed: 'wooden',
-        bookshelf: 'tall',
-        desk: 'simple',
-        flower: 'wicker',
-        doll: 'bear',
-        pillow: 'round',
-        pillowColor: '#d4a8a0',
-        
-        // 温暖值
         warmth: 100,
-        
-        // 已购买记录
         purchased: JSON.parse(JSON.stringify(DEFAULT_OWNED)),
-        
-        // 留言板
         messages: [],
-        
-        // 每日奖励
         daily: {
             lastDate: '',
             claimed: false,
             pool: [...DEFAULT_REWARD_POOL],
             todayReward: ''
         },
-        
-        // 专注弹幕
         focus: {
             danmaku: []
         },
-        
-        // 对方购买记录
         otherPurchases: []
     };
     
@@ -166,37 +86,31 @@ function initCozyData() {
 
 // ==================== 工具函数 ====================
 
-// 获取某个分类的所有选项
 function getCozyOptions(category) {
     return COZY_FURNITURE_CONFIG[category]?.options || [];
 }
 
-// 获取某个分类的当前选中
 function getCozyCurrent(category) {
     return appData.cozyRoom[category] || '';
 }
 
-// 检查是否已购买
 function isCozyOwned(category, id) {
     return appData.cozyRoom.purchased[category]?.includes(id) || false;
 }
 
-// 获取价格
 function getCozyPrice(category, id) {
-    const opt = COZY_FURNITURE_CONFIG[category]?.options.find(o => o.id === id);
+    var opt = COZY_FURNITURE_CONFIG[category]?.options.find(function(o) { return o.id === id; });
     return opt?.price || 0;
 }
 
-// 获取分类标签
 function getCozyLabel(category) {
     return COZY_FURNITURE_CONFIG[category]?.label || category;
 }
 
 // ==================== 购买逻辑 ====================
 
-// 购买家具
 function buyCozyItem(category, id) {
-    const price = getCozyPrice(category, id);
+    var price = getCozyPrice(category, id);
     if (price === 0) {
         showToast('这是初始免费款，已拥有');
         return false;
@@ -212,28 +126,21 @@ function buyCozyItem(category, id) {
         return false;
     }
     
-    // 扣温暖值
     appData.cozyRoom.warmth -= price;
     
-    // 记录购买
     if (!appData.cozyRoom.purchased[category]) {
         appData.cozyRoom.purchased[category] = [];
     }
     appData.cozyRoom.purchased[category].push(id);
-    
-    // 自动换上
     appData.cozyRoom[category] = id;
     
     saveData();
-    showToast('已购买「' + getCozyLabel(category) + '：' + getOptionName(category, id) + '」');
-    
-    // 聊天通知
-    addSystemMsg('我在暖屋添置了 ' + getOptionName(category, id));
+    showToast('已更换为 ' + getOptionName(category, id));
+    addSystemMsg('我更换了' + getCozyLabel(category) + '：' + getOptionName(category, id));
     
     return true;
 }
 
-// 切换样式（必须已购买）
 function switchCozyStyle(category, id) {
     if (!isCozyOwned(category, id)) {
         showToast('尚未购买');
@@ -244,39 +151,35 @@ function switchCozyStyle(category, id) {
     return true;
 }
 
-// 获取选项名称
 function getOptionName(category, id) {
-    const opt = COZY_FURNITURE_CONFIG[category]?.options.find(o => o.id === id);
+    var opt = COZY_FURNITURE_CONFIG[category]?.options.find(function(o) { return o.id === id; });
     return opt?.name || id;
 }
 
 // ==================== 对方随机购买 ====================
 
 function cozyOtherRandomBuy() {
-    // 收集所有未购买的选项
-    const available = [];
-    for (const cat in COZY_FURNITURE_CONFIG) {
-        const options = COZY_FURNITURE_CONFIG[cat].options;
-        for (const opt of options) {
+    var available = [];
+    for (var cat in COZY_FURNITURE_CONFIG) {
+        var options = COZY_FURNITURE_CONFIG[cat].options;
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
             if (opt.price > 0 && !isCozyOwned(cat, opt.id)) {
-                available.push({ category: cat, id: opt.id, name: opt.name, price: opt.price });
+                available.push({ category: cat, id: opt.id, name: opt.name });
             }
         }
     }
     
     if (available.length === 0) return;
     
-    // 随机选一个
-    const pick = available[Math.floor(Math.random() * available.length)];
+    var pick = available[Math.floor(Math.random() * available.length)];
     
-    // 自动购买（不扣温暖值）
     if (!appData.cozyRoom.purchased[pick.category]) {
         appData.cozyRoom.purchased[pick.category] = [];
     }
     appData.cozyRoom.purchased[pick.category].push(pick.id);
     appData.cozyRoom[pick.category] = pick.id;
     
-    // 记录对方购买
     appData.cozyRoom.otherPurchases.push({
         category: pick.category,
         id: pick.id,
@@ -291,14 +194,13 @@ function cozyOtherRandomBuy() {
 // ==================== 每日奖励 ====================
 
 function getTodayReward() {
-    const today = new Date().toDateString();
-    const daily = appData.cozyRoom.daily;
+    var today = new Date().toDateString();
+    var daily = appData.cozyRoom.daily;
     
     if (daily.lastDate !== today) {
         daily.lastDate = today;
         daily.claimed = false;
-        // 从池子里随机选一个
-        const pool = daily.pool || DEFAULT_REWARD_POOL;
+        var pool = daily.pool || DEFAULT_REWARD_POOL;
         daily.todayReward = pool[Math.floor(Math.random() * pool.length)];
         saveData();
     }
@@ -307,15 +209,15 @@ function getTodayReward() {
 }
 
 function claimDailyReward() {
-    const daily = getTodayReward();
+    var daily = getTodayReward();
     
     if (daily.claimed) {
         showToast('今日已领取');
         return false;
     }
     
-    const reward = daily.todayReward;
-    const value = parseInt(reward.match(/\d+/)?.[0] || 0);
+    var reward = daily.todayReward;
+    var value = parseInt(reward.match(/\d+/)?.[0] || 0);
     
     if (value > 0) {
         appData.cozyRoom.warmth += value;
@@ -351,7 +253,6 @@ function addCozyDanmaku(text, from) {
         from: from || 'me',
         time: Date.now()
     });
-    // 只保留最近50条
     if (appData.cozyRoom.focus.danmaku.length > 50) {
         appData.cozyRoom.focus.danmaku.shift();
     }
@@ -375,4 +276,4 @@ window.claimDailyReward = claimDailyReward;
 window.addCozyMessage = addCozyMessage;
 window.addCozyDanmaku = addCozyDanmaku;
 
-console.log('暖屋数据模块已加载（纯文字 + CSS 图标版）');
+console.log('暖屋数据模块已加载（墙/窗/地面版）');
