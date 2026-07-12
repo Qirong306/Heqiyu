@@ -130,4 +130,4 @@ window.openCozyShop = openCozyShop;
 window.buyFromShop = buyFromShop;
 window.switchFromShop = switchFromShop;
 
-console.log('暖屋商城已加载（墙/窗/地面/天气版）');
+console.log('暖屋商城已加载');
