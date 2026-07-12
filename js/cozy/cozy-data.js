@@ -1,6 +1,6 @@
 // ==================== 暖屋数据初始化 ====================
 
-// 只保留墙、窗、地面的配置
+// 墙、窗、地面、天气 四种配置
 const COZY_FURNITURE_CONFIG = {
     wall: {
         label: '墙面',
@@ -36,6 +36,17 @@ const COZY_FURNITURE_CONFIG = {
             { id: 'marble', name: '大理石', price: 14 },
             { id: 'brick', name: '砖地', price: 8 }
         ]
+    },
+    weather: {
+        label: '天气',
+        options: [
+            { id: 'sunny', name: '晴天', price: 0 },
+            { id: 'cloudy', name: '多云', price: 5 },
+            { id: 'rainy', name: '下雨', price: 8 },
+            { id: 'snowy', name: '下雪', price: 10 },
+            { id: 'night', name: '夜晚', price: 12 },
+            { id: 'sunset', name: '晚霞', price: 15 }
+        ]
     }
 };
 
@@ -43,7 +54,8 @@ const COZY_FURNITURE_CONFIG = {
 const DEFAULT_OWNED = {
     wall: ['warm'],
     window: ['arch'],
-    floor: ['wood']
+    floor: ['wood'],
+    weather: ['sunny']
 };
 
 // 默认奖励池
@@ -66,6 +78,7 @@ function initCozyData() {
         wall: 'warm',
         window: 'arch',
         floor: 'wood',
+        weather: 'sunny',
         warmth: 100,
         purchased: JSON.parse(JSON.stringify(DEFAULT_OWNED)),
         messages: [],
@@ -138,6 +151,11 @@ function buyCozyItem(category, id) {
     showToast('已更换为 ' + getOptionName(category, id));
     addSystemMsg('我更换了' + getCozyLabel(category) + '：' + getOptionName(category, id));
     
+    // 如果是天气，更新天气效果
+    if (category === 'weather') {
+        updateWeatherDisplay();
+    }
+    
     return true;
 }
 
@@ -148,6 +166,10 @@ function switchCozyStyle(category, id) {
     }
     appData.cozyRoom[category] = id;
     saveData();
+    
+    if (category === 'weather') {
+        updateWeatherDisplay();
+    }
     return true;
 }
 
@@ -189,6 +211,10 @@ function cozyOtherRandomBuy() {
     });
     
     saveData();
+    
+    if (pick.category === 'weather') {
+        updateWeatherDisplay();
+    }
 }
 
 // ==================== 每日奖励 ====================
@@ -259,6 +285,28 @@ function addCozyDanmaku(text, from) {
     saveData();
 }
 
+// ==================== 天气更新 ====================
+
+function updateWeatherDisplay() {
+    var label = document.getElementById('cozyWeatherLabel');
+    if (label) {
+        var map = {
+            sunny: '晴天',
+            cloudy: '多云',
+            rainy: '下雨',
+            snowy: '下雪',
+            night: '夜晚',
+            sunset: '晚霞'
+        };
+        label.textContent = map[appData.cozyRoom.weather] || '晴天';
+    }
+    // 重新渲染天气效果
+    var container = document.getElementById('cozyWeatherEffect');
+    if (container) {
+        renderWeatherEffect();
+    }
+}
+
 // ==================== 导出 ====================
 window.COZY_FURNITURE_CONFIG = COZY_FURNITURE_CONFIG;
 window.initCozyData = initCozyData;
@@ -275,5 +323,6 @@ window.getTodayReward = getTodayReward;
 window.claimDailyReward = claimDailyReward;
 window.addCozyMessage = addCozyMessage;
 window.addCozyDanmaku = addCozyDanmaku;
+window.updateWeatherDisplay = updateWeatherDisplay;
 
-console.log('暖屋数据模块已加载（墙/窗/地面版）');
+console.log('暖屋数据模块已加载（墙/窗/地面/天气版）');
