@@ -1,4 +1,4 @@
-/* ========== 暖屋全屏样式（家具立体 + 窗户平面） ========== */
+/* ========== 暖屋全屏样式（墙/窗/地面版 + 天气美化） ========== */
 
 .cozy-overlay {
     position: fixed;
@@ -144,55 +144,91 @@
     position: relative;
     overflow: hidden;
     min-height: 0;
-    background: #f5ede4;
 }
 
-/* ===== 背景层 ===== */
-.cozy-weather-layer {
+/* ===== 墙面 ===== */
+.cozy-wall-layer {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 0;
-}
-.cozy-weather-layer.weather-sunny {
-    background: linear-gradient(180deg, #fdf0e0 0%, #f5ede4 50%, #ede0d4 100%);
-}
-.cozy-weather-layer.weather-cloudy {
-    background: linear-gradient(180deg, #ece4dc 0%, #e4dcd4 50%, #dcd4cc 100%);
-}
-.cozy-weather-layer.weather-rainy {
-    background: linear-gradient(180deg, #d5d8dc 0%, #c8ccd0 50%, #bcc0c4 100%);
-}
-.cozy-weather-layer.weather-snowy {
-    background: linear-gradient(180deg, #ececec 0%, #e4e4e4 50%, #dcdcdc 100%);
-}
-.cozy-weather-layer.weather-night {
-    background: linear-gradient(180deg, #2a2a44 0%, #1a1a2e 50%, #0d0d1a 100%);
-}
-.cozy-weather-layer.weather-sunset {
-    background: linear-gradient(180deg, #f0c8b8 0%, #e0b8a0 50%, #d0b0a0 100%);
+    transition: background 0.8s ease;
 }
 
-/* ===== 窗户（平面，保持简洁） ===== */
+/* 墙面颜色 */
+.wall-warm { background: #f5ede4; }
+.wall-mint { background: #d4e8d8; }
+.wall-lavender { background: #e0dce8; }
+.wall-peach { background: #f5e0d8; }
+.wall-sky { background: #d4e4f0; }
+.wall-cream { background: #f5f0e8; }
+.wall-sage { background: #dce4d0; }
+.wall-dusty { background: #e8dcd8; }
+
+/* 墙面纹理（暖杏色默认带纹理） */
+.wall-warm {
+    background: #f5ede4;
+    background-image: 
+        radial-gradient(ellipse at 10% 20%, rgba(200,180,160,0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 80%, rgba(200,180,160,0.03) 0%, transparent 50%);
+}
+.wall-cream {
+    background: #f5f0e8;
+    background-image: 
+        radial-gradient(ellipse at 20% 30%, rgba(200,190,180,0.03) 0%, transparent 50%);
+}
+.wall-sky {
+    background: #d4e4f0;
+    background-image: 
+        radial-gradient(ellipse at 30% 10%, rgba(200,220,240,0.1) 0%, transparent 50%);
+}
+.wall-mint {
+    background: #d4e8d8;
+    background-image: 
+        radial-gradient(ellipse at 50% 20%, rgba(180,220,200,0.08) 0%, transparent 50%);
+}
+.wall-lavender {
+    background: #e0dce8;
+    background-image: 
+        radial-gradient(ellipse at 40% 30%, rgba(200,190,220,0.08) 0%, transparent 50%);
+}
+.wall-peach {
+    background: #f5e0d8;
+    background-image: 
+        radial-gradient(ellipse at 60% 40%, rgba(230,200,190,0.08) 0%, transparent 50%);
+}
+.wall-sage {
+    background: #dce4d0;
+    background-image: 
+        radial-gradient(ellipse at 30% 50%, rgba(190,210,180,0.08) 0%, transparent 50%);
+}
+.wall-dusty {
+    background: #e8dcd8;
+    background-image: 
+        radial-gradient(ellipse at 70% 30%, rgba(200,180,175,0.06) 0%, transparent 50%);
+}
+
+/* ===== 窗户 ===== */
 .cozy-window {
     position: absolute;
     top: 28px;
     left: 50%;
     transform: translateX(-50%);
     width: 38%;
-    height: 20%;
+    height: 22%;
     z-index: 2;
     pointer-events: none;
 }
 .window-frame {
     width: 100%;
     height: 100%;
-    border: 2.5px solid #4a3728;
+    border: 3px solid #4a3728;
     border-radius: 10px;
     position: relative;
     background: rgba(200, 220, 240, 0.06);
+    box-shadow: inset 0 0 30px rgba(200,220,240,0.05);
 }
 .window-frame.arch {
     border-radius: 50px 50px 10px 10px;
@@ -223,6 +259,15 @@
 }
 .window-frame.bay {
     border-radius: 10px 10px 3px 3px;
+    border-bottom-width: 5px;
+}
+.window-frame.round {
+    border-radius: 50%;
+}
+.window-frame.gothic {
+    border-radius: 50px 50px 6px 6px;
+    border-top-width: 5px;
+    border-top-color: #4a3728;
 }
 .window-view {
     position: absolute;
@@ -256,783 +301,236 @@
     border-radius: 0 0 3px 3px;
     background: #f5ede4;
 }
+.window-frame.bay::after {
+    height: 10px;
+    border-bottom-width: 3px;
+}
+.window-frame.round::after {
+    display: none;
+}
+.window-frame.gothic::after {
+    height: 6px;
+    border-radius: 0 0 3px 3px;
+}
 
-/* ===== 地板 ===== */
+/* ===== 地面 ===== */
 .cozy-floor {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 18%;
+    height: 20%;
     z-index: 2;
     pointer-events: none;
     border-top: 2px solid #4a3728;
+    transition: background 0.6s ease;
 }
 .cozy-floor.floor-wood {
-    background: repeating-linear-gradient(90deg, #e8d5c4 0px, #e8d5c4 1.5px, #dcc8b8 1.5px, #dcc8b8 16px);
+    background: repeating-linear-gradient(90deg, #dcc8b8 0px, #dcc8b8 1.5px, #d0bca8 1.5px, #d0bca8 16px);
 }
 .cozy-floor.floor-carpet {
-    background: #e0d0c8;
+    background: #d8ccc4;
     border-radius: 50% 50% 0 0 / 8% 8% 0 0;
 }
 .cozy-floor.floor-tile {
-    background: repeating-conic-gradient(#e8e0d8 0% 25%, #dcd4cc 0% 50%) 0 0 / 28px 28px;
+    background: repeating-conic-gradient(#e0dcd4 0% 25%, #d4d0c8 0% 50%) 0 0 / 28px 28px;
 }
 .cozy-floor.floor-tatami {
-    background: repeating-linear-gradient(0deg, #e0d4c0 0px, #e0d4c0 1.5px, #d4c8b4 1.5px, #d4c8b4 22px);
+    background: repeating-linear-gradient(0deg, #d4c8b4 0px, #d4c8b4 1.5px, #c8bca8 1.5px, #c8bca8 22px);
+}
+.cozy-floor.floor-marble {
+    background: #e8e4dc;
+    background-image: 
+        radial-gradient(ellipse at 20% 30%, rgba(200,190,180,0.2) 0%, transparent 40%),
+        radial-gradient(ellipse at 70% 60%, rgba(200,190,180,0.15) 0%, transparent 35%),
+        radial-gradient(ellipse at 50% 80%, rgba(180,170,160,0.1) 0%, transparent 30%);
+}
+.cozy-floor.floor-brick {
+    background: repeating-linear-gradient(0deg, #d0c0b0 0px, #d0c0b0 6px, #c8b8a8 6px, #c8b8a8 8px);
 }
 
-/* ===== 家具层 ===== */
-.cozy-furniture {
+/* ===== 天气特效容器 ===== */
+#cozyWeatherEffect {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 3;
     pointer-events: none;
-    padding: 8px;
-}
-.cozy-furniture > * {
-    pointer-events: auto;
+    z-index: 1;
+    overflow: hidden;
 }
 
-.furniture-item {
+/* ---------- 晴天 · 太阳 + 光芒 ---------- */
+.sunny-container .sun {
     position: absolute;
-    cursor: pointer;
-    transition: transform 0.2s, filter 0.2s;
-    border: none;
-    background: transparent;
-    padding: 0;
-    border-radius: 4px;
+    top: 12px;
+    right: 12%;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff7e6, #f5d742);
+    box-shadow: 0 0 40px rgba(245, 215, 66, 0.3), 0 0 80px rgba(245, 215, 66, 0.1);
+    animation: sunPulse 3s ease-in-out infinite;
 }
-.furniture-item:active {
-    transform: scale(0.92);
+@keyframes sunPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
-.furniture-item .f-badge {
+
+.sunny-container .sun-ray {
+    position: absolute;
+    top: 30px;
+    right: 12%;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+.sunny-container .sun-ray::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(245, 215, 66, 0.25), transparent);
+}
+.sunny-container .sun-ray:nth-child(2)::before { transform: translate(-50%, -50%) rotate(22.5deg); }
+.sunny-container .sun-ray:nth-child(3)::before { transform: translate(-50%, -50%) rotate(45deg); }
+.sunny-container .sun-ray:nth-child(4)::before { transform: translate(-50%, -50%) rotate(67.5deg); }
+.sunny-container .sun-ray:nth-child(5)::before { transform: translate(-50%, -50%) rotate(90deg); }
+.sunny-container .sun-ray:nth-child(6)::before { transform: translate(-50%, -50%) rotate(112.5deg); }
+.sunny-container .sun-ray:nth-child(7)::before { transform: translate(-50%, -50%) rotate(135deg); }
+.sunny-container .sun-ray:nth-child(8)::before { transform: translate(-50%, -50%) rotate(157.5deg); }
+
+/* ---------- 多云 ---------- */
+.cloudy-container .cloud {
+    position: absolute;
+    width: 80px;
+    height: 30px;
+    background: rgba(200, 195, 190, 0.5);
+    border-radius: 50px;
+    animation: cloudFloat 8s ease-in-out infinite;
+}
+.cloudy-container .cloud::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 12px;
+    width: 34px;
+    height: 34px;
+    background: rgba(200, 195, 190, 0.5);
+    border-radius: 50%;
+}
+.cloudy-container .cloud::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 34px;
+    width: 26px;
+    height: 26px;
+    background: rgba(200, 195, 190, 0.5);
+    border-radius: 50%;
+}
+@keyframes cloudFloat {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(20px); }
+}
+
+/* ---------- 下雨 ---------- */
+.rain-container .rain-drop {
+    position: absolute;
+    width: 1.5px;
+    background: rgba(120, 160, 200, 0.3);
+    border-radius: 1px;
+    animation: rainFall linear infinite;
+}
+@keyframes rainFall {
+    0% { transform: translateY(-20px); opacity: 0.5; }
+    100% { transform: translateY(calc(100vh + 20px)); opacity: 0.05; }
+}
+
+/* ---------- 下雪 ---------- */
+.snow-container .snow-flake {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.5);
+    animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.6; }
+    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.1; }
+}
+
+/* ---------- 夜晚 · 月亮 + 星星 ---------- */
+.night-container .moon {
+    position: absolute;
+    top: 15px;
+    right: 15%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #f5f0e8, #d8d0c0);
+    box-shadow: 0 0 30px rgba(200, 190, 170, 0.15);
+}
+.night-container .moon::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 8px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(180, 170, 155, 0.2);
+}
+.night-container .star {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.4);
+    animation: starTwinkle 2.5s ease-in-out infinite alternate;
+}
+@keyframes starTwinkle {
+    0% { opacity: 0.15; transform: scale(0.8); }
+    100% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* ---------- 晚霞 ---------- */
+.sunset-container .setting-sun {
+    position: absolute;
+    top: 30px;
+    right: 18%;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #f5c8a0, #e8a070);
+    box-shadow: 0 0 60px rgba(232, 160, 112, 0.25), 0 0 120px rgba(232, 160, 112, 0.08);
+}
+.sunset-container .sunset-cloud {
+    position: absolute;
+    width: 70px;
+    height: 20px;
+    background: rgba(200, 140, 120, 0.2);
+    border-radius: 50px;
+    animation: cloudFloat 10s ease-in-out infinite;
+}
+.sunset-container .sunset-cloud::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 10px;
+    width: 30px;
+    height: 30px;
+    background: rgba(200, 140, 120, 0.2);
+    border-radius: 50%;
+}
+.sunset-container .sunset-cloud::after {
+    content: '';
     position: absolute;
     top: -6px;
-    right: -6px;
-    font-size: 8px;
-    background: #e8a87c;
-    color: white;
+    left: 30px;
+    width: 22px;
+    height: 22px;
+    background: rgba(200, 140, 120, 0.2);
     border-radius: 50%;
-    width: 14px;
-    height: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1.5px solid #4a3728;
-    z-index: 10;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* ===== 家具位置 ===== */
-.f-sofa { bottom: 18%; left: 3%; width: 20%; height: 26%; }
-.f-bed { bottom: 15%; right: 2%; width: 24%; height: 28%; }
-.f-bookshelf { top: 26%; left: 1%; width: 12%; height: 36%; }
-.f-desk { bottom: 18%; left: 29%; width: 17%; height: 20%; }
-.f-flower { top: 32%; right: 11%; width: 10%; height: 20%; }
-.f-doll { top: 36%; right: 25%; width: 10%; height: 20%; }
-.f-pillow { bottom: 26%; right: 5%; width: 15%; height: 16%; }
-
-/* ============================================================
-   立体家具图形（多色渐变 + 阴影）
-   ============================================================ */
-
-.f-graphic {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    border-radius: 3px;
-}
-
-/* ---------- 沙发（立体） ---------- */
-.f-graphic-sofa {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-/* 坐垫 - 立体渐变 */
-.f-graphic-sofa .seat {
-    position: absolute;
-    bottom: 15%;
-    left: 5%;
-    width: 90%;
-    height: 55%;
-    background: linear-gradient(180deg, #f5e8d8 0%, #e8d4c0 40%, #dcc8b4 70%, #d0bca8 100%);
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 2px 2px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.08), inset 0 -3px 6px rgba(0,0,0,0.05);
-}
-/* 坐垫高光线 */
-.f-graphic-sofa .seat::before {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 8%;
-    width: 84%;
-    height: 20%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
-    border-radius: 3px 3px 50% 50%;
-}
-/* 靠背 - 立体 */
-.f-graphic-sofa .back {
-    position: absolute;
-    bottom: 50%;
-    left: 8%;
-    width: 84%;
-    height: 40%;
-    background: linear-gradient(180deg, #f0e4d4 0%, #e0ccb8 50%, #d0bcac 100%);
-    border: 2px solid #4a3728;
-    border-radius: 6px 6px 2px 2px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-}
-/* 靠背高光 */
-.f-graphic-sofa .back::before {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 10%;
-    width: 80%;
-    height: 30%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
-    border-radius: 4px 4px 50% 50%;
-}
-/* 左扶手 */
-.f-graphic-sofa .arm-l {
-    position: absolute;
-    bottom: 15%;
-    left: 0%;
-    width: 14%;
-    height: 50%;
-    background: linear-gradient(180deg, #f0e4d4 0%, #e0ccb8 50%, #d0bcac 100%);
-    border: 2px solid #4a3728;
-    border-radius: 4px 2px 2px 4px;
-    box-shadow: inset -2px 0 6px rgba(0,0,0,0.04);
-}
-/* 右扶手 */
-.f-graphic-sofa .arm-r {
-    position: absolute;
-    bottom: 15%;
-    right: 0%;
-    width: 14%;
-    height: 50%;
-    background: linear-gradient(180deg, #f0e4d4 0%, #e0ccb8 50%, #d0bcac 100%);
-    border: 2px solid #4a3728;
-    border-radius: 2px 4px 4px 2px;
-    box-shadow: inset 2px 0 6px rgba(0,0,0,0.04);
-}
-/* 沙发腿 */
-.f-graphic-sofa .leg-l {
-    position: absolute;
-    bottom: 0%;
-    left: 10%;
-    width: 10%;
-    height: 15%;
-    background: linear-gradient(180deg, #d0bcac 0%, #b8a494 100%);
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 3px 3px;
-}
-.f-graphic-sofa .leg-r {
-    position: absolute;
-    bottom: 0%;
-    right: 10%;
-    width: 10%;
-    height: 15%;
-    background: linear-gradient(180deg, #d0bcac 0%, #b8a494 100%);
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 3px 3px;
-}
-
-/* ---------- 床（立体） ---------- */
-.f-graphic-bed {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-/* 床体 */
-.f-graphic-bed .base {
-    position: absolute;
-    bottom: 10%;
-    left: 3%;
-    width: 94%;
-    height: 70%;
-    background: linear-gradient(180deg, #f5ece0 0%, #e8dcd0 40%, #dcccb8 80%, #d0c0b0 100%);
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 2px 2px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-}
-/* 床体高光 */
-.f-graphic-bed .base::before {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 5%;
-    width: 90%;
-    height: 25%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
-    border-radius: 3px 3px 50% 50%;
-}
-/* 枕头 */
-.f-graphic-bed .pillow {
-    position: absolute;
-    top: 12%;
-    right: 6%;
-    width: 35%;
-    height: 35%;
-    background: linear-gradient(180deg, #faf0e8 0%, #f0e4d8 50%, #e4d4c8 100%);
-    border: 2px solid #4a3728;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-}
-/* 枕头高光 */
-.f-graphic-bed .pillow::before {
-    content: '';
-    position: absolute;
-    top: 4px;
-    left: 10%;
-    width: 80%;
-    height: 30%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
-    border-radius: 3px;
-}
-/* 被子褶皱线 */
-.f-graphic-bed .blanket-line {
-    position: absolute;
-    top: 48%;
-    left: 6%;
-    width: 55%;
-    height: 1.5px;
-    background: rgba(74,55,40,0.15);
-}
-.f-graphic-bed .blanket-line2 {
-    position: absolute;
-    top: 58%;
-    left: 4%;
-    width: 45%;
-    height: 1.5px;
-    background: rgba(74,55,40,0.10);
-}
-/* 床腿 */
-.f-graphic-bed .leg-bl {
-    position: absolute;
-    bottom: 0%;
-    left: 8%;
-    width: 8%;
-    height: 10%;
-    background: linear-gradient(180deg, #d0c0b0 0%, #b8a898 100%);
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 3px 3px;
-}
-.f-graphic-bed .leg-br {
-    position: absolute;
-    bottom: 0%;
-    right: 8%;
-    width: 8%;
-    height: 10%;
-    background: linear-gradient(180deg, #d0c0b0 0%, #b8a898 100%);
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 3px 3px;
-}
-
-/* 床 - 木质 */
-.f-graphic-bed-wooden .base {
-    background: linear-gradient(180deg, #f0e4d0 0%, #e0d0b8 40%, #d0bc9c 80%, #c0ac90 100%);
-}
-/* 床 - 软包 */
-.f-graphic-bed-upholstered .base {
-    background: linear-gradient(180deg, #f0e0d8 0%, #e0ccc0 40%, #d0b8ac 80%, #c0a89c 100%);
-}
-/* 床 - 铁艺 */
-.f-graphic-bed-iron .base {
-    background: linear-gradient(180deg, #ece8e0 0%, #dcd4cc 40%, #ccc4bc 80%, #bcb4ac 100%);
-    border-style: double;
-}
-/* 床 - 榻榻米 */
-.f-graphic-bed-tatami .base {
-    background: linear-gradient(180deg, #e8dcc8 0%, #d8ccb8 40%, #c8bca8 80%, #b8ac98 100%);
-    border-bottom-width: 3px;
-}
-
-/* ---------- 书架（立体） ---------- */
-.f-graphic-bookshelf {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-/* 书架主体 */
-.f-graphic-bookshelf .body {
-    position: absolute;
-    top: 0%;
-    left: 5%;
-    width: 90%;
-    height: 100%;
-    background: linear-gradient(180deg, #f0e4d4 0%, #e4d4c0 40%, #d4c4b0 80%, #c8b8a4 100%);
-    border: 2px solid #4a3728;
-    border-radius: 2px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-}
-/* 书架隔板 */
-.f-graphic-bookshelf .shelf1 {
-    position: absolute;
-    top: 28%;
-    left: 5%;
-    width: 90%;
-    height: 3px;
-    background: linear-gradient(180deg, #d4c4b0 0%, #c0b09c 100%);
-    border-bottom: 1.5px solid #4a3728;
-}
-.f-graphic-bookshelf .shelf2 {
-    position: absolute;
-    top: 56%;
-    left: 5%;
-    width: 90%;
-    height: 3px;
-    background: linear-gradient(180deg, #d4c4b0 0%, #c0b09c 100%);
-    border-bottom: 1.5px solid #4a3728;
-}
-/* 书本 - 立体 */
-.f-graphic-bookshelf .book {
-    position: absolute;
-    border: 1.5px solid #4a3728;
-    border-radius: 1px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-.f-graphic-bookshelf .book1 {
-    bottom: 8%;
-    left: 12%;
-    width: 10%;
-    height: 26%;
-    background: linear-gradient(180deg, #e8d0c0 0%, #d4b8a8 50%, #c0a898 100%);
-}
-.f-graphic-bookshelf .book2 {
-    bottom: 8%;
-    left: 25%;
-    width: 8%;
-    height: 16%;
-    background: linear-gradient(180deg, #d4c8b8 0%, #c0b4a4 50%, #b0a090 100%);
-}
-.f-graphic-bookshelf .book3 {
-    bottom: 8%;
-    left: 36%;
-    width: 9%;
-    height: 22%;
-    background: linear-gradient(180deg, #e8dcc8 0%, #d4c8b4 50%, #c0b4a0 100%);
-}
-.f-graphic-bookshelf .book4 {
-    bottom: 8%;
-    left: 48%;
-    width: 7%;
-    height: 14%;
-    background: linear-gradient(180deg, #dcc8b8 0%, #c8b4a4 50%, #b8a090 100%);
-}
-.f-graphic-bookshelf .book5 {
-    bottom: 8%;
-    left: 58%;
-    width: 9%;
-    height: 20%;
-    background: linear-gradient(180deg, #e8d4c4 0%, #d4c0b0 50%, #c0a898 100%);
-}
-.f-graphic-bookshelf .book6 {
-    bottom: 8%;
-    left: 70%;
-    width: 7%;
-    height: 18%;
-    background: linear-gradient(180deg, #dcccb8 0%, #c8b8a4 50%, #b8a490 100%);
-}
-/* 书架顶部装饰线 */
-.f-graphic-bookshelf .top-line {
-    position: absolute;
-    top: 2%;
-    left: 5%;
-    width: 90%;
-    height: 2px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-}
-
-/* 书架 - 高 */
-.f-graphic-bookshelf-tall .body {
-    background: linear-gradient(180deg, #f0e4d4 0%, #e4d4c0 40%, #d4c4b0 70%, #c8b8a4 100%);
-}
-.f-graphic-bookshelf-tall .shelf1 { top: 23%; }
-.f-graphic-bookshelf-tall .shelf2 { top: 50%; }
-.f-graphic-bookshelf-tall .shelf3 { top: 77%; }
-
-/* 书架 - 壁挂 */
-.f-graphic-bookshelf-wall .body {
-    background: transparent;
-    border: none;
-    border-top: 2px solid #4a3728;
-    border-bottom: 2px solid #4a3728;
-    box-shadow: none;
-    height: 70%;
-    top: 15%;
-}
-.f-graphic-bookshelf-wall .shelf1 {
-    top: 50%;
-    left: 0%;
-    width: 100%;
-}
-/* 书架 - 矮柜 */
-.f-graphic-bookshelf-short .body {
-    background: linear-gradient(180deg, #f0e4d4 0%, #e4d4c0 40%, #d4c4b0 80%, #c8b8a4 100%);
-    height: 60%;
-    top: 20%;
-}
-.f-graphic-bookshelf-short .shelf1 { top: 50%; }
-
-/* ---------- 书桌（立体） ---------- */
-.f-graphic-desk {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-/* 桌面 */
-.f-graphic-desk .top {
-    position: absolute;
-    top: 10%;
-    left: 3%;
-    width: 94%;
-    height: 50%;
-    background: linear-gradient(180deg, #f5e8d8 0%, #e8d4c0 40%, #dcc8b4 80%, #d0bca8 100%);
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 2px 2px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-}
-/* 桌面高光 */
-.f-graphic-desk .top::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 5%;
-    width: 90%;
-    height: 25%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
-    border-radius: 3px;
-}
-/* 左桌腿 */
-.f-graphic-desk .leg-l {
-    position: absolute;
-    bottom: 0%;
-    left: 8%;
-    width: 8%;
-    height: 20%;
-    background: linear-gradient(180deg, #d0bca8 0%, #b8a494 50%, #a89080 100%);
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 3px 3px;
-}
-/* 右桌腿 */
-.f-graphic-desk .leg-r {
-    position: absolute;
-    bottom: 0%;
-    right: 8%;
-    width: 8%;
-    height: 20%;
-    background: linear-gradient(180deg, #d0bca8 0%, #b8a494 50%, #a89080 100%);
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 3px 3px;
-}
-
-.f-graphic-desk-simple .top {
-    background: linear-gradient(180deg, #f5e8d8 0%, #e8d4c0 40%, #dcc8b4 80%, #d0bca8 100%);
-}
-.f-graphic-desk-vintage .top {
-    background: linear-gradient(180deg, #f0e0cc 0%, #e0ccb4 40%, #d0bca0 80%, #c0ac90 100%);
-    border-radius: 6px 6px 2px 2px;
-}
-.f-graphic-desk-modern .top {
-    background: linear-gradient(180deg, #ece8e0 0%, #dcd4cc 40%, #ccc4bc 80%, #bcb4ac 100%);
-    border-radius: 2px;
-}
-
-/* ---------- 花篮（立体） ---------- */
-.f-graphic-flower {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-/* 花篮主体 */
-.f-graphic-flower .basket {
-    position: absolute;
-    bottom: 10%;
-    left: 15%;
-    width: 70%;
-    height: 50%;
-    background: linear-gradient(180deg, #e8dcc8 0%, #d8ccb8 40%, #c8bca8 80%, #b8ac98 100%);
-    border: 2px solid #4a3728;
-    border-radius: 2px 2px 8px 8px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-}
-/* 花篮编织纹 */
-.f-graphic-flower .basket::before {
-    content: '';
-    position: absolute;
-    top: 20%;
-    left: 10%;
-    width: 80%;
-    height: 1px;
-    background: rgba(74,55,40,0.15);
-    box-shadow: 0 30% 0 rgba(74,55,40,0.10);
-}
-/* 花朵 */
-.f-graphic-flower .flower1 {
-    position: absolute;
-    top: 0%;
-    left: 20%;
-    width: 20%;
-    height: 30%;
-    background: radial-gradient(circle at 50% 40%, #f5d0b0 30%, #e8b890 70%, #d4a080 100%);
-    border: 1.5px solid #4a3728;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-}
-.f-graphic-flower .flower2 {
-    position: absolute;
-    top: 2%;
-    left: 45%;
-    width: 18%;
-    height: 28%;
-    background: radial-gradient(circle at 50% 40%, #f5d8c0 30%, #e8c0a0 70%, #d4a888 100%);
-    border: 1.5px solid #4a3728;
-    border-radius: 50%;
-}
-.f-graphic-flower .flower3 {
-    position: absolute;
-    top: 0%;
-    right: 20%;
-    width: 20%;
-    height: 30%;
-    background: radial-gradient(circle at 50% 40%, #f5d0b0 30%, #e8b890 70%, #d4a080 100%);
-    border: 1.5px solid #4a3728;
-    border-radius: 50%;
-}
-/* 叶子 */
-.f-graphic-flower .leaf {
-    position: absolute;
-    top: 10%;
-    left: 35%;
-    width: 8%;
-    height: 15%;
-    background: linear-gradient(180deg, #b8d0a0 0%, #a0b888 100%);
-    border: 1.5px solid #4a3728;
-    border-radius: 50% 0 50% 0;
-    transform: rotate(-20deg);
-}
-.f-graphic-flower .leaf2 {
-    position: absolute;
-    top: 10%;
-    right: 35%;
-    width: 8%;
-    height: 15%;
-    background: linear-gradient(180deg, #b8d0a0 0%, #a0b888 100%);
-    border: 1.5px solid #4a3728;
-    border-radius: 50% 0 50% 0;
-    transform: rotate(20deg) scaleX(-1);
-}
-
-/* 花篮 - 藤编 */
-.f-graphic-flower-wicker .basket {
-    background: linear-gradient(180deg, #e8dcc8 0%, #d8ccb8 40%, #c8bca8 80%, #b8ac98 100%);
-}
-/* 花篮 - 玻璃 */
-.f-graphic-flower-glass .basket {
-    background: rgba(200, 220, 240, 0.15);
-    border-style: double;
-}
-/* 花篮 - 陶瓷 */
-.f-graphic-flower-ceramic .basket {
-    background: linear-gradient(180deg, #f0e0d8 0%, #e0ccc0 40%, #d0b8ac 80%, #c0a89c 100%);
-    border-radius: 4px 4px 8px 8px;
-}
-
-/* ---------- 玩偶（立体） ---------- */
-.f-graphic-doll {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-/* 身体 */
-.f-graphic-doll .body {
-    position: absolute;
-    bottom: 10%;
-    left: 15%;
-    width: 70%;
-    height: 60%;
-    background: linear-gradient(180deg, #f5ece0 0%, #e8dcd0 50%, #dcccb8 100%);
-    border: 2px solid #4a3728;
-    border-radius: 50% 50% 40% 40%;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-}
-/* 头部 */
-.f-graphic-doll .head {
-    position: absolute;
-    top: 2%;
-    left: 20%;
-    width: 60%;
-    height: 40%;
-    background: linear-gradient(180deg, #faf0e8 0%, #f0e4d8 50%, #e4d4c8 100%);
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-}
-/* 耳朵 - 左 */
-.f-graphic-doll .ear-l {
-    position: absolute;
-    top: 5%;
-    left: 10%;
-    width: 18%;
-    height: 20%;
-    background: linear-gradient(180deg, #f0e4d8 0%, #e0d0c0 100%);
-    border: 1.5px solid #4a3728;
-    border-radius: 50%;
-}
-/* 耳朵 - 右 */
-.f-graphic-doll .ear-r {
-    position: absolute;
-    top: 5%;
-    right: 10%;
-    width: 18%;
-    height: 20%;
-    background: linear-gradient(180deg, #f0e4d8 0%, #e0d0c0 100%);
-    border: 1.5px solid #4a3728;
-    border-radius: 50%;
-}
-/* 眼睛 */
-.f-graphic-doll .eye {
-    position: absolute;
-    top: 20%;
-    width: 6%;
-    height: 6%;
-    background: #4a3728;
-    border-radius: 50%;
-}
-.f-graphic-doll .eye-l { left: 30%; }
-.f-graphic-doll .eye-r { right: 30%; }
-
-/* 玩偶 - 小熊 */
-.f-graphic-doll-bear .body { background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 50%, #d0bcac 100%); }
-.f-graphic-doll-bear .head { background: linear-gradient(180deg, #f5e8d8 0%, #e8d8c8 50%, #dcc8b8 100%); }
-/* 玩偶 - 小兔 */
-.f-graphic-doll-rabbit .body { background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 50%, #dcd4cc 100%); }
-.f-graphic-doll-rabbit .head { background: linear-gradient(180deg, #faf5f0 0%, #f0e8e0 50%, #e4dcd4 100%); }
-/* 兔耳朵 */
-.f-graphic-doll-rabbit .ear-l {
-    top: -10%;
-    left: 8%;
-    width: 20%;
-    height: 30%;
-    border-radius: 50% 50% 0 0;
-    background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 100%);
-}
-.f-graphic-doll-rabbit .ear-r {
-    top: -10%;
-    right: 8%;
-    width: 20%;
-    height: 30%;
-    border-radius: 50% 50% 0 0;
-    background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 100%);
-}
-/* 玩偶 - 小猫 */
-.f-graphic-doll-cat .body { background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 50%, #d0bcac 100%); }
-.f-graphic-doll-cat .head { background: linear-gradient(180deg, #f5e8d8 0%, #e8d8c8 50%, #dcc8b8 100%); }
-/* 猫耳朵 */
-.f-graphic-doll-cat .ear-l {
-    top: 0%;
-    left: 8%;
-    width: 18%;
-    height: 22%;
-    border-radius: 50% 50% 0 0;
-    background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 100%);
-}
-.f-graphic-doll-cat .ear-r {
-    top: 0%;
-    right: 8%;
-    width: 18%;
-    height: 22%;
-    border-radius: 50% 50% 0 0;
-    background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 100%);
-}
-/* 玩偶 - 小狗 */
-.f-graphic-doll-dog .body { background: linear-gradient(180deg, #f0ece0 0%, #e0d8cc 50%, #d0c8bc 100%); }
-.f-graphic-doll-dog .head { background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 50%, #dcd4cc 100%); }
-.f-graphic-doll-dog .ear-l {
-    top: 2%;
-    left: 6%;
-    width: 22%;
-    height: 24%;
-    border-radius: 50%;
-    background: linear-gradient(180deg, #e0d8cc 0%, #d0c8bc 100%);
-}
-.f-graphic-doll-dog .ear-r {
-    top: 2%;
-    right: 6%;
-    width: 22%;
-    height: 24%;
-    border-radius: 50%;
-    background: linear-gradient(180deg, #e0d8cc 0%, #d0c8bc 100%);
-}
-
-/* ---------- 枕头（立体） ---------- */
-.f-graphic-pillow {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
-/* 枕体 */
-.f-graphic-pillow .body {
-    position: absolute;
-    top: 10%;
-    left: 5%;
-    width: 90%;
-    height: 75%;
-    background: linear-gradient(180deg, #faf0e8 0%, #f0e4d8 40%, #e4d4c8 80%, #d8c8bc 100%);
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-}
-/* 枕头高光 */
-.f-graphic-pillow .body::before {
-    content: '';
-    position: absolute;
-    top: 8%;
-    left: 15%;
-    width: 70%;
-    height: 30%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
-    border-radius: 50%;
-}
-/* 枕头褶皱 */
-.f-graphic-pillow .crease {
-    position: absolute;
-    top: 45%;
-    left: 15%;
-    width: 70%;
-    height: 1.5px;
-    background: rgba(74,55,40,0.08);
-}
-.f-graphic-pillow .crease2 {
-    position: absolute;
-    top: 55%;
-    left: 20%;
-    width: 60%;
-    height: 1.5px;
-    background: rgba(74,55,40,0.06);
-}
-
-.f-graphic-pillow-square .body {
-    border-radius: 6px;
-}
-.f-graphic-pillow-long .body {
-    border-radius: 8px;
-    height: 60%;
-    top: 20%;
 }
 
 /* ===== 弹幕层 ===== */
@@ -1321,68 +819,6 @@
 .reward-display .text {
     font-size: 14px;
     color: #8b7355;
-}
-
-/* ===== 天气特效 ===== */
-.rain-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1;
-}
-.rain-drop {
-    position: absolute;
-    width: 1.5px;
-    background: rgba(74, 55, 40, 0.15);
-    border-radius: 1px;
-    animation: rainFall linear infinite;
-}
-@keyframes rainFall {
-    0% { transform: translateY(-20px); opacity: 0.3; }
-    100% { transform: translateY(calc(100vh + 20px)); opacity: 0.05; }
-}
-.snow-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1;
-}
-.snow-flake {
-    position: absolute;
-    color: rgba(74, 55, 40, 0.12);
-    font-size: 12px;
-    animation: snowFall linear infinite;
-}
-@keyframes snowFall {
-    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.3; }
-    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.05; }
-}
-.star-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: 1;
-}
-.star {
-    position: absolute;
-    color: rgba(255,255,255,0.25);
-    font-size: 9px;
-    animation: starTwinkle 2s ease-in-out infinite alternate;
-}
-@keyframes starTwinkle {
-    0% { opacity: 0.1; transform: scale(0.8); }
-    100% { opacity: 0.3; transform: scale(1.2); }
 }
 
 /* ===== 滚动条 ===== */
