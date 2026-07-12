@@ -12,9 +12,7 @@ function openCozySpace() {
         initCozyData();
     }
     
-    // 确保初始有完整搭配
     ensureCozyDefaultSetup();
-    
     checkOtherPurchases();
     renderCozySpace();
     
@@ -44,7 +42,6 @@ function closeCozySpace() {
 
 function ensureCozyDefaultSetup() {
     var room = appData.cozyRoom;
-    // 如果没有任何购买记录，初始化默认搭配
     var hasItems = false;
     for (var key in room.purchased) {
         if (room.purchased[key] && room.purchased[key].length > 0) {
@@ -121,42 +118,35 @@ function renderCozySpace() {
     body.className = 'cozy-body';
     body.id = 'cozyBody';
     
-    // 天气层
     var weatherLayer = document.createElement('div');
     weatherLayer.className = 'cozy-weather-layer weather-' + appData.cozyRoom.weather;
     weatherLayer.id = 'cozyWeatherLayer';
     body.appendChild(weatherLayer);
     
-    // 天气特效
     var effectContainer = document.createElement('div');
     effectContainer.id = 'cozyWeatherEffect';
     body.appendChild(effectContainer);
     renderWeatherEffect();
     
-    // 窗户（带玻璃反光）
     var windowEl = document.createElement('div');
     windowEl.className = 'cozy-window';
     windowEl.innerHTML = '<div class="window-frame ' + appData.cozyRoom.window + '"><div class="window-view"><div class="window-glare"></div></div></div>';
     body.appendChild(windowEl);
     
-    // 地板
     var floor = document.createElement('div');
     floor.className = 'cozy-floor floor-' + appData.cozyRoom.floor;
     body.appendChild(floor);
     
-    // 家具容器
     var furniture = document.createElement('div');
     furniture.className = 'cozy-furniture';
     furniture.id = 'cozyFurniture';
     body.appendChild(furniture);
     
-    // 弹幕层
     var danmakuLayer = document.createElement('div');
     danmakuLayer.className = 'cozy-danmaku-layer';
     danmakuLayer.id = 'cozyDanmakuLayer';
     body.appendChild(danmakuLayer);
     
-    // 专注输入条
     var focusBar = document.createElement('div');
     focusBar.className = 'cozy-focus-bar';
     focusBar.id = 'cozyFocusBar';
@@ -168,45 +158,42 @@ function renderCozySpace() {
     
     overlay.appendChild(body);
     
-    // ---- 底部功能栏 ----
+    // ---- 底部功能栏（删除了「设置」按钮） ----
     var footer = document.createElement('div');
     footer.className = 'cozy-footer';
     footer.innerHTML = 
         '<button onclick="openCozyShop()"><span class="icon-shop"></span>商城</button>' +
         '<button onclick="openCozyMessages()"><span class="icon-msg"></span>留言</button>' +
         '<button onclick="toggleCozyFocus()"><span class="icon-focus"></span>专注</button>' +
-        '<button onclick="openCozyDaily()"><span class="icon-gift"></span>奖励</button>' +
-        '<button onclick="openCozySettings()"><span class="icon-setting"></span>设置</button>';
+        '<button onclick="openCozyDaily()"><span class="icon-gift"></span>奖励</button>';
     overlay.appendChild(footer);
     
     document.body.appendChild(overlay);
 }
 
-// ==================== 渲染家具（CSS 图形版） ====================
+// ==================== 渲染家具（CSS 图形版，无文字） ====================
 
 function renderCozyFurniture() {
     var container = document.getElementById('cozyFurniture');
     if (!container) return;
     
     var furnitureMap = {
-        sofa: { class: 'f-sofa', label: '沙发' },
-        bed: { class: 'f-bed', label: '床' },
-        bookshelf: { class: 'f-bookshelf', label: '书架' },
-        desk: { class: 'f-desk', label: '书桌' },
-        flower: { class: 'f-flower', label: '花' },
-        doll: { class: 'f-doll', label: '玩偶' },
-        pillow: { class: 'f-pillow', label: '枕头' }
+        sofa: { class: 'f-sofa' },
+        bed: { class: 'f-bed' },
+        bookshelf: { class: 'f-bookshelf' },
+        desk: { class: 'f-desk' },
+        flower: { class: 'f-flower' },
+        doll: { class: 'f-doll' },
+        pillow: { class: 'f-pillow' }
     };
     
     var html = '';
     for (var key in furnitureMap) {
         var currentId = appData.cozyRoom[key] || '';
-        var name = getOptionName(key, currentId);
         var owned = isCozyOwned(key, currentId);
         
         html += '<div class="furniture-item ' + furnitureMap[key].class + '" onclick="openCozyItemDetail(\'' + key + '\')" data-category="' + key + '">' +
             '<div class="f-graphic f-graphic-' + key + ' f-graphic-' + key + '-' + currentId + '"></div>' +
-            '<span class="f-name">' + name + '</span>' +
             (owned ? '' : '<span class="f-badge">?</span>') +
             '</div>';
     }
@@ -248,7 +235,6 @@ function updateCozyMusicDisplay() {
 
 function cozyMusicPlayPause() {
     if (typeof musicAudio === 'undefined' || !musicAudio) {
-        // 如果没有音乐，打开播放器
         if (typeof openMusicPlayer === 'function') {
             openMusicPlayer();
             setTimeout(updateCozyMusicDisplay, 500);
@@ -339,7 +325,7 @@ function renderWeatherEffect() {
     }
 }
 
-// ==================== 其他函数（保持不变） ====================
+// ==================== 其他函数 ====================
 
 function updateWarmthDisplay() {
     var el = document.getElementById('cozyWarmthDisplay');
@@ -378,10 +364,8 @@ function toggleCozyFocus() {
     if (!bar) return;
     
     if (cozyFocusActive) {
-        // 停止专注
         stopCozyFocus();
     } else {
-        // 开始专注
         startCozyFocus();
     }
 }
@@ -393,28 +377,21 @@ function startCozyFocus() {
     cozyFocusActive = true;
     cozyFocusSeconds = 0;
     
-    // 显示专注计时 + 输入框
     bar.classList.add('show');
     bar.classList.add('focus-mode');
     
-    // 更新计时显示
     updateCozyFocusTimer();
     
-    // 启动计时器
     if (cozyFocusInterval) clearInterval(cozyFocusInterval);
     cozyFocusInterval = setInterval(function() {
         cozyFocusSeconds++;
         updateCozyFocusTimer();
     }, 1000);
     
-    // 聚焦输入框
     var input = document.getElementById('cozyFocusInput');
     if (input) setTimeout(function() { input.focus(); }, 100);
     
-    // 更新按钮状态（底部专注按钮变亮）
     updateCozyFocusButton(true);
-    
-    // 系统消息
     addSystemMsg('开始专注模式');
 }
 
@@ -432,14 +409,11 @@ function stopCozyFocus() {
         bar.classList.remove('focus-mode');
     }
     
-    // 重置计时显示
     var timerEl = document.getElementById('cozyFocusTimerDisplay');
     if (timerEl) timerEl.textContent = '';
     
-    // 更新按钮状态
     updateCozyFocusButton(false);
     
-    // 系统消息
     var minutes = Math.floor(cozyFocusSeconds / 60);
     var seconds = cozyFocusSeconds % 60;
     var timeStr = minutes > 0 ? minutes + '分' + seconds + '秒' : seconds + '秒';
@@ -454,7 +428,6 @@ function stopCozyFocus() {
 function updateCozyFocusTimer() {
     var timerEl = document.getElementById('cozyFocusTimerDisplay');
     if (!timerEl) {
-        // 如果计时元素不存在，在输入框前面插入一个
         var bar = document.getElementById('cozyFocusBar');
         if (bar) {
             var existing = bar.querySelector('.cozy-focus-timer');
@@ -495,7 +468,6 @@ function updateCozyFocusButton(active) {
     }
 }
 
-// 覆盖原来的 openCozyFocusBar / closeCozyFocusBar（兼容旧调用）
 function openCozyFocusBar() {
     if (!cozyFocusActive) {
         startCozyFocus();
@@ -516,7 +488,6 @@ function closeCozyFocusBar() {
     }
 }
 
-// 发送弹幕（保留原有功能，增加专注计时联动）
 function sendCozyDanmaku() {
     var input = document.getElementById('cozyFocusInput');
     if (!input) return;
@@ -527,7 +498,6 @@ function sendCozyDanmaku() {
     showCozyDanmaku(text, 'me');
     input.value = '';
     
-    // 对方自动回复（20%概率）
     if (Math.random() < 0.2) {
         var replies = getAllReplies();
         if (replies.length > 0) {
@@ -539,16 +509,6 @@ function sendCozyDanmaku() {
         }
     }
 }
-
-// 确保挂载到全局
-window.toggleCozyFocus = toggleCozyFocus;
-window.startCozyFocus = startCozyFocus;
-window.stopCozyFocus = stopCozyFocus;
-window.openCozyFocusBar = openCozyFocusBar;
-window.closeCozyFocusBar = closeCozyFocusBar;
-window.sendCozyDanmaku = sendCozyDanmaku;
-
-
 
 function showCozyDanmaku(text, from) {
     var layer = document.getElementById('cozyDanmakuLayer');
@@ -652,94 +612,6 @@ function buyCozyItemFromDetail(category, id) {
     }
 }
 
-// ==================== 设置 ====================
-
-function openCozySettings() {
-    closeModal('settingsOverlay');
-    
-    var html = '<h3>暖屋设置</h3>';
-    html += '<div class="sub">管理暖屋的所有配置</div>';
-    
-    html += '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8d5c4;">' +
-        '<span>当前温暖值</span>' +
-        '<span style="font-weight:bold;">' + appData.cozyRoom.warmth + '</span>' +
-        '</div>';
-    
-    html += '<div style="margin-top:12px;">';
-    html += '<div style="font-weight:bold;margin-bottom:6px;">每日奖励池</div>';
-    var pool = appData.cozyRoom.daily.pool || [];
-    pool.forEach(function(item, i) {
-        html += '<div style="display:flex;justify-content:space-between;padding:6px 10px;background:#fffcf8;border-radius:8px;margin-bottom:4px;">' +
-            '<span>' + item + '</span>' +
-            '<button onclick="removeRewardPoolItem(' + i + ')" style="background:none;border:none;color:#d48888;cursor:pointer;font-size:16px;">✕</button>' +
-            '</div>';
-    });
-    html += '<div style="display:flex;gap:6px;margin-top:6px;">' +
-        '<input type="text" id="newRewardInput" placeholder="新奖励名称" style="flex:1;padding:6px 12px;border:2px solid #e8d5c4;border-radius:12px;font-family:inherit;background:white;">' +
-        '<button onclick="addRewardPoolItem()" style="padding:6px 14px;border-radius:12px;border:none;background:#e8a87c;color:white;font-family:inherit;cursor:pointer;">添加</button>' +
-        '</div>';
-    html += '</div>';
-    
-    html += '<div style="margin-top:12px;display:flex;gap:8px;">' +
-        '<button onclick="resetCozyDefault()" style="padding:6px 16px;border-radius:12px;border:2px solid #d48888;background:transparent;color:#d48888;font-family:inherit;cursor:pointer;">恢复默认</button>' +
-        '</div>';
-    
-    html += '<button onclick="closeCozyModal()" style="margin-top:12px;padding:8px 24px;border-radius:20px;border:2px solid #e8d5c4;background:transparent;font-family:inherit;font-size:13px;cursor:pointer;color:#4a3728;">关闭</button>';
-    
-    openCozyModal(html);
-}
-
-function addRewardPoolItem() {
-    var input = document.getElementById('newRewardInput');
-    if (!input) return;
-    var text = input.value.trim();
-    if (!text) { showToast('请输入奖励名称'); return; }
-    appData.cozyRoom.daily.pool.push(text);
-    saveData();
-    input.value = '';
-    openCozySettings();
-    showToast('已添加');
-}
-
-function removeRewardPoolItem(index) {
-    appData.cozyRoom.daily.pool.splice(index, 1);
-    saveData();
-    openCozySettings();
-}
-
-function resetCozyDefault() {
-    if (!confirm('确定恢复默认暖屋配置吗？')) return;
-    appData.cozyRoom.weather = 'sunny';
-    appData.cozyRoom.window = 'arch';
-    appData.cozyRoom.floor = 'wood';
-    appData.cozyRoom.sofa = 'fabric';
-    appData.cozyRoom.bed = 'wooden';
-    appData.cozyRoom.bookshelf = 'tall';
-    appData.cozyRoom.desk = 'simple';
-    appData.cozyRoom.flower = 'wicker';
-    appData.cozyRoom.doll = 'bear';
-    appData.cozyRoom.pillow = 'round';
-    appData.cozyRoom.warmth = 100;
-    appData.cozyRoom.purchased = {
-        weather: ['sunny'],
-        window: ['arch'],
-        floor: ['wood'],
-        sofa: ['fabric'],
-        bed: ['wooden'],
-        bookshelf: ['tall'],
-        desk: ['simple'],
-        flower: ['wicker'],
-        doll: ['bear'],
-        pillow: ['round']
-    };
-    appData.cozyRoom.daily.pool = ['温暖值 +5', '温暖值 +10', '温暖值 +15', '家具折扣券', '小星星', '一杯虚拟咖啡', '今日好心情', '阳光明媚'];
-    saveData();
-    closeCozyModal();
-    closeCozySpace();
-    showToast('已恢复默认');
-    setTimeout(openCozySpace, 300);
-}
-
 // ==================== 留言板 ====================
 
 function openCozyMessages() {
@@ -749,7 +621,6 @@ function openCozyMessages() {
     var subText = messages.length > 0 ? '共 ' + messages.length + ' 条留言' : '写下第一条留言吧';
     html += '<div class="sub">' + subText + '</div>';
     
-    // 留言列表
     html += '<div class="msg-list">';
     if (messages.length === 0) {
         html += '<div style="text-align:center;color:#b8a99a;padding:20px;">还没有留言</div>';
@@ -771,7 +642,6 @@ function openCozyMessages() {
     }
     html += '</div>';
     
-    // 输入框
     html += '<div style="display:flex;gap:6px;margin-top:8px;">' +
         '<input type="text" id="cozyMessageInput" placeholder="写留言..." maxlength="200" style="flex:1;padding:8px 14px;border:2px solid #e8d5c4;border-radius:16px;font-family:inherit;font-size:13px;background:white;outline:none;" onkeydown="if(event.key===\'Enter\')sendCozyMessage()">' +
         '<button onclick="sendCozyMessage()" style="padding:8px 18px;border-radius:16px;border:none;background:#e8a87c;color:white;font-family:inherit;font-size:13px;cursor:pointer;">发送</button>' +
@@ -787,8 +657,6 @@ function openCozyMessages() {
     }, 200);
 }
 
-// ==================== 发送留言 ====================
-
 function sendCozyMessage() {
     var input = document.getElementById('cozyMessageInput');
     if (!input) return;
@@ -800,14 +668,9 @@ function sendCozyMessage() {
     
     addCozyMessage(text, 'me');
     input.value = '';
-    
-    // 刷新留言板
     openCozyMessages();
-    
-    // 聊天通知
     addSystemMsg('我在暖屋留了言：' + text);
     
-    // 10% 概率对方回复
     if (Math.random() < 0.1) {
         var replies = getAllReplies();
         if (replies.length > 0) {
@@ -816,28 +679,41 @@ function sendCozyMessage() {
                 addCozyMessage(reply, 'other');
                 showToast('对方在暖屋回复了留言');
                 addSystemMsg('对方在暖屋回复了留言：' + reply);
-                // 不自动刷新，避免打断用户
             }, 2000 + Math.random() * 2000);
         }
     }
 }
 
-// 确保挂载到全局
+// ==================== 弹窗工具 ====================
 
+function openCozyModal(html) {
+    var existing = document.getElementById('cozyModalOverlay');
+    if (existing) existing.remove();
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'cozyModalOverlay';
+    overlay.className = 'cozy-modal-overlay show';
+    overlay.innerHTML = '<div class="cozy-modal">' + html + '</div>';
+    overlay.onclick = function(e) {
+        if (e.target === this) closeCozyModal();
+    };
+    document.body.appendChild(overlay);
+}
+
+function closeCozyModal() {
+    var el = document.getElementById('cozyModalOverlay');
+    if (el) el.remove();
+}
 
 // ==================== 导出到全局 ====================
 window.openCozySpace = openCozySpace;
 window.closeCozySpace = closeCozySpace;
-window.openCozySettings = openCozySettings;
 window.openCozyItemDetail = openCozyItemDetail;
 window.switchCozyStyleFromDetail = switchCozyStyleFromDetail;
 window.buyCozyItemFromDetail = buyCozyItemFromDetail;
 window.sendCozyDanmaku = sendCozyDanmaku;
 window.toggleCozyFocus = toggleCozyFocus;
 window.closeCozyFocusBar = closeCozyFocusBar;
-window.addRewardPoolItem = addRewardPoolItem;
-window.removeRewardPoolItem = removeRewardPoolItem;
-window.resetCozyDefault = resetCozyDefault;
 window.openCozyModal = openCozyModal;
 window.closeCozyModal = closeCozyModal;
 window.openCozyMessages = openCozyMessages;
