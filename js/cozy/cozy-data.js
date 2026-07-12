@@ -323,4 +323,4 @@ window.addCozyMessage = addCozyMessage;
 window.addCozyDanmaku = addCozyDanmaku;
 window.updateWeatherDisplay = updateWeatherDisplay;
 
-console.log('暖屋数据模块已加载（墙/窗/地面/天气版）');
+console.log('暖屋数据模块已加载');
