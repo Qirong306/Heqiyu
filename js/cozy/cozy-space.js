@@ -823,8 +823,7 @@ function sendCozyMessage() {
 }
 
 // 确保挂载到全局
-window.openCozyMessages = openCozyMessages;
-window.sendCozyMessage = sendCozyMessage;
+
 
 // ==================== 导出到全局 ====================
 window.openCozySpace = openCozySpace;
@@ -841,6 +840,8 @@ window.removeRewardPoolItem = removeRewardPoolItem;
 window.resetCozyDefault = resetCozyDefault;
 window.openCozyModal = openCozyModal;
 window.closeCozyModal = closeCozyModal;
+window.openCozyMessages = openCozyMessages;
+window.sendCozyMessage = sendCozyMessage;
 window.toggleCozyMusic = toggleCozyMusic;
 window.cozyMusicPlayPause = cozyMusicPlayPause;
 window.cozyMusicNext = cozyMusicNext;
