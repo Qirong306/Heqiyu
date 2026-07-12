@@ -1,73 +1,79 @@
-// ==================== 暖屋家具商城 ====================
-
-// ==================== 打开商城 ====================
+// ==================== 暖屋商城（墙/窗/地面） ====================
 
 function openCozyShop() {
-    var html = '<h3>家具商城</h3>';
-    html += '<div class="sub">用温暖值添置家具</div>';
+    var html = '<h3>暖屋商城</h3>';
+    html += '<div class="sub">更换墙面、窗户、地面的样式</div>';
     
-    // 当前温暖值
-    html += '<div style="text-align:center;padding:8px 0;margin-bottom:12px;background:#f5ede4;border-radius:12px;font-size:14px;">' +
-        '当前温暖值：<span style="font-weight:bold;color:#e8a87c;">' + appData.cozyRoom.warmth + '</span>' +
+    html += '<div style="text-align:center;padding:8px 0;margin-bottom:12px;background:#f5ede4;border-radius:12px;border:2px solid #4a3728;font-size:14px;">' +
+        '温暖值：<span style="font-weight:bold;color:#e8a87c;">' + appData.cozyRoom.warmth + '</span>' +
         '</div>';
     
-    // 分类 Tab
-    var categories = ['sofa', 'bed', 'bookshelf', 'desk', 'flower', 'doll', 'pillow', 'window', 'floor', 'weather'];
-    var labels = ['沙发', '床', '书架', '书桌', '花', '玩偶', '枕头', '窗户', '地板', '天气'];
+    var categories = ['wall', 'window', 'floor'];
+    var labels = ['墙面', '窗户', '地面'];
     
-    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">';
-    for (var i = 0; i < categories.length; i++) {
-        var cat = categories[i];
-        var label = labels[i];
-        var active = (window._cozyShopCategory === cat) ? 'background:#e8d5c4;' : 'background:#fffcf8;';
-        html += '<button onclick="switchCozyShopCategory(\'' + cat + '\')" style="padding:4px 12px;border-radius:12px;border:2px solid #e8d5c4;' + active + 'font-family:inherit;font-size:12px;cursor:pointer;color:#4a3728;">' + label + '</button>';
-    }
-    html += '</div>';
-    
-    // 当前分类商品列表
-    var currentCat = window._cozyShopCategory || 'sofa';
-    var options = getCozyOptions(currentCat);
-    var label = getCozyLabel(currentCat);
-    
-    html += '<div style="font-size:13px;color:#8b7355;margin-bottom:8px;">' + label + '</div>';
-    html += '<div class="shop-grid">';
-    
-    options.forEach(function(opt) {
-        var owned = isCozyOwned(currentCat, opt.id);
-        var active = (appData.cozyRoom[currentCat] === opt.id);
-        var priceText = opt.price === 0 ? '初始' : opt.price + '温暖值';
+    for (var c = 0; c < categories.length; c++) {
+        var cat = categories[c];
+        var label = labels[c];
+        var options = getCozyOptions(cat);
+        var current = appData.cozyRoom[cat] || '';
         
-        html += '<div class="shop-item" style="' + (active ? 'border-color:#d4b8a0;background:#f5ede4;' : '') + '">' +
-            '<div class="info">' +
-                '<span class="name">' + opt.name + 
-                (active ? ' <span style="color:#8b7355;font-size:11px;">(使用中)</span>' : '') +
-                '</span>' +
-                '<span class="price">' + priceText + '</span>' +
-            '</div>' +
-            (owned ? 
-                '<button class="btn-buy owned" onclick="switchFromShop(\'' + currentCat + '\',\'' + opt.id + '\')" ' + (active ? 'style="background:#d4b8a0;"' : '') + '>' + (active ? '使用中' : '切换') + '</button>' :
-                (opt.price === 0 ? 
-                    '<button class="btn-buy owned" onclick="switchFromShop(\'' + currentCat + '\',\'' + opt.id + '\')">使用</button>' :
-                    '<button class="btn-buy" onclick="buyFromShop(\'' + currentCat + '\',\'' + opt.id + '\')">购买</button>'
-                )
-            ) +
-            '</div>';
-    });
+        html += '<div style="margin-bottom:14px;border-top:1.5px solid #e8d5c4;padding-top:10px;">';
+        html += '<div style="font-weight:bold;font-size:14px;color:#4a3728;margin-bottom:6px;">' + label + '</div>';
+        
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            var owned = isCozyOwned(cat, opt.id);
+            var active = (current === opt.id);
+            var priceText = opt.price === 0 ? '初始' : opt.price + '温暖值';
+            
+            var bgColor = '';
+            if (cat === 'wall') {
+                var wallColors = {
+                    'warm': '#f5ede4',
+                    'mint': '#d4e8d8',
+                    'lavender': '#e0dce8',
+                    'peach': '#f5e0d8',
+                    'sky': '#d4e4f0',
+                    'cream': '#f5f0e8',
+                    'sage': '#dce4d0',
+                    'dusty': '#e8dcd8'
+                };
+                bgColor = wallColors[opt.id] || '#f5ede4';
+            } else if (cat === 'floor') {
+                var floorColors = {
+                    'wood': '#d4c0b0',
+                    'carpet': '#d8ccc4',
+                    'tile': '#e0dcd4',
+                    'tatami': '#d4c8b4',
+                    'marble': '#e8e4dc',
+                    'brick': '#d0c0b0'
+                };
+                bgColor = floorColors[opt.id] || '#d4c0b0';
+            } else {
+                bgColor = '#f5ede4';
+            }
+            
+            var activeBorder = active ? 'border-color:#4a3728;border-width:2.5px;' : '';
+            var ownedBadge = owned ? '' : ' <span style="font-size:10px;color:#e8a87c;">🔒</span>';
+            
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin-bottom:4px;background:' + bgColor + ';border-radius:10px;border:2px solid #e8d5c4;' + activeBorder + '">' +
+                '<span>' + opt.name + (active ? ' ✓' : '') + ownedBadge + ' <span style="font-size:11px;color:#8b7355;">' + priceText + '</span></span>' +
+                (owned ? 
+                    '<button onclick="switchFromShop(\'' + cat + '\',\'' + opt.id + '\')" style="padding:3px 12px;border-radius:10px;border:2px solid #4a3728;background:#f5ede4;color:#4a3728;font-family:inherit;font-size:11px;cursor:pointer;">' + (active ? '使用中' : '切换') + '</button>' :
+                    (opt.price === 0 ? 
+                        '<button onclick="switchFromShop(\'' + cat + '\',\'' + opt.id + '\')" style="padding:3px 12px;border-radius:10px;border:2px solid #4a3728;background:#f5ede4;color:#4a3728;font-family:inherit;font-size:11px;cursor:pointer;">使用</button>' :
+                        '<button onclick="buyFromShop(\'' + cat + '\',\'' + opt.id + '\')" style="padding:3px 12px;border-radius:10px;border:2px solid #4a3728;background:#e8a87c;color:white;font-family:inherit;font-size:11px;cursor:pointer;">购买</button>'
+                    )
+                ) +
+                '</div>';
+        }
+        html += '</div>';
+    }
     
-    html += '</div>';
-    html += '<button onclick="closeCozyModal()" style="margin-top:12px;padding:8px 24px;border-radius:20px;border:2px solid #e8d5c4;background:transparent;font-family:inherit;font-size:13px;cursor:pointer;color:#4a3728;">关闭</button>';
+    html += '<button onclick="closeCozyModal()" style="margin-top:8px;padding:8px 24px;border-radius:20px;border:2px solid #4a3728;background:transparent;font-family:inherit;font-size:13px;cursor:pointer;color:#4a3728;">关闭</button>';
     
     openCozyModal(html);
 }
-
-// ==================== 切换商城分类 ====================
-
-function switchCozyShopCategory(category) {
-    window._cozyShopCategory = category;
-    openCozyShop();
-}
-
-// ==================== 从商城购买 ====================
 
 function buyFromShop(category, id) {
     var price = getCozyPrice(category, id);
@@ -86,35 +92,23 @@ function buyFromShop(category, id) {
         return;
     }
     
-    // 扣温暖值
     appData.cozyRoom.warmth -= price;
     
-    // 记录购买
     if (!appData.cozyRoom.purchased[category]) {
         appData.cozyRoom.purchased[category] = [];
     }
     appData.cozyRoom.purchased[category].push(id);
-    
-    // 自动换上
     appData.cozyRoom[category] = id;
     
     saveData();
     
-    // 刷新商城
     openCozyShop();
-    renderCozyFurniture();
+    renderCozyRoom();
     updateWarmthDisplay();
     
-    // 天气特殊处理
-    if (category === 'weather') {
-        updateWeather();
-    }
-    
-    showToast('已购买 ' + getOptionName(category, id));
-    addSystemMsg('我在暖屋添置了 ' + getOptionName(category, id));
+    showToast('已更换 ' + getOptionName(category, id));
+    addSystemMsg('我更换了' + getCozyLabel(category) + '：' + getOptionName(category, id));
 }
-
-// ==================== 从商城切换 ====================
 
 function switchFromShop(category, id) {
     if (!isCozyOwned(category, id)) {
@@ -125,22 +119,15 @@ function switchFromShop(category, id) {
     appData.cozyRoom[category] = id;
     saveData();
     
-    // 刷新商城
     openCozyShop();
-    renderCozyFurniture();
-    
-    if (category === 'weather') {
-        updateWeather();
-    }
+    renderCozyRoom();
     
     showToast('已切换至 ' + getOptionName(category, id));
 }
 
-// ==================== 导入到全局 ====================
-
+// 导入到全局
 window.openCozyShop = openCozyShop;
-window.switchCozyShopCategory = switchCozyShopCategory;
 window.buyFromShop = buyFromShop;
 window.switchFromShop = switchFromShop;
 
-console.log('暖屋家具商城已加载');
+console.log('暖屋商城已加载（墙/窗/地面版）');
