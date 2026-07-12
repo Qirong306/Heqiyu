@@ -1,4 +1,4 @@
-/* ========== 暖屋全屏样式（线稿手绘风格 - 图二质感） ========== */
+/* ========== 暖屋全屏样式（家具立体 + 窗户平面） ========== */
 
 .cozy-overlay {
     position: fixed;
@@ -175,7 +175,7 @@
     background: linear-gradient(180deg, #f0c8b8 0%, #e0b8a0 50%, #d0b0a0 100%);
 }
 
-/* ===== 窗户（比例协调） ===== */
+/* ===== 窗户（平面，保持简洁） ===== */
 .cozy-window {
     position: absolute;
     top: 28px;
@@ -244,7 +244,6 @@
     transform: rotate(25deg);
     pointer-events: none;
 }
-/* 窗台 */
 .window-frame::after {
     content: '';
     position: absolute;
@@ -298,14 +297,14 @@
     pointer-events: auto;
 }
 
-/* 家具卡片 - 无背景，只有线稿 */
 .furniture-item {
     position: absolute;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, filter 0.2s;
     border: none;
     background: transparent;
     padding: 0;
+    border-radius: 4px;
 }
 .furniture-item:active {
     transform: scale(0.92);
@@ -325,9 +324,10 @@
     justify-content: center;
     border: 1.5px solid #4a3728;
     z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* 家具位置（更符合真实房间比例） */
+/* ===== 家具位置 ===== */
 .f-sofa { bottom: 18%; left: 3%; width: 20%; height: 26%; }
 .f-bed { bottom: 15%; right: 2%; width: 24%; height: 28%; }
 .f-bookshelf { top: 26%; left: 1%; width: 12%; height: 36%; }
@@ -336,752 +336,703 @@
 .f-doll { top: 36%; right: 25%; width: 10%; height: 20%; }
 .f-pillow { bottom: 26%; right: 5%; width: 15%; height: 16%; }
 
-/* ===== CSS 线稿图形家具（黑线 + 柔和填充色） ===== */
+/* ============================================================
+   立体家具图形（多色渐变 + 阴影）
+   ============================================================ */
+
 .f-graphic {
     width: 100%;
     height: 100%;
     position: relative;
-    background: transparent;
+    border-radius: 3px;
 }
 
-/* ---------- 沙发 ---------- */
+/* ---------- 沙发（立体） ---------- */
 .f-graphic-sofa {
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 2px 2px;
-    background: #f0e4d4;  /* 柔和杏色 */
-    height: 65%;
-    width: 88%;
-    margin: 22% auto 0;
+    height: 100%;
+    width: 100%;
     position: relative;
 }
-/* 沙发扶手 - 左 */
-.f-graphic-sofa::before {
-    content: '';
+/* 坐垫 - 立体渐变 */
+.f-graphic-sofa .seat {
     position: absolute;
-    top: -35%;
-    left: 6%;
-    width: 28%;
-    height: 40%;
+    bottom: 15%;
+    left: 5%;
+    width: 90%;
+    height: 55%;
+    background: linear-gradient(180deg, #f5e8d8 0%, #e8d4c0 40%, #dcc8b4 70%, #d0bca8 100%);
     border: 2px solid #4a3728;
-    border-radius: 4px 4px 0 0;
-    background: #f0e4d4;
+    border-radius: 4px 4px 2px 2px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08), inset 0 -3px 6px rgba(0,0,0,0.05);
 }
-/* 沙发扶手 - 右 */
-.f-graphic-sofa::after {
+/* 坐垫高光线 */
+.f-graphic-sofa .seat::before {
     content: '';
     position: absolute;
-    top: -35%;
-    right: 6%;
-    width: 28%;
+    top: 3px;
+    left: 8%;
+    width: 84%;
+    height: 20%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+    border-radius: 3px 3px 50% 50%;
+}
+/* 靠背 - 立体 */
+.f-graphic-sofa .back {
+    position: absolute;
+    bottom: 50%;
+    left: 8%;
+    width: 84%;
     height: 40%;
+    background: linear-gradient(180deg, #f0e4d4 0%, #e0ccb8 50%, #d0bcac 100%);
     border: 2px solid #4a3728;
-    border-radius: 4px 4px 0 0;
-    background: #f0e4d4;
+    border-radius: 6px 6px 2px 2px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+/* 靠背高光 */
+.f-graphic-sofa .back::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 10%;
+    width: 80%;
+    height: 30%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
+    border-radius: 4px 4px 50% 50%;
+}
+/* 左扶手 */
+.f-graphic-sofa .arm-l {
+    position: absolute;
+    bottom: 15%;
+    left: 0%;
+    width: 14%;
+    height: 50%;
+    background: linear-gradient(180deg, #f0e4d4 0%, #e0ccb8 50%, #d0bcac 100%);
+    border: 2px solid #4a3728;
+    border-radius: 4px 2px 2px 4px;
+    box-shadow: inset -2px 0 6px rgba(0,0,0,0.04);
+}
+/* 右扶手 */
+.f-graphic-sofa .arm-r {
+    position: absolute;
+    bottom: 15%;
+    right: 0%;
+    width: 14%;
+    height: 50%;
+    background: linear-gradient(180deg, #f0e4d4 0%, #e0ccb8 50%, #d0bcac 100%);
+    border: 2px solid #4a3728;
+    border-radius: 2px 4px 4px 2px;
+    box-shadow: inset 2px 0 6px rgba(0,0,0,0.04);
 }
 /* 沙发腿 */
-.f-graphic-sofa .legs {
+.f-graphic-sofa .leg-l {
     position: absolute;
-    bottom: -8px;
-    left: 12%;
+    bottom: 0%;
+    left: 10%;
     width: 10%;
-    height: 8px;
+    height: 15%;
+    background: linear-gradient(180deg, #d0bcac 0%, #b8a494 100%);
     border: 1.5px solid #4a3728;
     border-top: none;
-    border-radius: 0 0 2px 2px;
+    border-radius: 0 0 3px 3px;
 }
-.f-graphic-sofa .legs-r {
+.f-graphic-sofa .leg-r {
     position: absolute;
-    bottom: -8px;
-    right: 12%;
+    bottom: 0%;
+    right: 10%;
     width: 10%;
-    height: 8px;
+    height: 15%;
+    background: linear-gradient(180deg, #d0bcac 0%, #b8a494 100%);
     border: 1.5px solid #4a3728;
     border-top: none;
-    border-radius: 0 0 2px 2px;
+    border-radius: 0 0 3px 3px;
 }
 
-.f-graphic-sofa-leather {
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 2px 2px;
-    background: #dcc8b8;  /* 浅驼色 */
-    height: 65%;
-    width: 88%;
-    margin: 22% auto 0;
-    position: relative;
-}
-.f-graphic-sofa-leather::before {
-    content: '';
-    position: absolute;
-    top: -35%;
-    left: 6%;
-    width: 28%;
-    height: 40%;
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 0 0;
-    background: #dcc8b8;
-}
-.f-graphic-sofa-leather::after {
-    content: '';
-    position: absolute;
-    top: -35%;
-    right: 6%;
-    width: 28%;
-    height: 40%;
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 0 0;
-    background: #dcc8b8;
-}
-
-.f-graphic-sofa-lounge {
-    border: 2px solid #4a3728;
-    border-radius: 8px 8px 4px 4px;
-    background: #f0e4d4;
-    height: 55%;
-    width: 92%;
-    margin: 28% auto 0;
-    position: relative;
-}
-
-/* ---------- 床 ---------- */
+/* ---------- 床（立体） ---------- */
 .f-graphic-bed {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+/* 床体 */
+.f-graphic-bed .base {
+    position: absolute;
+    bottom: 10%;
+    left: 3%;
+    width: 94%;
+    height: 70%;
+    background: linear-gradient(180deg, #f5ece0 0%, #e8dcd0 40%, #dcccb8 80%, #d0c0b0 100%);
     border: 2px solid #4a3728;
     border-radius: 4px 4px 2px 2px;
-    background: #f0e8dc;  /* 暖白 */
-    height: 72%;
-    width: 94%;
-    margin: 10% auto 0;
-    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+/* 床体高光 */
+.f-graphic-bed .base::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 5%;
+    width: 90%;
+    height: 25%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
+    border-radius: 3px 3px 50% 50%;
 }
 /* 枕头 */
-.f-graphic-bed::after {
-    content: '';
+.f-graphic-bed .pillow {
     position: absolute;
     top: 12%;
-    right: 8%;
-    width: 32%;
-    height: 42%;
+    right: 6%;
+    width: 35%;
+    height: 35%;
+    background: linear-gradient(180deg, #faf0e8 0%, #f0e4d8 50%, #e4d4c8 100%);
     border: 2px solid #4a3728;
-    border-radius: 4px;
-    background: #f5f0e8;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+/* 枕头高光 */
+.f-graphic-bed .pillow::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 10%;
+    width: 80%;
+    height: 30%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+    border-radius: 3px;
 }
 /* 被子褶皱线 */
 .f-graphic-bed .blanket-line {
     position: absolute;
-    top: 50%;
-    left: 5%;
-    width: 60%;
+    top: 48%;
+    left: 6%;
+    width: 55%;
     height: 1.5px;
-    background: #4a3728;
-    opacity: 0.3;
+    background: rgba(74,55,40,0.15);
 }
-
-.f-graphic-bed-wooden {
-    border: 2px solid #4a3728;
-    border-radius: 2px;
-    background: #e8dcc8;  /* 浅木色 */
-    height: 68%;
-    width: 94%;
-    margin: 10% auto 0;
-    position: relative;
-}
-.f-graphic-bed-wooden::after {
-    content: '';
+.f-graphic-bed .blanket-line2 {
     position: absolute;
-    top: 12%;
+    top: 58%;
+    left: 4%;
+    width: 45%;
+    height: 1.5px;
+    background: rgba(74,55,40,0.10);
+}
+/* 床腿 */
+.f-graphic-bed .leg-bl {
+    position: absolute;
+    bottom: 0%;
+    left: 8%;
+    width: 8%;
+    height: 10%;
+    background: linear-gradient(180deg, #d0c0b0 0%, #b8a898 100%);
+    border: 1.5px solid #4a3728;
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+}
+.f-graphic-bed .leg-br {
+    position: absolute;
+    bottom: 0%;
     right: 8%;
-    width: 32%;
-    height: 42%;
-    border: 2px solid #4a3728;
-    border-radius: 4px;
-    background: #f0e8d8;
+    width: 8%;
+    height: 10%;
+    background: linear-gradient(180deg, #d0c0b0 0%, #b8a898 100%);
+    border: 1.5px solid #4a3728;
+    border-top: none;
+    border-radius: 0 0 3px 3px;
 }
 
-.f-graphic-bed-upholstered {
-    border: 2px solid #4a3728;
-    border-radius: 6px 6px 2px 2px;
-    background: #e8d4cc;  /* 暖粉灰 */
-    height: 72%;
-    width: 94%;
-    margin: 10% auto 0;
-    position: relative;
+/* 床 - 木质 */
+.f-graphic-bed-wooden .base {
+    background: linear-gradient(180deg, #f0e4d0 0%, #e0d0b8 40%, #d0bc9c 80%, #c0ac90 100%);
 }
-.f-graphic-bed-upholstered::after {
-    content: '';
-    position: absolute;
-    top: 12%;
-    right: 8%;
-    width: 32%;
-    height: 42%;
-    border: 2px solid #4a3728;
-    border-radius: 4px;
-    background: #f0e8e0;
+/* 床 - 软包 */
+.f-graphic-bed-upholstered .base {
+    background: linear-gradient(180deg, #f0e0d8 0%, #e0ccc0 40%, #d0b8ac 80%, #c0a89c 100%);
 }
-
-.f-graphic-bed-iron {
-    border: 2px solid #4a3728;
-    border-radius: 2px;
-    background: transparent;
-    height: 68%;
-    width: 94%;
-    margin: 10% auto 0;
-    position: relative;
+/* 床 - 铁艺 */
+.f-graphic-bed-iron .base {
+    background: linear-gradient(180deg, #ece8e0 0%, #dcd4cc 40%, #ccc4bc 80%, #bcb4ac 100%);
+    border-style: double;
 }
-.f-graphic-bed-iron::after {
-    content: '';
-    position: absolute;
-    top: 12%;
-    right: 8%;
-    width: 32%;
-    height: 42%;
-    border: 2px solid #4a3728;
-    border-radius: 4px;
-    background: #f0e8d8;
-}
-/* 铁艺床头 */
-.f-graphic-bed-iron .headboard {
-    position: absolute;
-    top: -8%;
-    left: 10%;
-    width: 80%;
-    height: 12%;
-    border: 2px solid #4a3728;
-    border-radius: 50% 50% 0 0;
-    background: transparent;
-}
-
-.f-graphic-bed-tatami {
-    border: 2px solid #4a3728;
-    border-radius: 2px;
-    background: #e8dcc8;
-    height: 58%;
-    width: 94%;
-    margin: 10% auto 0;
+/* 床 - 榻榻米 */
+.f-graphic-bed-tatami .base {
+    background: linear-gradient(180deg, #e8dcc8 0%, #d8ccb8 40%, #c8bca8 80%, #b8ac98 100%);
     border-bottom-width: 3px;
-    position: relative;
-}
-.f-graphic-bed-tatami::after {
-    content: '';
-    position: absolute;
-    top: 12%;
-    right: 8%;
-    width: 32%;
-    height: 42%;
-    border: 2px solid #4a3728;
-    border-radius: 4px;
-    background: #f0e8d8;
 }
 
-/* ---------- 书架 ---------- */
+/* ---------- 书架（立体） ---------- */
 .f-graphic-bookshelf {
-    border: 2px solid #4a3728;
-    border-radius: 2px;
-    background: #f0e4d4;  /* 暖杏色 */
-    height: 90%;
-    width: 82%;
-    margin: 5% auto 0;
+    height: 100%;
+    width: 100%;
     position: relative;
 }
-/* 隔板 */
-.f-graphic-bookshelf::before {
-    content: '';
+/* 书架主体 */
+.f-graphic-bookshelf .body {
+    position: absolute;
+    top: 0%;
+    left: 5%;
+    width: 90%;
+    height: 100%;
+    background: linear-gradient(180deg, #f0e4d4 0%, #e4d4c0 40%, #d4c4b0 80%, #c8b8a4 100%);
+    border: 2px solid #4a3728;
+    border-radius: 2px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+/* 书架隔板 */
+.f-graphic-bookshelf .shelf1 {
     position: absolute;
     top: 28%;
-    left: 6%;
-    right: 6%;
-    height: 1.5px;
-    background: #4a3728;
-    box-shadow: 0 32% 0 #4a3728, 0 64% 0 #4a3728;
+    left: 5%;
+    width: 90%;
+    height: 3px;
+    background: linear-gradient(180deg, #d4c4b0 0%, #c0b09c 100%);
+    border-bottom: 1.5px solid #4a3728;
 }
-/* 书本 */
-.f-graphic-bookshelf .book1 {
+.f-graphic-bookshelf .shelf2 {
     position: absolute;
+    top: 56%;
+    left: 5%;
+    width: 90%;
+    height: 3px;
+    background: linear-gradient(180deg, #d4c4b0 0%, #c0b09c 100%);
+    border-bottom: 1.5px solid #4a3728;
+}
+/* 书本 - 立体 */
+.f-graphic-bookshelf .book {
+    position: absolute;
+    border: 1.5px solid #4a3728;
+    border-radius: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.f-graphic-bookshelf .book1 {
     bottom: 8%;
     left: 12%;
     width: 10%;
-    height: 28%;
-    border: 1.5px solid #4a3728;
-    background: #e8d0c0;
+    height: 26%;
+    background: linear-gradient(180deg, #e8d0c0 0%, #d4b8a8 50%, #c0a898 100%);
 }
 .f-graphic-bookshelf .book2 {
-    position: absolute;
     bottom: 8%;
-    left: 26%;
+    left: 25%;
     width: 8%;
-    height: 18%;
-    border: 1.5px solid #4a3728;
-    background: #d4c8b8;
+    height: 16%;
+    background: linear-gradient(180deg, #d4c8b8 0%, #c0b4a4 50%, #b0a090 100%);
 }
 .f-graphic-bookshelf .book3 {
-    position: absolute;
     bottom: 8%;
-    left: 38%;
-    width: 9%;
-    height: 24%;
-    border: 1.5px solid #4a3728;
-    background: #e8dcc8;
-}
-.f-graphic-bookshelf .book4 {
-    position: absolute;
-    bottom: 8%;
-    left: 51%;
-    width: 7%;
-    height: 16%;
-    border: 1.5px solid #4a3728;
-    background: #dcc8b8;
-}
-.f-graphic-bookshelf .book5 {
-    position: absolute;
-    bottom: 8%;
-    left: 62%;
+    left: 36%;
     width: 9%;
     height: 22%;
-    border: 1.5px solid #4a3728;
-    background: #e8d4c4;
+    background: linear-gradient(180deg, #e8dcc8 0%, #d4c8b4 50%, #c0b4a0 100%);
 }
-
-.f-graphic-bookshelf-tall {
-    border: 2px solid #4a3728;
-    border-radius: 2px;
-    background: #f0e4d4;
-    height: 92%;
-    width: 82%;
-    margin: 4% auto 0;
-    position: relative;
+.f-graphic-bookshelf .book4 {
+    bottom: 8%;
+    left: 48%;
+    width: 7%;
+    height: 14%;
+    background: linear-gradient(180deg, #dcc8b8 0%, #c8b4a4 50%, #b8a090 100%);
 }
-.f-graphic-bookshelf-tall::before {
-    content: '';
+.f-graphic-bookshelf .book5 {
+    bottom: 8%;
+    left: 58%;
+    width: 9%;
+    height: 20%;
+    background: linear-gradient(180deg, #e8d4c4 0%, #d4c0b0 50%, #c0a898 100%);
+}
+.f-graphic-bookshelf .book6 {
+    bottom: 8%;
+    left: 70%;
+    width: 7%;
+    height: 18%;
+    background: linear-gradient(180deg, #dcccb8 0%, #c8b8a4 50%, #b8a490 100%);
+}
+/* 书架顶部装饰线 */
+.f-graphic-bookshelf .top-line {
     position: absolute;
-    top: 22%;
-    left: 6%;
-    right: 6%;
-    height: 1.5px;
-    background: #4a3728;
-    box-shadow: 0 30% 0 #4a3728, 0 60% 0 #4a3728;
+    top: 2%;
+    left: 5%;
+    width: 90%;
+    height: 2px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
 }
 
-.f-graphic-bookshelf-wall {
+/* 书架 - 高 */
+.f-graphic-bookshelf-tall .body {
+    background: linear-gradient(180deg, #f0e4d4 0%, #e4d4c0 40%, #d4c4b0 70%, #c8b8a4 100%);
+}
+.f-graphic-bookshelf-tall .shelf1 { top: 23%; }
+.f-graphic-bookshelf-tall .shelf2 { top: 50%; }
+.f-graphic-bookshelf-tall .shelf3 { top: 77%; }
+
+/* 书架 - 壁挂 */
+.f-graphic-bookshelf-wall .body {
+    background: transparent;
     border: none;
     border-top: 2px solid #4a3728;
     border-bottom: 2px solid #4a3728;
-    background: transparent;
-    height: 65%;
-    width: 82%;
-    margin: 15% auto 0;
-    position: relative;
+    box-shadow: none;
+    height: 70%;
+    top: 15%;
 }
-.f-graphic-bookshelf-wall::before {
-    content: '';
-    position: absolute;
+.f-graphic-bookshelf-wall .shelf1 {
     top: 50%;
-    left: 0;
-    right: 0;
-    height: 1.5px;
-    background: #4a3728;
+    left: 0%;
+    width: 100%;
 }
+/* 书架 - 矮柜 */
+.f-graphic-bookshelf-short .body {
+    background: linear-gradient(180deg, #f0e4d4 0%, #e4d4c0 40%, #d4c4b0 80%, #c8b8a4 100%);
+    height: 60%;
+    top: 20%;
+}
+.f-graphic-bookshelf-short .shelf1 { top: 50%; }
 
-.f-graphic-bookshelf-short {
-    border: 2px solid #4a3728;
-    border-radius: 2px;
-    background: #f0e4d4;
-    height: 50%;
-    width: 82%;
-    margin: 22% auto 0;
-    position: relative;
-}
-.f-graphic-bookshelf-short::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 6%;
-    right: 6%;
-    height: 1.5px;
-    background: #4a3728;
-}
-
-/* ---------- 书桌 ---------- */
+/* ---------- 书桌（立体） ---------- */
 .f-graphic-desk {
-    border: 2px solid #4a3728;
-    border-radius: 2px 2px 0 0;
-    background: #f0e4d4;  /* 暖杏色 */
-    height: 52%;
-    width: 92%;
-    margin: 22% auto 0;
+    height: 100%;
+    width: 100%;
     position: relative;
 }
-/* 桌腿 */
-.f-graphic-desk::after {
+/* 桌面 */
+.f-graphic-desk .top {
+    position: absolute;
+    top: 10%;
+    left: 3%;
+    width: 94%;
+    height: 50%;
+    background: linear-gradient(180deg, #f5e8d8 0%, #e8d4c0 40%, #dcc8b4 80%, #d0bca8 100%);
+    border: 2px solid #4a3728;
+    border-radius: 4px 4px 2px 2px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+/* 桌面高光 */
+.f-graphic-desk .top::before {
     content: '';
     position: absolute;
-    bottom: -22%;
+    top: 2px;
+    left: 5%;
+    width: 90%;
+    height: 25%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
+    border-radius: 3px;
+}
+/* 左桌腿 */
+.f-graphic-desk .leg-l {
+    position: absolute;
+    bottom: 0%;
     left: 8%;
     width: 8%;
-    height: 22%;
+    height: 20%;
+    background: linear-gradient(180deg, #d0bca8 0%, #b8a494 50%, #a89080 100%);
     border: 1.5px solid #4a3728;
     border-top: none;
-    border-radius: 0 0 2px 2px;
-    background: #f0e4d4;
+    border-radius: 0 0 3px 3px;
 }
-.f-graphic-desk .leg2 {
+/* 右桌腿 */
+.f-graphic-desk .leg-r {
     position: absolute;
-    bottom: -22%;
+    bottom: 0%;
     right: 8%;
     width: 8%;
-    height: 22%;
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    background: #f0e4d4;
-}
-
-.f-graphic-desk-simple {
-    border: 2px solid #4a3728;
-    border-radius: 2px 2px 0 0;
-    background: #f0e4d4;
-    height: 48%;
-    width: 92%;
-    margin: 22% auto 0;
-    position: relative;
-}
-.f-graphic-desk-simple::after {
-    content: '';
-    position: absolute;
-    bottom: -20%;
-    left: 10%;
-    width: 6%;
     height: 20%;
+    background: linear-gradient(180deg, #d0bca8 0%, #b8a494 50%, #a89080 100%);
     border: 1.5px solid #4a3728;
     border-top: none;
-    border-radius: 0 0 2px 2px;
-}
-.f-graphic-desk-simple .leg2 {
-    position: absolute;
-    bottom: -20%;
-    right: 10%;
-    width: 6%;
-    height: 20%;
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
+    border-radius: 0 0 3px 3px;
 }
 
-.f-graphic-desk-vintage {
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 0 0;
-    background: #e8dcc8;  /* 复古米色 */
-    height: 52%;
-    width: 92%;
-    margin: 22% auto 0;
-    position: relative;
+.f-graphic-desk-simple .top {
+    background: linear-gradient(180deg, #f5e8d8 0%, #e8d4c0 40%, #dcc8b4 80%, #d0bca8 100%);
 }
-.f-graphic-desk-vintage::after {
-    content: '';
-    position: absolute;
-    bottom: -22%;
-    left: 8%;
-    width: 8%;
-    height: 22%;
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    background: #e8dcc8;
+.f-graphic-desk-vintage .top {
+    background: linear-gradient(180deg, #f0e0cc 0%, #e0ccb4 40%, #d0bca0 80%, #c0ac90 100%);
+    border-radius: 6px 6px 2px 2px;
 }
-.f-graphic-desk-vintage .leg2 {
-    position: absolute;
-    bottom: -22%;
-    right: 8%;
-    width: 8%;
-    height: 22%;
-    border: 1.5px solid #4a3728;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    background: #e8dcc8;
-}
-
-.f-graphic-desk-modern {
-    border: 2px solid #4a3728;
+.f-graphic-desk-modern .top {
+    background: linear-gradient(180deg, #ece8e0 0%, #dcd4cc 40%, #ccc4bc 80%, #bcb4ac 100%);
     border-radius: 2px;
-    background: #ece4dc;  /* 现代灰白 */
-    height: 42%;
-    width: 92%;
-    margin: 26% auto 0;
-    position: relative;
-}
-.f-graphic-desk-modern::after {
-    content: '';
-    position: absolute;
-    bottom: -18%;
-    left: 12%;
-    width: 5%;
-    height: 18%;
-    border: 1.5px solid #4a3728;
-    border-top: none;
-}
-.f-graphic-desk-modern .leg2 {
-    position: absolute;
-    bottom: -18%;
-    right: 12%;
-    width: 5%;
-    height: 18%;
-    border: 1.5px solid #4a3728;
-    border-top: none;
 }
 
-/* ---------- 花篮 ---------- */
+/* ---------- 花篮（立体） ---------- */
 .f-graphic-flower {
-    border: 2px solid #4a3728;
-    border-radius: 2px 2px 6px 6px;
-    background: #e8dcc8;  /* 藤编色 */
-    height: 40%;
-    width: 55%;
-    margin: 32% auto 0;
+    height: 100%;
+    width: 100%;
     position: relative;
+}
+/* 花篮主体 */
+.f-graphic-flower .basket {
+    position: absolute;
+    bottom: 10%;
+    left: 15%;
+    width: 70%;
+    height: 50%;
+    background: linear-gradient(180deg, #e8dcc8 0%, #d8ccb8 40%, #c8bca8 80%, #b8ac98 100%);
+    border: 2px solid #4a3728;
+    border-radius: 2px 2px 8px 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+/* 花篮编织纹 */
+.f-graphic-flower .basket::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 10%;
+    width: 80%;
+    height: 1px;
+    background: rgba(74,55,40,0.15);
+    box-shadow: 0 30% 0 rgba(74,55,40,0.10);
 }
 /* 花朵 */
-.f-graphic-flower::after {
-    content: '';
+.f-graphic-flower .flower1 {
     position: absolute;
-    top: -30%;
-    left: 5%;
-    width: 90%;
-    height: 35%;
+    top: 0%;
+    left: 20%;
+    width: 20%;
+    height: 30%;
+    background: radial-gradient(circle at 50% 40%, #f5d0b0 30%, #e8b890 70%, #d4a080 100%);
+    border: 1.5px solid #4a3728;
     border-radius: 50%;
-    background: radial-gradient(circle at 25% 35%, #f5c8a0 22%, transparent 22%),
-                radial-gradient(circle at 50% 20%, #f5d0b0 22%, transparent 22%),
-                radial-gradient(circle at 75% 35%, #f5c8a0 22%, transparent 22%),
-                radial-gradient(circle at 50% 50%, #f0d0b8 18%, transparent 18%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
-
-.f-graphic-flower-wicker {
-    border: 2px solid #4a3728;
-    border-radius: 2px 2px 6px 6px;
-    background: #e8dcc8;
-    height: 36%;
-    width: 55%;
-    margin: 34% auto 0;
-    position: relative;
-}
-.f-graphic-flower-wicker::after {
-    content: '';
-    position: absolute;
-    top: -30%;
-    left: 5%;
-    width: 90%;
-    height: 35%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 25% 35%, #f5c8a0 22%, transparent 22%),
-                radial-gradient(circle at 50% 20%, #f5d0b0 22%, transparent 22%),
-                radial-gradient(circle at 75% 35%, #f5c8a0 22%, transparent 22%);
-}
-
-.f-graphic-flower-glass {
-    border: 2px solid #4a3728;
-    border-radius: 2px 2px 6px 6px;
-    background: rgba(200, 220, 240, 0.15);
-    height: 44%;
-    width: 50%;
-    margin: 28% auto 0;
-    position: relative;
-}
-.f-graphic-flower-glass::after {
-    content: '';
-    position: absolute;
-    top: -35%;
-    left: 5%;
-    width: 90%;
-    height: 40%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 25% 35%, #f5c8a0 22%, transparent 22%),
-                radial-gradient(circle at 50% 20%, #f5d0b0 22%, transparent 22%),
-                radial-gradient(circle at 75% 35%, #f5c8a0 22%, transparent 22%);
-}
-
-.f-graphic-flower-ceramic {
-    border: 2px solid #4a3728;
-    border-radius: 4px 4px 6px 6px;
-    background: #e8d4cc;  /* 陶瓷粉 */
-    height: 40%;
-    width: 55%;
-    margin: 32% auto 0;
-    position: relative;
-}
-.f-graphic-flower-ceramic::after {
-    content: '';
-    position: absolute;
-    top: -30%;
-    left: 5%;
-    width: 90%;
-    height: 35%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 25% 35%, #f5c8a0 22%, transparent 22%),
-                radial-gradient(circle at 50% 20%, #f5d0b0 22%, transparent 22%),
-                radial-gradient(circle at 75% 35%, #f5c8a0 22%, transparent 22%);
-}
-
-/* ---------- 玩偶 ---------- */
-.f-graphic-doll {
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    background: #f0e4d4;  /* 暖杏色 */
-    height: 58%;
-    width: 58%;
-    margin: 22% auto 0;
-    position: relative;
-}
-/* 耳朵 */
-.f-graphic-doll::after {
-    content: '';
+.f-graphic-flower .flower2 {
     position: absolute;
     top: 2%;
-    left: 18%;
-    width: 64%;
-    height: 35%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 28% 50%, #e8dcc8 25%, transparent 25%),
-                radial-gradient(circle at 72% 50%, #e8dcc8 25%, transparent 25%);
-}
-
-.f-graphic-doll-bear {
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    background: #f0e4d4;
-    height: 58%;
-    width: 58%;
-    margin: 22% auto 0;
-    position: relative;
-}
-.f-graphic-doll-bear::after {
-    content: '';
-    position: absolute;
-    top: 2%;
-    left: 18%;
-    width: 64%;
-    height: 35%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 28% 50%, #e8dcc8 25%, transparent 25%),
-                radial-gradient(circle at 72% 50%, #e8dcc8 25%, transparent 25%);
-}
-
-.f-graphic-doll-rabbit {
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    background: #f5ece0;  /* 暖白 */
-    height: 54%;
-    width: 54%;
-    margin: 22% auto 0;
-    position: relative;
-}
-.f-graphic-doll-rabbit::after {
-    content: '';
-    position: absolute;
-    top: -22%;
-    left: 12%;
-    width: 28%;
-    height: 32%;
-    border: 2px solid #4a3728;
-    border-radius: 50% 50% 0 0;
-    background: #f5ece0;
-}
-.f-graphic-doll-rabbit .ear2 {
-    position: absolute;
-    top: -22%;
-    right: 12%;
-    width: 28%;
-    height: 32%;
-    border: 2px solid #4a3728;
-    border-radius: 50% 50% 0 0;
-    background: #f5ece0;
-}
-
-.f-graphic-doll-cat {
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    background: #f0e4d4;
-    height: 54%;
-    width: 54%;
-    margin: 22% auto 0;
-    position: relative;
-}
-.f-graphic-doll-cat::after {
-    content: '';
-    position: absolute;
-    top: -8%;
-    left: 8%;
-    width: 35%;
+    left: 45%;
+    width: 18%;
     height: 28%;
+    background: radial-gradient(circle at 50% 40%, #f5d8c0 30%, #e8c0a0 70%, #d4a888 100%);
+    border: 1.5px solid #4a3728;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%, #f0e4d4 25%, transparent 25%),
-                radial-gradient(circle at 50% 50%, #f0e4d4 25%, transparent 25%) 55% 0;
+}
+.f-graphic-flower .flower3 {
+    position: absolute;
+    top: 0%;
+    right: 20%;
+    width: 20%;
+    height: 30%;
+    background: radial-gradient(circle at 50% 40%, #f5d0b0 30%, #e8b890 70%, #d4a080 100%);
+    border: 1.5px solid #4a3728;
+    border-radius: 50%;
+}
+/* 叶子 */
+.f-graphic-flower .leaf {
+    position: absolute;
+    top: 10%;
+    left: 35%;
+    width: 8%;
+    height: 15%;
+    background: linear-gradient(180deg, #b8d0a0 0%, #a0b888 100%);
+    border: 1.5px solid #4a3728;
+    border-radius: 50% 0 50% 0;
+    transform: rotate(-20deg);
+}
+.f-graphic-flower .leaf2 {
+    position: absolute;
+    top: 10%;
+    right: 35%;
+    width: 8%;
+    height: 15%;
+    background: linear-gradient(180deg, #b8d0a0 0%, #a0b888 100%);
+    border: 1.5px solid #4a3728;
+    border-radius: 50% 0 50% 0;
+    transform: rotate(20deg) scaleX(-1);
 }
 
-.f-graphic-doll-dog {
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    background: #f0ece0;  /* 暖灰 */
-    height: 54%;
-    width: 54%;
-    margin: 22% auto 0;
+/* 花篮 - 藤编 */
+.f-graphic-flower-wicker .basket {
+    background: linear-gradient(180deg, #e8dcc8 0%, #d8ccb8 40%, #c8bca8 80%, #b8ac98 100%);
+}
+/* 花篮 - 玻璃 */
+.f-graphic-flower-glass .basket {
+    background: rgba(200, 220, 240, 0.15);
+    border-style: double;
+}
+/* 花篮 - 陶瓷 */
+.f-graphic-flower-ceramic .basket {
+    background: linear-gradient(180deg, #f0e0d8 0%, #e0ccc0 40%, #d0b8ac 80%, #c0a89c 100%);
+    border-radius: 4px 4px 8px 8px;
+}
+
+/* ---------- 玩偶（立体） ---------- */
+.f-graphic-doll {
+    height: 100%;
+    width: 100%;
     position: relative;
 }
-.f-graphic-doll-dog::after {
+/* 身体 */
+.f-graphic-doll .body {
+    position: absolute;
+    bottom: 10%;
+    left: 15%;
+    width: 70%;
+    height: 60%;
+    background: linear-gradient(180deg, #f5ece0 0%, #e8dcd0 50%, #dcccb8 100%);
+    border: 2px solid #4a3728;
+    border-radius: 50% 50% 40% 40%;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+/* 头部 */
+.f-graphic-doll .head {
+    position: absolute;
+    top: 2%;
+    left: 20%;
+    width: 60%;
+    height: 40%;
+    background: linear-gradient(180deg, #faf0e8 0%, #f0e4d8 50%, #e4d4c8 100%);
+    border: 2px solid #4a3728;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+/* 耳朵 - 左 */
+.f-graphic-doll .ear-l {
+    position: absolute;
+    top: 5%;
+    left: 10%;
+    width: 18%;
+    height: 20%;
+    background: linear-gradient(180deg, #f0e4d8 0%, #e0d0c0 100%);
+    border: 1.5px solid #4a3728;
+    border-radius: 50%;
+}
+/* 耳朵 - 右 */
+.f-graphic-doll .ear-r {
+    position: absolute;
+    top: 5%;
+    right: 10%;
+    width: 18%;
+    height: 20%;
+    background: linear-gradient(180deg, #f0e4d8 0%, #e0d0c0 100%);
+    border: 1.5px solid #4a3728;
+    border-radius: 50%;
+}
+/* 眼睛 */
+.f-graphic-doll .eye {
+    position: absolute;
+    top: 20%;
+    width: 6%;
+    height: 6%;
+    background: #4a3728;
+    border-radius: 50%;
+}
+.f-graphic-doll .eye-l { left: 30%; }
+.f-graphic-doll .eye-r { right: 30%; }
+
+/* 玩偶 - 小熊 */
+.f-graphic-doll-bear .body { background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 50%, #d0bcac 100%); }
+.f-graphic-doll-bear .head { background: linear-gradient(180deg, #f5e8d8 0%, #e8d8c8 50%, #dcc8b8 100%); }
+/* 玩偶 - 小兔 */
+.f-graphic-doll-rabbit .body { background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 50%, #dcd4cc 100%); }
+.f-graphic-doll-rabbit .head { background: linear-gradient(180deg, #faf5f0 0%, #f0e8e0 50%, #e4dcd4 100%); }
+/* 兔耳朵 */
+.f-graphic-doll-rabbit .ear-l {
+    top: -10%;
+    left: 8%;
+    width: 20%;
+    height: 30%;
+    border-radius: 50% 50% 0 0;
+    background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 100%);
+}
+.f-graphic-doll-rabbit .ear-r {
+    top: -10%;
+    right: 8%;
+    width: 20%;
+    height: 30%;
+    border-radius: 50% 50% 0 0;
+    background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 100%);
+}
+/* 玩偶 - 小猫 */
+.f-graphic-doll-cat .body { background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 50%, #d0bcac 100%); }
+.f-graphic-doll-cat .head { background: linear-gradient(180deg, #f5e8d8 0%, #e8d8c8 50%, #dcc8b8 100%); }
+/* 猫耳朵 */
+.f-graphic-doll-cat .ear-l {
+    top: 0%;
+    left: 8%;
+    width: 18%;
+    height: 22%;
+    border-radius: 50% 50% 0 0;
+    background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 100%);
+}
+.f-graphic-doll-cat .ear-r {
+    top: 0%;
+    right: 8%;
+    width: 18%;
+    height: 22%;
+    border-radius: 50% 50% 0 0;
+    background: linear-gradient(180deg, #f0e4d4 0%, #e0d0bc 100%);
+}
+/* 玩偶 - 小狗 */
+.f-graphic-doll-dog .body { background: linear-gradient(180deg, #f0ece0 0%, #e0d8cc 50%, #d0c8bc 100%); }
+.f-graphic-doll-dog .head { background: linear-gradient(180deg, #f5f0e8 0%, #e8e0d8 50%, #dcd4cc 100%); }
+.f-graphic-doll-dog .ear-l {
+    top: 2%;
+    left: 6%;
+    width: 22%;
+    height: 24%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #e0d8cc 0%, #d0c8bc 100%);
+}
+.f-graphic-doll-dog .ear-r {
+    top: 2%;
+    right: 6%;
+    width: 22%;
+    height: 24%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #e0d8cc 0%, #d0c8bc 100%);
+}
+
+/* ---------- 枕头（立体） ---------- */
+.f-graphic-pillow {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+/* 枕体 */
+.f-graphic-pillow .body {
+    position: absolute;
+    top: 10%;
+    left: 5%;
+    width: 90%;
+    height: 75%;
+    background: linear-gradient(180deg, #faf0e8 0%, #f0e4d8 40%, #e4d4c8 80%, #d8c8bc 100%);
+    border: 2px solid #4a3728;
+    border-radius: 50%;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+/* 枕头高光 */
+.f-graphic-pillow .body::before {
     content: '';
     position: absolute;
-    top: -12%;
-    left: 8%;
-    width: 40%;
-    height: 22%;
-    border: 2px solid #4a3728;
-    border-radius: 50% 50% 0 0;
-    background: #f0ece0;
-}
-
-/* ---------- 枕头 ---------- */
-.f-graphic-pillow {
-    border: 2px solid #4a3728;
+    top: 8%;
+    left: 15%;
+    width: 70%;
+    height: 30%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
     border-radius: 50%;
-    background: #f5f0e8;  /* 暖白 */
-    height: 70%;
-    width: 82%;
-    margin: 15% auto 0;
-    position: relative;
 }
 /* 枕头褶皱 */
-.f-graphic-pillow::after {
-    content: '';
+.f-graphic-pillow .crease {
     position: absolute;
-    top: 50%;
+    top: 45%;
     left: 15%;
     width: 70%;
     height: 1.5px;
-    background: #4a3728;
-    opacity: 0.2;
+    background: rgba(74,55,40,0.08);
+}
+.f-graphic-pillow .crease2 {
+    position: absolute;
+    top: 55%;
+    left: 20%;
+    width: 60%;
+    height: 1.5px;
+    background: rgba(74,55,40,0.06);
 }
 
-.f-graphic-pillow-round {
-    border: 2px solid #4a3728;
-    border-radius: 50%;
-    background: #f5f0e8;
-    height: 70%;
-    width: 82%;
-    margin: 15% auto 0;
-    position: relative;
-}
-.f-graphic-pillow-square {
-    border: 2px solid #4a3728;
-    border-radius: 4px;
-    background: #f5f0e8;
-    height: 60%;
-    width: 82%;
-    margin: 20% auto 0;
-    position: relative;
-}
-.f-graphic-pillow-long {
-    border: 2px solid #4a3728;
+.f-graphic-pillow-square .body {
     border-radius: 6px;
-    background: #f5f0e8;
-    height: 45%;
-    width: 82%;
-    margin: 25% auto 0;
-    position: relative;
+}
+.f-graphic-pillow-long .body {
+    border-radius: 8px;
+    height: 60%;
+    top: 20%;
 }
 
 /* ===== 弹幕层 ===== */
@@ -1284,7 +1235,7 @@
     margin-bottom: 12px;
 }
 
-/* 商城列表 */
+/* ===== 商城列表 ===== */
 .shop-grid {
     display: flex;
     flex-direction: column;
@@ -1332,7 +1283,7 @@
     cursor: default;
 }
 
-/* 留言列表 */
+/* ===== 留言列表 ===== */
 .msg-list {
     max-height: 200px;
     overflow-y: auto;
@@ -1358,7 +1309,7 @@
     float: right;
 }
 
-/* 奖励 */
+/* ===== 奖励 ===== */
 .reward-display {
     text-align: center;
     padding: 18px;
