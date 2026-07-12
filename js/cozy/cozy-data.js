@@ -151,7 +151,6 @@ function buyCozyItem(category, id) {
     showToast('已更换为 ' + getOptionName(category, id));
     addSystemMsg('我更换了' + getCozyLabel(category) + '：' + getOptionName(category, id));
     
-    // 如果是天气，更新天气效果
     if (category === 'weather') {
         updateWeatherDisplay();
     }
@@ -300,7 +299,6 @@ function updateWeatherDisplay() {
         };
         label.textContent = map[appData.cozyRoom.weather] || '晴天';
     }
-    // 重新渲染天气效果
     var container = document.getElementById('cozyWeatherEffect');
     if (container) {
         renderWeatherEffect();
