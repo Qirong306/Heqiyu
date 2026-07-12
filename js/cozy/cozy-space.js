@@ -1,9 +1,11 @@
-// ==================== 暖屋主界面（优化版：CSS图形家具 + 嵌入音乐） ====================
+// ==================== 暖屋主界面（墙/窗/地面版） ====================
 
 var cozyFocusActive = false;
 var cozyFocusTimer = null;
 var cozyDanmakuTimer = null;
 var cozyMusicPlayerOpen = false;
+var cozyFocusSeconds = 0;
+var cozyFocusInterval = null;
 
 // ==================== 打开/关闭暖屋 ====================
 
@@ -22,7 +24,7 @@ function openCozySpace() {
         document.body.style.overflow = 'hidden';
     }
     
-    renderCozyFurniture();
+    renderCozyRoom();
     renderCozyDanmakuHistory();
     startCozyDanmakuLoop();
     updateCozyMusicDisplay();
@@ -51,28 +53,14 @@ function ensureCozyDefaultSetup() {
     }
     
     if (!hasItems) {
-        room.weather = 'sunny';
+        room.wall = 'warm';
         room.window = 'arch';
         room.floor = 'wood';
-        room.sofa = 'fabric';
-        room.bed = 'wooden';
-        room.bookshelf = 'tall';
-        room.desk = 'simple';
-        room.flower = 'wicker';
-        room.doll = 'bear';
-        room.pillow = 'round';
         room.warmth = 100;
         room.purchased = {
-            weather: ['sunny'],
+            wall: ['warm'],
             window: ['arch'],
-            floor: ['wood'],
-            sofa: ['fabric'],
-            bed: ['wooden'],
-            bookshelf: ['tall'],
-            desk: ['simple'],
-            flower: ['wicker'],
-            doll: ['bear'],
-            pillow: ['round']
+            floor: ['wood']
         };
         saveData();
     }
@@ -88,7 +76,7 @@ function renderCozySpace() {
     overlay.id = 'cozyOverlay';
     overlay.className = 'cozy-overlay';
     
-    // ---- 顶部栏（含迷你音乐播放器） ----
+    // ---- 顶部栏 ----
     var header = document.createElement('div');
     header.className = 'cozy-header';
     header.innerHTML = 
@@ -118,35 +106,36 @@ function renderCozySpace() {
     body.className = 'cozy-body';
     body.id = 'cozyBody';
     
-    var weatherLayer = document.createElement('div');
-    weatherLayer.className = 'cozy-weather-layer weather-' + appData.cozyRoom.weather;
-    weatherLayer.id = 'cozyWeatherLayer';
-    body.appendChild(weatherLayer);
+    // 墙面（背景）
+    var wallLayer = document.createElement('div');
+    wallLayer.className = 'cozy-wall-layer wall-' + appData.cozyRoom.wall;
+    wallLayer.id = 'cozyWallLayer';
+    body.appendChild(wallLayer);
     
+    // 天气特效
     var effectContainer = document.createElement('div');
     effectContainer.id = 'cozyWeatherEffect';
     body.appendChild(effectContainer);
     renderWeatherEffect();
     
+    // 窗户
     var windowEl = document.createElement('div');
     windowEl.className = 'cozy-window';
     windowEl.innerHTML = '<div class="window-frame ' + appData.cozyRoom.window + '"><div class="window-view"><div class="window-glare"></div></div></div>';
     body.appendChild(windowEl);
     
+    // 地面
     var floor = document.createElement('div');
     floor.className = 'cozy-floor floor-' + appData.cozyRoom.floor;
     body.appendChild(floor);
     
-    var furniture = document.createElement('div');
-    furniture.className = 'cozy-furniture';
-    furniture.id = 'cozyFurniture';
-    body.appendChild(furniture);
-    
+    // 弹幕层
     var danmakuLayer = document.createElement('div');
     danmakuLayer.className = 'cozy-danmaku-layer';
     danmakuLayer.id = 'cozyDanmakuLayer';
     body.appendChild(danmakuLayer);
     
+    // 专注输入条
     var focusBar = document.createElement('div');
     focusBar.className = 'cozy-focus-bar';
     focusBar.id = 'cozyFocusBar';
@@ -158,7 +147,7 @@ function renderCozySpace() {
     
     overlay.appendChild(body);
     
-    // ---- 底部功能栏（删除了「设置」按钮） ----
+    // ---- 底部功能栏 ----
     var footer = document.createElement('div');
     footer.className = 'cozy-footer';
     footer.innerHTML = 
@@ -171,34 +160,26 @@ function renderCozySpace() {
     document.body.appendChild(overlay);
 }
 
-// ==================== 渲染家具（CSS 图形版，无文字） ====================
+// ==================== 渲染房间（墙/窗/地面） ====================
 
-function renderCozyFurniture() {
-    var container = document.getElementById('cozyFurniture');
-    if (!container) return;
-    
-    var furnitureMap = {
-        sofa: { class: 'f-sofa' },
-        bed: { class: 'f-bed' },
-        bookshelf: { class: 'f-bookshelf' },
-        desk: { class: 'f-desk' },
-        flower: { class: 'f-flower' },
-        doll: { class: 'f-doll' },
-        pillow: { class: 'f-pillow' }
-    };
-    
-    var html = '';
-    for (var key in furnitureMap) {
-        var currentId = appData.cozyRoom[key] || '';
-        var owned = isCozyOwned(key, currentId);
-        
-        html += '<div class="furniture-item ' + furnitureMap[key].class + '" onclick="openCozyItemDetail(\'' + key + '\')" data-category="' + key + '">' +
-            '<div class="f-graphic f-graphic-' + key + ' f-graphic-' + key + '-' + currentId + '"></div>' +
-            (owned ? '' : '<span class="f-badge">?</span>') +
-            '</div>';
+function renderCozyRoom() {
+    // 更新墙面
+    var wallLayer = document.getElementById('cozyWallLayer');
+    if (wallLayer) {
+        wallLayer.className = 'cozy-wall-layer wall-' + appData.cozyRoom.wall;
     }
     
-    container.innerHTML = html;
+    // 更新窗户
+    var windowEl = document.querySelector('.cozy-window .window-frame');
+    if (windowEl) {
+        windowEl.className = 'window-frame ' + appData.cozyRoom.window;
+    }
+    
+    // 更新地面
+    var floor = document.querySelector('.cozy-floor');
+    if (floor) {
+        floor.className = 'cozy-floor floor-' + appData.cozyRoom.floor;
+    }
 }
 
 // ==================== 迷你音乐播放器 ====================
@@ -284,44 +265,88 @@ function renderWeatherEffect() {
     
     var weather = appData.cozyRoom.weather;
     container.innerHTML = '';
+    container.className = '';
     
-    if (weather === 'rainy') {
+    if (weather === 'sunny') {
+        container.className = 'sunny-container';
+        // 太阳
+        var sun = document.createElement('div');
+        sun.className = 'sun';
+        container.appendChild(sun);
+        // 阳光射线
+        for (var i = 0; i < 8; i++) {
+            var ray = document.createElement('div');
+            ray.className = 'sun-ray';
+            ray.style.transform = 'rotate(' + (i * 45) + 'deg)';
+            container.appendChild(ray);
+        }
+    } else if (weather === 'cloudy') {
+        container.className = 'cloudy-container';
+        for (var c = 0; c < 3; c++) {
+            var cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            cloud.style.left = (10 + c * 30) + '%';
+            cloud.style.top = (5 + Math.random() * 15) + '%';
+            cloud.style.animationDelay = (c * 1.5) + 's';
+            cloud.style.transform = 'scale(' + (0.7 + Math.random() * 0.6) + ')';
+            container.appendChild(cloud);
+        }
+    } else if (weather === 'rainy') {
         container.className = 'rain-container';
-        for (var i = 0; i < 60; i++) {
+        for (var r = 0; r < 80; r++) {
             var drop = document.createElement('div');
             drop.className = 'rain-drop';
             drop.style.left = Math.random() * 100 + '%';
-            drop.style.height = (10 + Math.random() * 20) + 'px';
-            drop.style.animationDuration = (0.5 + Math.random() * 0.8) + 's';
+            drop.style.height = (8 + Math.random() * 16) + 'px';
+            drop.style.animationDuration = (0.4 + Math.random() * 0.6) + 's';
             drop.style.animationDelay = Math.random() * 2 + 's';
             container.appendChild(drop);
         }
     } else if (weather === 'snowy') {
         container.className = 'snow-container';
-        for (var j = 0; j < 40; j++) {
+        for (var s = 0; s < 50; s++) {
             var flake = document.createElement('div');
             flake.className = 'snow-flake';
-            flake.textContent = '❖';
+            flake.textContent = '❄';
             flake.style.left = Math.random() * 100 + '%';
-            flake.style.fontSize = (10 + Math.random() * 16) + 'px';
-            flake.style.animationDuration = (4 + Math.random() * 6) + 's';
-            flake.style.animationDelay = Math.random() * 4 + 's';
+            flake.style.fontSize = (8 + Math.random() * 14) + 'px';
+            flake.style.animationDuration = (6 + Math.random() * 8) + 's';
+            flake.style.animationDelay = Math.random() * 6 + 's';
+            flake.style.opacity = 0.3 + Math.random() * 0.4;
             container.appendChild(flake);
         }
     } else if (weather === 'night') {
-        container.className = 'star-container';
-        for (var k = 0; k < 30; k++) {
+        container.className = 'night-container';
+        // 月亮
+        var moon = document.createElement('div');
+        moon.className = 'moon';
+        container.appendChild(moon);
+        // 星星
+        for (var st = 0; st < 35; st++) {
             var star = document.createElement('div');
             star.className = 'star';
-            star.textContent = '✦';
             star.style.left = Math.random() * 100 + '%';
-            star.style.top = (10 + Math.random() * 40) + '%';
-            star.style.fontSize = (8 + Math.random() * 12) + 'px';
-            star.style.animationDelay = Math.random() * 2 + 's';
+            star.style.top = (5 + Math.random() * 50) + '%';
+            star.style.fontSize = (6 + Math.random() * 10) + 'px';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.textContent = '✦';
             container.appendChild(star);
         }
-    } else {
-        container.className = '';
+    } else if (weather === 'sunset') {
+        container.className = 'sunset-container';
+        // 夕阳
+        var settingSun = document.createElement('div');
+        settingSun.className = 'setting-sun';
+        container.appendChild(settingSun);
+        // 云彩
+        for (var sc = 0; sc < 4; sc++) {
+            var sunsetCloud = document.createElement('div');
+            sunsetCloud.className = 'sunset-cloud';
+            sunsetCloud.style.left = (5 + sc * 25) + '%';
+            sunsetCloud.style.top = (10 + Math.random() * 20) + '%';
+            sunsetCloud.style.animationDelay = (sc * 0.8) + 's';
+            container.appendChild(sunsetCloud);
+        }
     }
 }
 
@@ -337,7 +362,7 @@ function checkOtherPurchases() {
     var newItems = purchases.filter(function(p) { return p.isNew; });
     if (newItems.length > 0) {
         newItems.forEach(function(p) {
-            showToast('对方添置了 ' + p.name);
+            showToast('对方更换了 ' + p.name);
             p.isNew = false;
         });
         saveData();
@@ -345,19 +370,12 @@ function checkOtherPurchases() {
 }
 
 function updateWeather() {
-    var layer = document.getElementById('cozyWeatherLayer');
-    if (layer) {
-        layer.className = 'cozy-weather-layer weather-' + appData.cozyRoom.weather;
-    }
     var label = document.getElementById('cozyWeatherLabel');
     if (label) label.textContent = getWeatherLabel();
     renderWeatherEffect();
 }
 
-// ==================== 专注模式（计时 + 弹幕，暖屋可见） ====================
-
-var cozyFocusSeconds = 0;
-var cozyFocusInterval = null;
+// ==================== 专注模式 ====================
 
 function toggleCozyFocus() {
     var bar = document.getElementById('cozyFocusBar');
@@ -436,7 +454,7 @@ function updateCozyFocusTimer() {
             var newTimer = document.createElement('span');
             newTimer.className = 'cozy-focus-timer';
             newTimer.id = 'cozyFocusTimerDisplay';
-            newTimer.style.cssText = 'color:white;font-size:16px;font-weight:bold;min-width:60px;';
+            newTimer.style.cssText = 'color:#4a3728;font-size:15px;font-weight:bold;min-width:44px;';
             bar.insertBefore(newTimer, bar.firstChild);
             timerEl = newTimer;
         }
@@ -456,8 +474,8 @@ function updateCozyFocusButton(active) {
         if (btn.textContent.indexOf('专注') !== -1 || btn.innerHTML.indexOf('专注') !== -1) {
             if (active) {
                 btn.style.background = '#e8a87c';
-                btn.style.borderColor = '#e8a87c';
-                btn.style.color = 'white';
+                btn.style.borderColor = '#4a3728';
+                btn.style.color = '#4a3728';
             } else {
                 btn.style.background = '';
                 btn.style.borderColor = '';
@@ -559,57 +577,25 @@ function stopCozyDanmakuLoop() {
     }
 }
 
-// ==================== 家具详情 ====================
+// ==================== 弹窗工具 ====================
 
-function openCozyItemDetail(category) {
-    var current = appData.cozyRoom[category] || '';
-    var label = getCozyLabel(category);
-    var options = getCozyOptions(category);
+function openCozyModal(html) {
+    var existing = document.getElementById('cozyModalOverlay');
+    if (existing) existing.remove();
     
-    var html = '<h3>' + label + '</h3>';
-    html += '<div class="sub">点击切换样式</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:6px;">';
-    
-    options.forEach(function(opt) {
-        var owned = isCozyOwned(category, opt.id);
-        var active = (current === opt.id);
-        var priceText = opt.price === 0 ? '初始' : opt.price + '温暖值';
-        
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:' + 
-            (active ? '#e8d5c4' : '#fffcf8') + 
-            ';border-radius:12px;border:2px solid ' + (active ? '#d4b8a0' : '#e8d5c4') + ';">' +
-            '<span>' + opt.name + 
-            (active ? ' ✓' : '') + 
-            ' <span style="font-size:11px;color:#8b7355;">' + priceText + '</span></span>' +
-            (owned ? 
-                '<button onclick="switchCozyStyleFromDetail(\'' + category + '\',\'' + opt.id + '\')" style="padding:4px 14px;border-radius:14px;border:none;background:#c8b8a8;color:white;font-family:inherit;font-size:12px;cursor:pointer;">' + (active ? '使用中' : '切换') + '</button>' :
-                '<button onclick="buyCozyItemFromDetail(\'' + category + '\',\'' + opt.id + '\')" style="padding:4px 14px;border-radius:14px;border:none;background:#e8a87c;color:white;font-family:inherit;font-size:12px;cursor:pointer;">购买</button>'
-            ) +
-            '</div>';
-    });
-    
-    html += '</div>';
-    html += '<button onclick="closeCozyModal()" style="margin-top:12px;padding:8px 24px;border-radius:20px;border:2px solid #e8d5c4;background:transparent;font-family:inherit;font-size:13px;cursor:pointer;color:#4a3728;">关闭</button>';
-    
-    openCozyModal(html);
+    var overlay = document.createElement('div');
+    overlay.id = 'cozyModalOverlay';
+    overlay.className = 'cozy-modal-overlay show';
+    overlay.innerHTML = '<div class="cozy-modal">' + html + '</div>';
+    overlay.onclick = function(e) {
+        if (e.target === this) closeCozyModal();
+    };
+    document.body.appendChild(overlay);
 }
 
-function switchCozyStyleFromDetail(category, id) {
-    if (switchCozyStyle(category, id)) {
-        renderCozyFurniture();
-        if (category === 'weather') updateWeather();
-        closeCozyModal();
-        showToast('已切换');
-    }
-}
-
-function buyCozyItemFromDetail(category, id) {
-    if (buyCozyItem(category, id)) {
-        renderCozyFurniture();
-        updateWarmthDisplay();
-        if (category === 'weather') updateWeather();
-        closeCozyModal();
-    }
+function closeCozyModal() {
+    var el = document.getElementById('cozyModalOverlay');
+    if (el) el.remove();
 }
 
 // ==================== 留言板 ====================
@@ -643,11 +629,11 @@ function openCozyMessages() {
     html += '</div>';
     
     html += '<div style="display:flex;gap:6px;margin-top:8px;">' +
-        '<input type="text" id="cozyMessageInput" placeholder="写留言..." maxlength="200" style="flex:1;padding:8px 14px;border:2px solid #e8d5c4;border-radius:16px;font-family:inherit;font-size:13px;background:white;outline:none;" onkeydown="if(event.key===\'Enter\')sendCozyMessage()">' +
-        '<button onclick="sendCozyMessage()" style="padding:8px 18px;border-radius:16px;border:none;background:#e8a87c;color:white;font-family:inherit;font-size:13px;cursor:pointer;">发送</button>' +
+        '<input type="text" id="cozyMessageInput" placeholder="写留言..." maxlength="200" style="flex:1;padding:8px 14px;border:2px solid #4a3728;border-radius:16px;font-family:inherit;font-size:13px;background:white;outline:none;" onkeydown="if(event.key===\'Enter\')sendCozyMessage()">' +
+        '<button onclick="sendCozyMessage()" style="padding:8px 18px;border-radius:16px;border:2px solid #4a3728;background:#f5ede4;color:#4a3728;font-family:inherit;font-size:13px;cursor:pointer;">发送</button>' +
         '</div>';
     
-    html += '<button onclick="closeCozyModal()" style="margin-top:12px;padding:8px 24px;border-radius:20px;border:2px solid #e8d5c4;background:transparent;font-family:inherit;font-size:13px;cursor:pointer;color:#4a3728;">关闭</button>';
+    html += '<button onclick="closeCozyModal()" style="margin-top:12px;padding:8px 24px;border-radius:20px;border:2px solid #4a3728;background:transparent;font-family:inherit;font-size:13px;cursor:pointer;color:#4a3728;">关闭</button>';
     
     openCozyModal(html);
     
@@ -684,33 +670,9 @@ function sendCozyMessage() {
     }
 }
 
-// ==================== 弹窗工具 ====================
-
-function openCozyModal(html) {
-    var existing = document.getElementById('cozyModalOverlay');
-    if (existing) existing.remove();
-    
-    var overlay = document.createElement('div');
-    overlay.id = 'cozyModalOverlay';
-    overlay.className = 'cozy-modal-overlay show';
-    overlay.innerHTML = '<div class="cozy-modal">' + html + '</div>';
-    overlay.onclick = function(e) {
-        if (e.target === this) closeCozyModal();
-    };
-    document.body.appendChild(overlay);
-}
-
-function closeCozyModal() {
-    var el = document.getElementById('cozyModalOverlay');
-    if (el) el.remove();
-}
-
 // ==================== 导出到全局 ====================
 window.openCozySpace = openCozySpace;
 window.closeCozySpace = closeCozySpace;
-window.openCozyItemDetail = openCozyItemDetail;
-window.switchCozyStyleFromDetail = switchCozyStyleFromDetail;
-window.buyCozyItemFromDetail = buyCozyItemFromDetail;
 window.sendCozyDanmaku = sendCozyDanmaku;
 window.toggleCozyFocus = toggleCozyFocus;
 window.closeCozyFocusBar = closeCozyFocusBar;
@@ -725,4 +687,4 @@ window.cozyMusicPrev = cozyMusicPrev;
 window.updateCozyMusicDisplay = updateCozyMusicDisplay;
 window.ensureCozyDefaultSetup = ensureCozyDefaultSetup;
 
-console.log('暖屋主界面已加载（优化版：CSS图形家具 + 嵌入音乐）');
+console.log('暖屋主界面已加载（墙/窗/地面版）');
