@@ -213,11 +213,11 @@
 /* ===== 窗户 ===== */
 .cozy-window {
     position: absolute;
-    top: 28px;
+    top: 24px;
     left: 50%;
     transform: translateX(-50%);
-    width: 38%;
-    height: 22%;
+    width: 48%;
+    height: 26%;
     z-index: 2;
     pointer-events: none;
 }
@@ -319,7 +319,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 20%;
+    height: 24%;
     z-index: 2;
     pointer-events: none;
     border-top: 2px solid #4a3728;
