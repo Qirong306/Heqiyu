@@ -1,21 +1,28 @@
-// ==================== 暖屋商城（墙/窗/地面） ====================
+// ==================== 暖屋商城（墙/窗/地面/天气） ====================
 
 function openCozyShop() {
     var html = '<h3>暖屋商城</h3>';
-    html += '<div class="sub">更换墙面、窗户、地面的样式</div>';
+    html += '<div class="sub">更换墙面、窗户、地面、天气</div>';
     
     html += '<div style="text-align:center;padding:8px 0;margin-bottom:12px;background:#f5ede4;border-radius:12px;border:2px solid #4a3728;font-size:14px;">' +
         '温暖值：<span style="font-weight:bold;color:#e8a87c;">' + appData.cozyRoom.warmth + '</span>' +
         '</div>';
     
-    var categories = ['wall', 'window', 'floor'];
-    var labels = ['墙面', '窗户', '地面'];
+    var categories = ['wall', 'window', 'floor', 'weather'];
+    var labels = ['墙面', '窗户', '地面', '天气'];
+    var previewMap = {
+        'wall': { 'warm': '#f5ede4', 'mint': '#d4e8d8', 'lavender': '#e0dce8', 'peach': '#f5e0d8', 'sky': '#d4e4f0', 'cream': '#f5f0e8', 'sage': '#dce4d0', 'dusty': '#e8dcd8' },
+        'floor': { 'wood': '#d4c0b0', 'carpet': '#d8ccc4', 'tile': '#e0dcd4', 'tatami': '#d4c8b4', 'marble': '#e8e4dc', 'brick': '#d0c0b0' },
+        'weather': { 'sunny': '#fce4b8', 'cloudy': '#d5d0c8', 'rainy': '#b0c0d0', 'snowy': '#e8ecf0', 'night': '#2a2a44', 'sunset': '#f0c8b8' },
+        'window': {}
+    };
     
     for (var c = 0; c < categories.length; c++) {
         var cat = categories[c];
         var label = labels[c];
         var options = getCozyOptions(cat);
         var current = appData.cozyRoom[cat] || '';
+        var previewColors = previewMap[cat] || {};
         
         html += '<div style="margin-bottom:14px;border-top:1.5px solid #e8d5c4;padding-top:10px;">';
         html += '<div style="font-weight:bold;font-size:14px;color:#4a3728;margin-bottom:6px;">' + label + '</div>';
@@ -26,38 +33,23 @@ function openCozyShop() {
             var active = (current === opt.id);
             var priceText = opt.price === 0 ? '初始' : opt.price + '温暖值';
             
-            var bgColor = '';
-            if (cat === 'wall') {
-                var wallColors = {
-                    'warm': '#f5ede4',
-                    'mint': '#d4e8d8',
-                    'lavender': '#e0dce8',
-                    'peach': '#f5e0d8',
-                    'sky': '#d4e4f0',
-                    'cream': '#f5f0e8',
-                    'sage': '#dce4d0',
-                    'dusty': '#e8dcd8'
-                };
-                bgColor = wallColors[opt.id] || '#f5ede4';
-            } else if (cat === 'floor') {
-                var floorColors = {
-                    'wood': '#d4c0b0',
-                    'carpet': '#d8ccc4',
-                    'tile': '#e0dcd4',
-                    'tatami': '#d4c8b4',
-                    'marble': '#e8e4dc',
-                    'brick': '#d0c0b0'
-                };
-                bgColor = floorColors[opt.id] || '#d4c0b0';
+            var previewColor = previewColors[opt.id] || '#f5ede4';
+            var previewStyle = '';
+            if (cat === 'window') {
+                previewStyle = 'border:2px solid #4a3728;border-radius:4px;background:rgba(200,220,240,0.1);';
+            } else if (cat === 'weather') {
+                previewStyle = 'border-radius:50%;';
             } else {
-                bgColor = '#f5ede4';
+                previewStyle = 'border-radius:4px;border:1px solid #d5c8b8;';
             }
             
             var activeBorder = active ? 'border-color:#4a3728;border-width:2.5px;' : '';
-            var ownedBadge = owned ? '' : ' <span style="font-size:10px;color:#e8a87c;">🔒</span>';
             
-            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin-bottom:4px;background:' + bgColor + ';border-radius:10px;border:2px solid #e8d5c4;' + activeBorder + '">' +
-                '<span>' + opt.name + (active ? ' ✓' : '') + ownedBadge + ' <span style="font-size:11px;color:#8b7355;">' + priceText + '</span></span>' +
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;margin-bottom:4px;background:#fffcf8;border-radius:10px;border:2px solid #e8d5c4;' + activeBorder + '">' +
+                '<div style="display:flex;align-items:center;gap:8px;">' +
+                    '<div style="width:24px;height:24px;' + previewStyle + 'background:' + previewColor + ';flex-shrink:0;"></div>' +
+                    '<span>' + opt.name + (active ? ' ✓' : '') + ' <span style="font-size:11px;color:#8b7355;">' + priceText + '</span></span>' +
+                '</div>' +
                 (owned ? 
                     '<button onclick="switchFromShop(\'' + cat + '\',\'' + opt.id + '\')" style="padding:3px 12px;border-radius:10px;border:2px solid #4a3728;background:#f5ede4;color:#4a3728;font-family:inherit;font-size:11px;cursor:pointer;">' + (active ? '使用中' : '切换') + '</button>' :
                     (opt.price === 0 ? 
@@ -106,6 +98,10 @@ function buyFromShop(category, id) {
     renderCozyRoom();
     updateWarmthDisplay();
     
+    if (category === 'weather') {
+        updateWeatherDisplay();
+    }
+    
     showToast('已更换 ' + getOptionName(category, id));
     addSystemMsg('我更换了' + getCozyLabel(category) + '：' + getOptionName(category, id));
 }
@@ -122,6 +118,10 @@ function switchFromShop(category, id) {
     openCozyShop();
     renderCozyRoom();
     
+    if (category === 'weather') {
+        updateWeatherDisplay();
+    }
+    
     showToast('已切换至 ' + getOptionName(category, id));
 }
 
@@ -130,4 +130,4 @@ window.openCozyShop = openCozyShop;
 window.buyFromShop = buyFromShop;
 window.switchFromShop = switchFromShop;
 
-console.log('暖屋商城已加载（墙/窗/地面版）');
+console.log('暖屋商城已加载（墙/窗/地面/天气版）');
