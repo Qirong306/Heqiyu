@@ -368,33 +368,185 @@ function updateWeather() {
     renderWeatherEffect();
 }
 
-// ==================== 弹幕系统 ====================
+// ==================== 专注模式（计时 + 弹幕，暖屋可见） ====================
+
+var cozyFocusSeconds = 0;
+var cozyFocusInterval = null;
 
 function toggleCozyFocus() {
     var bar = document.getElementById('cozyFocusBar');
     if (!bar) return;
-    if (bar.classList.contains('show')) {
-        closeCozyFocusBar();
+    
+    if (cozyFocusActive) {
+        // 停止专注
+        stopCozyFocus();
     } else {
-        openCozyFocusBar();
+        // 开始专注
+        startCozyFocus();
     }
 }
 
-function openCozyFocusBar() {
+function startCozyFocus() {
+    var bar = document.getElementById('cozyFocusBar');
+    if (!bar) return;
+    
+    cozyFocusActive = true;
+    cozyFocusSeconds = 0;
+    
+    // 显示专注计时 + 输入框
+    bar.classList.add('show');
+    bar.classList.add('focus-mode');
+    
+    // 更新计时显示
+    updateCozyFocusTimer();
+    
+    // 启动计时器
+    if (cozyFocusInterval) clearInterval(cozyFocusInterval);
+    cozyFocusInterval = setInterval(function() {
+        cozyFocusSeconds++;
+        updateCozyFocusTimer();
+    }, 1000);
+    
+    // 聚焦输入框
+    var input = document.getElementById('cozyFocusInput');
+    if (input) setTimeout(function() { input.focus(); }, 100);
+    
+    // 更新按钮状态（底部专注按钮变亮）
+    updateCozyFocusButton(true);
+    
+    // 系统消息
+    addSystemMsg('开始专注模式');
+}
+
+function stopCozyFocus() {
+    cozyFocusActive = false;
+    
+    if (cozyFocusInterval) {
+        clearInterval(cozyFocusInterval);
+        cozyFocusInterval = null;
+    }
+    
     var bar = document.getElementById('cozyFocusBar');
     if (bar) {
-        bar.classList.add('show');
+        bar.classList.remove('show');
+        bar.classList.remove('focus-mode');
+    }
+    
+    // 重置计时显示
+    var timerEl = document.getElementById('cozyFocusTimerDisplay');
+    if (timerEl) timerEl.textContent = '';
+    
+    // 更新按钮状态
+    updateCozyFocusButton(false);
+    
+    // 系统消息
+    var minutes = Math.floor(cozyFocusSeconds / 60);
+    var seconds = cozyFocusSeconds % 60;
+    var timeStr = minutes > 0 ? minutes + '分' + seconds + '秒' : seconds + '秒';
+    if (cozyFocusSeconds > 0) {
+        addSystemMsg('专注结束，共 ' + timeStr);
+        showToast('专注 ' + timeStr);
+    }
+    
+    cozyFocusSeconds = 0;
+}
+
+function updateCozyFocusTimer() {
+    var timerEl = document.getElementById('cozyFocusTimerDisplay');
+    if (!timerEl) {
+        // 如果计时元素不存在，在输入框前面插入一个
+        var bar = document.getElementById('cozyFocusBar');
+        if (bar) {
+            var existing = bar.querySelector('.cozy-focus-timer');
+            if (existing) existing.remove();
+            
+            var newTimer = document.createElement('span');
+            newTimer.className = 'cozy-focus-timer';
+            newTimer.id = 'cozyFocusTimerDisplay';
+            newTimer.style.cssText = 'color:white;font-size:16px;font-weight:bold;min-width:60px;';
+            bar.insertBefore(newTimer, bar.firstChild);
+            timerEl = newTimer;
+        }
+    }
+    
+    if (timerEl) {
+        var mins = Math.floor(cozyFocusSeconds / 60);
+        var secs = cozyFocusSeconds % 60;
+        timerEl.textContent = (mins > 0 ? mins + ':' : '') + (secs < 10 ? '0' : '') + secs;
+    }
+}
+
+function updateCozyFocusButton(active) {
+    var footerBtns = document.querySelectorAll('.cozy-footer button');
+    for (var i = 0; i < footerBtns.length; i++) {
+        var btn = footerBtns[i];
+        if (btn.textContent.indexOf('专注') !== -1 || btn.innerHTML.indexOf('专注') !== -1) {
+            if (active) {
+                btn.style.background = '#e8a87c';
+                btn.style.borderColor = '#e8a87c';
+                btn.style.color = 'white';
+            } else {
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }
+            break;
+        }
+    }
+}
+
+// 覆盖原来的 openCozyFocusBar / closeCozyFocusBar（兼容旧调用）
+function openCozyFocusBar() {
+    if (!cozyFocusActive) {
+        startCozyFocus();
+    } else {
+        var bar = document.getElementById('cozyFocusBar');
+        if (bar) bar.classList.add('show');
         var input = document.getElementById('cozyFocusInput');
         if (input) setTimeout(function() { input.focus(); }, 100);
     }
-    cozyFocusActive = true;
 }
 
 function closeCozyFocusBar() {
-    var bar = document.getElementById('cozyFocusBar');
-    if (bar) bar.classList.remove('show');
-    cozyFocusActive = false;
+    if (cozyFocusActive) {
+        stopCozyFocus();
+    } else {
+        var bar = document.getElementById('cozyFocusBar');
+        if (bar) bar.classList.remove('show');
+    }
 }
+
+// 发送弹幕（保留原有功能，增加专注计时联动）
+function sendCozyDanmaku() {
+    var input = document.getElementById('cozyFocusInput');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) return;
+    
+    addCozyDanmaku(text, 'me');
+    showCozyDanmaku(text, 'me');
+    input.value = '';
+    
+    // 对方自动回复（20%概率）
+    if (Math.random() < 0.2) {
+        var replies = getAllReplies();
+        if (replies.length > 0) {
+            var reply = replies[Math.floor(Math.random() * replies.length)];
+            setTimeout(function() {
+                addCozyDanmaku(reply, 'other');
+                showCozyDanmaku(reply, 'other');
+            }, 800 + Math.random() * 1500);
+        }
+    }
+}
+
+// 确保挂载到全局
+window.toggleCozyFocus = toggleCozyFocus;
+window.startCozyFocus = startCozyFocus;
+window.stopCozyFocus = stopCozyFocus;
+window.openCozyFocusBar = openCozyFocusBar;
+window.closeCozyFocusBar = closeCozyFocusBar;
+window.sendCozyDanmaku = sendCozyDanmaku;
 
 function sendCozyDanmaku() {
     var input = document.getElementById('cozyFocusInput');
