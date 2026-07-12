@@ -1,4 +1,4 @@
-// ==================== 暖屋主界面（墙/窗/地面版） ====================
+// ==================== 暖屋主界面（墙/窗/地面/天气版） ====================
 
 var cozyFocusActive = false;
 var cozyFocusTimer = null;
@@ -28,6 +28,7 @@ function openCozySpace() {
     renderCozyDanmakuHistory();
     startCozyDanmakuLoop();
     updateCozyMusicDisplay();
+    updateWeatherDisplay();
 }
 
 function closeCozySpace() {
@@ -56,11 +57,13 @@ function ensureCozyDefaultSetup() {
         room.wall = 'warm';
         room.window = 'arch';
         room.floor = 'wood';
+        room.weather = 'sunny';
         room.warmth = 100;
         room.purchased = {
             wall: ['warm'],
             window: ['arch'],
-            floor: ['wood']
+            floor: ['wood'],
+            weather: ['sunny']
         };
         saveData();
     }
@@ -118,13 +121,13 @@ function renderCozySpace() {
     body.appendChild(effectContainer);
     renderWeatherEffect();
     
-    // 窗户
+    // 窗户（比例调大）
     var windowEl = document.createElement('div');
     windowEl.className = 'cozy-window';
     windowEl.innerHTML = '<div class="window-frame ' + appData.cozyRoom.window + '"><div class="window-view"><div class="window-glare"></div></div></div>';
     body.appendChild(windowEl);
     
-    // 地面
+    // 地面（比例调大）
     var floor = document.createElement('div');
     floor.className = 'cozy-floor floor-' + appData.cozyRoom.floor;
     body.appendChild(floor);
@@ -170,9 +173,9 @@ function renderCozyRoom() {
     }
     
     // 更新窗户
-    var windowEl = document.querySelector('.cozy-window .window-frame');
-    if (windowEl) {
-        windowEl.className = 'window-frame ' + appData.cozyRoom.window;
+    var windowFrame = document.querySelector('.cozy-window .window-frame');
+    if (windowFrame) {
+        windowFrame.className = 'window-frame ' + appData.cozyRoom.window;
     }
     
     // 更新地面
@@ -369,9 +372,19 @@ function checkOtherPurchases() {
     }
 }
 
-function updateWeather() {
+function updateWeatherDisplay() {
     var label = document.getElementById('cozyWeatherLabel');
-    if (label) label.textContent = getWeatherLabel();
+    if (label) {
+        var map = {
+            sunny: '晴天',
+            cloudy: '多云',
+            rainy: '下雨',
+            snowy: '下雪',
+            night: '夜晚',
+            sunset: '晚霞'
+        };
+        label.textContent = map[appData.cozyRoom.weather] || '晴天';
+    }
     renderWeatherEffect();
 }
 
@@ -686,5 +699,7 @@ window.cozyMusicNext = cozyMusicNext;
 window.cozyMusicPrev = cozyMusicPrev;
 window.updateCozyMusicDisplay = updateCozyMusicDisplay;
 window.ensureCozyDefaultSetup = ensureCozyDefaultSetup;
+window.renderCozyRoom = renderCozyRoom;
+window.updateWeatherDisplay = updateWeatherDisplay;
 
-console.log('暖屋主界面已加载（墙/窗/地面版）');
+console.log('暖屋主界面已加载（墙/窗/地面/天气版）');
