@@ -1,4 +1,4 @@
-/* ========== 暖屋全屏样式（墙/窗/地面版 + 天气美化） ========== */
+/* ========== 暖屋全屏样式 ========== */
 
 .cozy-overlay {
     position: fixed;
@@ -146,7 +146,7 @@
     min-height: 0;
 }
 
-/* ===== 墙面 ===== */
+/* ===== 墙面 - 用户选择的颜色 ===== */
 .cozy-wall-layer {
     position: absolute;
     top: 0;
@@ -154,10 +154,10 @@
     right: 0;
     bottom: 0;
     z-index: 0;
-    transition: background 0.8s ease;
+    transition: background 0.6s ease;
 }
 
-/* 墙面颜色 */
+/* 墙面颜色选项 */
 .wall-warm { background: #f5ede4; }
 .wall-mint { background: #d4e8d8; }
 .wall-lavender { background: #e0dce8; }
@@ -167,7 +167,7 @@
 .wall-sage { background: #dce4d0; }
 .wall-dusty { background: #e8dcd8; }
 
-/* 墙面纹理（暖杏色默认带纹理） */
+/* 墙面纹理 */
 .wall-warm {
     background: #f5ede4;
     background-image: 
@@ -210,14 +210,247 @@
         radial-gradient(ellipse at 70% 30%, rgba(200,180,175,0.06) 0%, transparent 50%);
 }
 
+/* ===== 天气特效容器 ===== */
+#cozyWeatherEffect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* ---------- 晴天 ---------- */
+.sunny-container .sun {
+    position: absolute;
+    top: 8px;
+    right: 8%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff7e6, #f5d742);
+    box-shadow: 0 0 40px rgba(245, 215, 66, 0.15);
+    animation: sunPulse 3s ease-in-out infinite;
+}
+@keyframes sunPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+.sunny-container .sun-ray {
+    position: absolute;
+    top: 18px;
+    right: 8%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+.sunny-container .sun-ray::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 52px;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, rgba(200,180,150,0.2), transparent);
+}
+.sunny-container .sun-ray:nth-child(2)::before { transform: translate(-50%, -50%) rotate(22.5deg); }
+.sunny-container .sun-ray:nth-child(3)::before { transform: translate(-50%, -50%) rotate(45deg); }
+.sunny-container .sun-ray:nth-child(4)::before { transform: translate(-50%, -50%) rotate(67.5deg); }
+.sunny-container .sun-ray:nth-child(5)::before { transform: translate(-50%, -50%) rotate(90deg); }
+.sunny-container .sun-ray:nth-child(6)::before { transform: translate(-50%, -50%) rotate(112.5deg); }
+.sunny-container .sun-ray:nth-child(7)::before { transform: translate(-50%, -50%) rotate(135deg); }
+.sunny-container .sun-ray:nth-child(8)::before { transform: translate(-50%, -50%) rotate(157.5deg); }
+
+/* ---------- 多云 ---------- */
+.cloudy-container .cloud {
+    position: absolute;
+    width: 65px;
+    height: 22px;
+    background: rgba(210, 205, 198, 0.4);
+    border-radius: 40px;
+    animation: cloudFloat 8s ease-in-out infinite;
+}
+.cloudy-container .cloud::before {
+    content: '';
+    position: absolute;
+    top: -9px;
+    left: 8px;
+    width: 26px;
+    height: 26px;
+    background: rgba(210, 205, 198, 0.4);
+    border-radius: 50%;
+}
+.cloudy-container .cloud::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 24px;
+    width: 20px;
+    height: 20px;
+    background: rgba(210, 205, 198, 0.4);
+    border-radius: 50%;
+}
+.cloudy-container .cloud:nth-child(1) { top: 10px; left: 5%; animation-delay: 0s; }
+.cloudy-container .cloud:nth-child(2) { top: 6px; right: 15%; animation-delay: 2.5s; width: 50px; height: 18px; }
+.cloudy-container .cloud:nth-child(2)::before { width: 20px; height: 20px; top: -7px; left: 6px; }
+.cloudy-container .cloud:nth-child(2)::after { width: 16px; height: 16px; top: -4px; left: 18px; }
+.cloudy-container .cloud:nth-child(3) { top: 28px; left: 35%; animation-delay: 5s; width: 45px; height: 16px; opacity: 0.5; }
+.cloudy-container .cloud:nth-child(3)::before { width: 16px; height: 16px; top: -5px; left: 5px; }
+.cloudy-container .cloud:nth-child(3)::after { width: 14px; height: 14px; top: -3px; left: 16px; }
+
+@keyframes cloudFloat {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(12px); }
+}
+
+/* ---------- 下雨 ---------- */
+.rain-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+.rain-container .rain-drop {
+    position: absolute;
+    width: 1.5px;
+    background: rgba(120, 160, 200, 0.2);
+    border-radius: 1px;
+    animation: rainFall linear infinite;
+}
+@keyframes rainFall {
+    0% { transform: translateY(-20px); opacity: 0.4; }
+    100% { transform: translateY(calc(100vh + 20px)); opacity: 0.05; }
+}
+
+/* ---------- 下雪 ---------- */
+.snow-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+.snow-container .snow-flake {
+    position: absolute;
+    color: rgba(200, 210, 220, 0.3);
+    animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.4; }
+    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.05; }
+}
+
+/* ---------- 夜晚 ---------- */
+.night-container .moon {
+    position: absolute;
+    top: 10px;
+    right: 10%;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #f5f0e8, #d8d0c0);
+    box-shadow: 0 0 25px rgba(200, 190, 170, 0.08);
+}
+.night-container .moon::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 7px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(180, 170, 155, 0.15);
+}
+.night-container .star {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 7px;
+    animation: starTwinkle 2.5s ease-in-out infinite alternate;
+}
+@keyframes starTwinkle {
+    0% { opacity: 0.15; transform: scale(0.8); }
+    100% { opacity: 0.5; transform: scale(1.2); }
+}
+.night-container .star:nth-child(2) { top: 8%; left: 8%; animation-delay: 0s; font-size: 8px; }
+.night-container .star:nth-child(3) { top: 5%; left: 20%; animation-delay: 0.5s; font-size: 6px; }
+.night-container .star:nth-child(4) { top: 15%; left: 35%; animation-delay: 1s; font-size: 9px; }
+.night-container .star:nth-child(5) { top: 6%; left: 50%; animation-delay: 1.5s; font-size: 7px; }
+.night-container .star:nth-child(6) { top: 12%; left: 65%; animation-delay: 0.8s; font-size: 6px; }
+.night-container .star:nth-child(7) { top: 4%; left: 78%; animation-delay: 2s; font-size: 8px; }
+.night-container .star:nth-child(8) { top: 18%; left: 90%; animation-delay: 0.3s; font-size: 7px; }
+.night-container .star:nth-child(9) { top: 25%; left: 15%; animation-delay: 1.2s; font-size: 6px; }
+.night-container .star:nth-child(10) { top: 22%; left: 45%; animation-delay: 0.7s; font-size: 8px; }
+.night-container .star:nth-child(11) { top: 20%; left: 72%; animation-delay: 1.8s; font-size: 6px; }
+.night-container .star:nth-child(12) { top: 30%; left: 55%; animation-delay: 0.4s; font-size: 7px; }
+.night-container .star:nth-child(13) { top: 28%; left: 85%; animation-delay: 1.5s; font-size: 6px; }
+.night-container .star:nth-child(14) { top: 35%; left: 10%; animation-delay: 0.9s; font-size: 5px; }
+.night-container .star:nth-child(15) { top: 32%; left: 40%; animation-delay: 2.2s; font-size: 6px; }
+
+/* ---------- 晚霞 ---------- */
+.sunset-container .setting-sun {
+    position: absolute;
+    top: 18px;
+    right: 10%;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #f5c8a0, #e8a070);
+    box-shadow: 0 0 40px rgba(232, 160, 112, 0.12);
+}
+.sunset-container .sunset-cloud {
+    position: absolute;
+    width: 50px;
+    height: 16px;
+    background: rgba(210, 160, 140, 0.15);
+    border-radius: 30px;
+    animation: cloudFloat 10s ease-in-out infinite;
+}
+.sunset-container .sunset-cloud::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 6px;
+    width: 22px;
+    height: 22px;
+    background: rgba(210, 160, 140, 0.15);
+    border-radius: 50%;
+}
+.sunset-container .sunset-cloud::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 20px;
+    width: 16px;
+    height: 16px;
+    background: rgba(210, 160, 140, 0.15);
+    border-radius: 50%;
+}
+.sunset-container .sunset-cloud:nth-child(2) { top: 10px; left: 6%; animation-delay: 0s; }
+.sunset-container .sunset-cloud:nth-child(3) { top: 6px; right: 28%; animation-delay: 3.5s; width: 40px; }
+.sunset-container .sunset-cloud:nth-child(3)::before { width: 18px; height: 18px; }
+.sunset-container .sunset-cloud:nth-child(3)::after { width: 14px; height: 14px; }
+.sunset-container .sunset-cloud:nth-child(4) { top: 28px; left: 30%; animation-delay: 7s; width: 38px; opacity: 0.5; }
+.sunset-container .sunset-cloud:nth-child(4)::before { width: 14px; height: 14px; }
+.sunset-container .sunset-cloud:nth-child(4)::after { width: 12px; height: 12px; }
+
 /* ===== 窗户 ===== */
 .cozy-window {
     position: absolute;
-    top: 24px;
+    top: 30px;
     left: 50%;
     transform: translateX(-50%);
-    width: 48%;
-    height: 26%;
+    width: 55%;
+    height: 30%;
     z-index: 2;
     pointer-events: none;
 }
@@ -319,7 +552,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 24%;
+    height: 22%;
     z-index: 2;
     pointer-events: none;
     border-top: 2px solid #4a3728;
@@ -347,190 +580,6 @@
 }
 .cozy-floor.floor-brick {
     background: repeating-linear-gradient(0deg, #d0c0b0 0px, #d0c0b0 6px, #c8b8a8 6px, #c8b8a8 8px);
-}
-
-/* ===== 天气特效容器 ===== */
-#cozyWeatherEffect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: 1;
-    overflow: hidden;
-}
-
-/* ---------- 晴天 · 太阳 + 光芒 ---------- */
-.sunny-container .sun {
-    position: absolute;
-    top: 12px;
-    right: 12%;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #fff7e6, #f5d742);
-    box-shadow: 0 0 40px rgba(245, 215, 66, 0.3), 0 0 80px rgba(245, 215, 66, 0.1);
-    animation: sunPulse 3s ease-in-out infinite;
-}
-@keyframes sunPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-.sunny-container .sun-ray {
-    position: absolute;
-    top: 30px;
-    right: 12%;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-}
-.sunny-container .sun-ray::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(245, 215, 66, 0.25), transparent);
-}
-.sunny-container .sun-ray:nth-child(2)::before { transform: translate(-50%, -50%) rotate(22.5deg); }
-.sunny-container .sun-ray:nth-child(3)::before { transform: translate(-50%, -50%) rotate(45deg); }
-.sunny-container .sun-ray:nth-child(4)::before { transform: translate(-50%, -50%) rotate(67.5deg); }
-.sunny-container .sun-ray:nth-child(5)::before { transform: translate(-50%, -50%) rotate(90deg); }
-.sunny-container .sun-ray:nth-child(6)::before { transform: translate(-50%, -50%) rotate(112.5deg); }
-.sunny-container .sun-ray:nth-child(7)::before { transform: translate(-50%, -50%) rotate(135deg); }
-.sunny-container .sun-ray:nth-child(8)::before { transform: translate(-50%, -50%) rotate(157.5deg); }
-
-/* ---------- 多云 ---------- */
-.cloudy-container .cloud {
-    position: absolute;
-    width: 80px;
-    height: 30px;
-    background: rgba(200, 195, 190, 0.5);
-    border-radius: 50px;
-    animation: cloudFloat 8s ease-in-out infinite;
-}
-.cloudy-container .cloud::before {
-    content: '';
-    position: absolute;
-    top: -12px;
-    left: 12px;
-    width: 34px;
-    height: 34px;
-    background: rgba(200, 195, 190, 0.5);
-    border-radius: 50%;
-}
-.cloudy-container .cloud::after {
-    content: '';
-    position: absolute;
-    top: -8px;
-    left: 34px;
-    width: 26px;
-    height: 26px;
-    background: rgba(200, 195, 190, 0.5);
-    border-radius: 50%;
-}
-@keyframes cloudFloat {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(20px); }
-}
-
-/* ---------- 下雨 ---------- */
-.rain-container .rain-drop {
-    position: absolute;
-    width: 1.5px;
-    background: rgba(120, 160, 200, 0.3);
-    border-radius: 1px;
-    animation: rainFall linear infinite;
-}
-@keyframes rainFall {
-    0% { transform: translateY(-20px); opacity: 0.5; }
-    100% { transform: translateY(calc(100vh + 20px)); opacity: 0.05; }
-}
-
-/* ---------- 下雪 ---------- */
-.snow-container .snow-flake {
-    position: absolute;
-    color: rgba(255, 255, 255, 0.5);
-    animation: snowFall linear infinite;
-}
-@keyframes snowFall {
-    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.6; }
-    100% { transform: translateY(calc(100vh + 20px)) rotate(360deg); opacity: 0.1; }
-}
-
-/* ---------- 夜晚 · 月亮 + 星星 ---------- */
-.night-container .moon {
-    position: absolute;
-    top: 15px;
-    right: 15%;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #f5f0e8, #d8d0c0);
-    box-shadow: 0 0 30px rgba(200, 190, 170, 0.15);
-}
-.night-container .moon::after {
-    content: '';
-    position: absolute;
-    top: 5px;
-    left: 8px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(180, 170, 155, 0.2);
-}
-.night-container .star {
-    position: absolute;
-    color: rgba(255, 255, 255, 0.4);
-    animation: starTwinkle 2.5s ease-in-out infinite alternate;
-}
-@keyframes starTwinkle {
-    0% { opacity: 0.15; transform: scale(0.8); }
-    100% { opacity: 0.5; transform: scale(1.2); }
-}
-
-/* ---------- 晚霞 ---------- */
-.sunset-container .setting-sun {
-    position: absolute;
-    top: 30px;
-    right: 18%;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 40% 40%, #f5c8a0, #e8a070);
-    box-shadow: 0 0 60px rgba(232, 160, 112, 0.25), 0 0 120px rgba(232, 160, 112, 0.08);
-}
-.sunset-container .sunset-cloud {
-    position: absolute;
-    width: 70px;
-    height: 20px;
-    background: rgba(200, 140, 120, 0.2);
-    border-radius: 50px;
-    animation: cloudFloat 10s ease-in-out infinite;
-}
-.sunset-container .sunset-cloud::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 10px;
-    width: 30px;
-    height: 30px;
-    background: rgba(200, 140, 120, 0.2);
-    border-radius: 50%;
-}
-.sunset-container .sunset-cloud::after {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: 30px;
-    width: 22px;
-    height: 22px;
-    background: rgba(200, 140, 120, 0.2);
-    border-radius: 50%;
 }
 
 /* ===== 弹幕层 ===== */
