@@ -608,26 +608,91 @@ function resetCozyDefault() {
     setTimeout(openCozySpace, 300);
 }
 
-// ==================== 弹窗工具 ====================
+// ==================== 留言板 ====================
 
-function openCozyModal(html) {
-    var existing = document.getElementById('cozyModalOverlay');
-    if (existing) existing.remove();
+function openCozyMessages() {
+    var messages = appData.cozyRoom.messages || [];
     
-    var overlay = document.createElement('div');
-    overlay.id = 'cozyModalOverlay';
-    overlay.className = 'cozy-modal-overlay show';
-    overlay.innerHTML = '<div class="cozy-modal">' + html + '</div>';
-    overlay.onclick = function(e) {
-        if (e.target === this) closeCozyModal();
-    };
-    document.body.appendChild(overlay);
+    var html = '<h3>暖屋留言</h3>';
+    var subText = messages.length > 0 ? '共 ' + messages.length + ' 条留言' : '写下第一条留言吧';
+    html += '<div class="sub">' + subText + '</div>';
+    
+    // 留言列表
+    html += '<div class="msg-list">';
+    if (messages.length === 0) {
+        html += '<div style="text-align:center;color:#b8a99a;padding:20px;">还没有留言</div>';
+    } else {
+        var reversed = messages.slice().reverse();
+        for (var i = 0; i < Math.min(reversed.length, 20); i++) {
+            var msg = reversed[i];
+            var fromLabel = msg.from === 'me' ? '我' : '对方';
+            var timeStr = formatTimeShort(msg.time);
+            html += '<div class="msg-item">' +
+                '<span class="from">' + fromLabel + '</span>' +
+                '<span class="time">' + timeStr + '</span>' +
+                '<div style="margin-top:4px;">' + escapeHTML(msg.content) + '</div>' +
+                '</div>';
+        }
+        if (messages.length > 20) {
+            html += '<div style="text-align:center;color:#b8a99a;font-size:12px;padding:4px;">仅显示最近20条</div>';
+        }
+    }
+    html += '</div>';
+    
+    // 输入框
+    html += '<div style="display:flex;gap:6px;margin-top:8px;">' +
+        '<input type="text" id="cozyMessageInput" placeholder="写留言..." maxlength="200" style="flex:1;padding:8px 14px;border:2px solid #e8d5c4;border-radius:16px;font-family:inherit;font-size:13px;background:white;outline:none;" onkeydown="if(event.key===\'Enter\')sendCozyMessage()">' +
+        '<button onclick="sendCozyMessage()" style="padding:8px 18px;border-radius:16px;border:none;background:#e8a87c;color:white;font-family:inherit;font-size:13px;cursor:pointer;">发送</button>' +
+        '</div>';
+    
+    html += '<button onclick="closeCozyModal()" style="margin-top:12px;padding:8px 24px;border-radius:20px;border:2px solid #e8d5c4;background:transparent;font-family:inherit;font-size:13px;cursor:pointer;color:#4a3728;">关闭</button>';
+    
+    openCozyModal(html);
+    
+    setTimeout(function() {
+        var input = document.getElementById('cozyMessageInput');
+        if (input) input.focus();
+    }, 200);
 }
 
-function closeCozyModal() {
-    var el = document.getElementById('cozyModalOverlay');
-    if (el) el.remove();
+// ==================== 发送留言 ====================
+
+function sendCozyMessage() {
+    var input = document.getElementById('cozyMessageInput');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) {
+        showToast('请输入留言内容');
+        return;
+    }
+    
+    addCozyMessage(text, 'me');
+    input.value = '';
+    
+    // 刷新留言板
+    openCozyMessages();
+    
+    // 聊天通知
+    addSystemMsg('我在暖屋留了言：' + text);
+    
+    // 10% 概率对方回复
+    if (Math.random() < 0.1) {
+        var replies = getAllReplies();
+        if (replies.length > 0) {
+            var reply = replies[Math.floor(Math.random() * replies.length)];
+            setTimeout(function() {
+                addCozyMessage(reply, 'other');
+                showToast('对方在暖屋回复了留言');
+                addSystemMsg('对方在暖屋回复了留言：' + reply);
+                // 不自动刷新，避免打断用户
+            }, 2000 + Math.random() * 2000);
+        }
+    }
 }
+
+// 确保挂载到全局
+window.openCozyMessages = openCozyMessages;
+window.sendCozyMessage = sendCozyMessage;
 
 // ==================== 导出到全局 ====================
 window.openCozySpace = openCozySpace;
