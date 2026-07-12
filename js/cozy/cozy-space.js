@@ -548,27 +548,7 @@ window.openCozyFocusBar = openCozyFocusBar;
 window.closeCozyFocusBar = closeCozyFocusBar;
 window.sendCozyDanmaku = sendCozyDanmaku;
 
-function sendCozyDanmaku() {
-    var input = document.getElementById('cozyFocusInput');
-    if (!input) return;
-    var text = input.value.trim();
-    if (!text) return;
-    
-    addCozyDanmaku(text, 'me');
-    showCozyDanmaku(text, 'me');
-    input.value = '';
-    
-    if (Math.random() < 0.2) {
-        var replies = getAllReplies();
-        if (replies.length > 0) {
-            var reply = replies[Math.floor(Math.random() * replies.length)];
-            setTimeout(function() {
-                addCozyDanmaku(reply, 'other');
-                showCozyDanmaku(reply, 'other');
-            }, 800 + Math.random() * 1500);
-        }
-    }
-}
+
 
 function showCozyDanmaku(text, from) {
     var layer = document.getElementById('cozyDanmakuLayer');
