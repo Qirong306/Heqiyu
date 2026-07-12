@@ -388,6 +388,8 @@ function getWeatherLabel() {
     return map[appData.cozyRoom.weather] || '晴天';
 }
 
+// ==================== 天气（只显示在窗户内部） ====================
+
 function renderWeatherEffect() {
     var container = document.getElementById('cozyWeatherEffect');
     if (!container) return;
@@ -396,37 +398,36 @@ function renderWeatherEffect() {
     container.innerHTML = '';
     container.className = '';
     
-    // ===== 天气元素在窗户外面 =====
-    // 注意：天气元素的位置在窗户的上方和两侧，不遮挡窗户
+    // ===== 天气只渲染在窗户区域内，不修改墙面颜色 =====
+    // 墙面颜色由 renderCozyRoom 中的 wall-xxx 控制
     
     if (weather === 'sunny') {
         container.className = 'sunny-container';
-        container.innerHTML = `
-            <div class="sun"></div>
-            <div class="sun-ray"></div>
-            <div class="sun-ray"></div>
-            <div class="sun-ray"></div>
-            <div class="sun-ray"></div>
-            <div class="sun-ray"></div>
-            <div class="sun-ray"></div>
-            <div class="sun-ray"></div>
-            <div class="sun-ray"></div>
-        `;
+        // 太阳 + 光芒
+        var sun = document.createElement('div');
+        sun.className = 'sun';
+        container.appendChild(sun);
+        for (var i = 0; i < 8; i++) {
+            var ray = document.createElement('div');
+            ray.className = 'sun-ray';
+            container.appendChild(ray);
+        }
         
     } else if (weather === 'cloudy') {
         container.className = 'cloudy-container';
-        container.innerHTML = `
-            <div class="cloud"></div>
-            <div class="cloud"></div>
-            <div class="cloud"></div>
-        `;
+        for (var c = 0; c < 3; c++) {
+            var cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            container.appendChild(cloud);
+        }
         
     } else if (weather === 'rainy') {
         container.className = 'rain-container';
-        for (var r = 0; r < 60; r++) {
+        for (var r = 0; r < 50; r++) {
             var drop = document.createElement('div');
             drop.className = 'rain-drop';
             drop.style.left = Math.random() * 100 + '%';
+            drop.style.top = Math.random() * 100 + '%';
             drop.style.height = (6 + Math.random() * 14) + 'px';
             drop.style.animationDuration = (0.3 + Math.random() * 0.5) + 's';
             drop.style.animationDelay = Math.random() * 2 + 's';
@@ -435,11 +436,12 @@ function renderWeatherEffect() {
         
     } else if (weather === 'snowy') {
         container.className = 'snow-container';
-        for (var s = 0; s < 40; s++) {
+        for (var s = 0; s < 35; s++) {
             var flake = document.createElement('div');
             flake.className = 'snow-flake';
             flake.textContent = '❄';
             flake.style.left = Math.random() * 100 + '%';
+            flake.style.top = Math.random() * 100 + '%';
             flake.style.fontSize = (8 + Math.random() * 12) + 'px';
             flake.style.animationDuration = (5 + Math.random() * 7) + 's';
             flake.style.animationDelay = Math.random() * 5 + 's';
@@ -449,32 +451,29 @@ function renderWeatherEffect() {
         
     } else if (weather === 'night') {
         container.className = 'night-container';
-        container.innerHTML = `
-            <div class="moon"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-        `;
+        // 月亮
+        var moon = document.createElement('div');
+        moon.className = 'moon';
+        container.appendChild(moon);
+        // 星星
+        for (var st = 0; st < 10; st++) {
+            var star = document.createElement('div');
+            star.className = 'star';
+            container.appendChild(star);
+        }
         
     } else if (weather === 'sunset') {
         container.className = 'sunset-container';
-        container.innerHTML = `
-            <div class="setting-sun"></div>
-            <div class="sunset-cloud"></div>
-            <div class="sunset-cloud"></div>
-            <div class="sunset-cloud"></div>
-        `;
+        // 夕阳
+        var settingSun = document.createElement('div');
+        settingSun.className = 'setting-sun';
+        container.appendChild(settingSun);
+        // 晚霞云
+        for (var sc = 0; sc < 4; sc++) {
+            var sunsetCloud = document.createElement('div');
+            sunsetCloud.className = 'sunset-cloud';
+            container.appendChild(sunsetCloud);
+        }
     }
 }
 
