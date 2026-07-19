@@ -10,9 +10,7 @@ function loadShopItems() {
         } catch(e) { shopItems = []; }
     }
     if (!shopItems.length) {
-        // 内置80个商品
         shopItems = [
-            // 日常三餐 (1-30)
             { id: 'meal_001', name: '早餐-豆浆油条套餐', price: 8.50 },
             { id: 'meal_002', name: '早餐-三明治牛奶', price: 12.00 },
             { id: 'meal_003', name: '早餐-小笼包粥', price: 10.00 },
@@ -43,7 +41,6 @@ function loadShopItems() {
             { id: 'meal_028', name: '水果-草莓一盒', price: 25.00 },
             { id: 'meal_029', name: '水果-榴莲', price: 68.00 },
             { id: 'meal_030', name: '零食-大礼包', price: 38.00 },
-            // 情侣礼物 (31-50)
             { id: 'gift_001', name: '玫瑰花束', price: 52.00 },
             { id: 'gift_002', name: '手工巧克力礼盒', price: 38.00 },
             { id: 'gift_003', name: '情侣手链', price: 45.00 },
@@ -64,7 +61,6 @@ function loadShopItems() {
             { id: 'gift_018', name: '小夜灯', price: 19.90 },
             { id: 'gift_019', name: '情侣雨伞', price: 35.00 },
             { id: 'gift_020', name: '告白气球', price: 15.00 },
-            // 健身运动 (51-62)
             { id: 'fit_001', name: '瑜伽垫', price: 39.00 },
             { id: 'fit_002', name: '运动水壶', price: 25.00 },
             { id: 'fit_003', name: '健身手套', price: 32.00 },
@@ -77,7 +73,6 @@ function loadShopItems() {
             { id: 'fit_010', name: '护膝', price: 38.00 },
             { id: 'fit_011', name: '健腹轮', price: 42.00 },
             { id: 'fit_012', name: '哑铃套装', price: 88.00 },
-            // 服饰日用品 (63-74)
             { id: 'daily_001', name: '情侣睡衣', price: 79.00 },
             { id: 'daily_002', name: '情侣拖鞋', price: 35.00 },
             { id: 'daily_003', name: '毛巾礼盒', price: 28.00 },
@@ -90,7 +85,6 @@ function loadShopItems() {
             { id: 'daily_010', name: '收纳盒', price: 28.00 },
             { id: 'daily_011', name: '情侣围裙', price: 32.00 },
             { id: 'daily_012', name: '保鲜盒套装', price: 26.00 },
-            // 常用药品 (75-80)
             { id: 'med_001', name: '感冒灵颗粒', price: 18.00 },
             { id: 'med_002', name: '维生素C片', price: 25.00 },
             { id: 'med_003', name: '创可贴', price: 5.00 },
@@ -108,8 +102,6 @@ function saveShopItems() {
 
 function openShopModal() {
     loadShopItems();
-    
-    // 创建全屏容器
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'shopFullscreen';
@@ -126,7 +118,6 @@ function openShopModal() {
             <div style="text-align:center;padding:20px;color:var(--text-system);">加载中...</div>
         </div>
     `;
-    
     document.body.appendChild(overlay);
     renderShopFullscreen();
 }
@@ -141,10 +132,11 @@ function renderShopFullscreen() {
     if (!container) return;
     
     var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
+    var warmth = appData.cozyRoom ? appData.cozyRoom.warmth : 100;
     
     var html = '';
     html += '<div style="text-align:center;padding:8px 0;margin-bottom:12px;background:var(--item-bg);border-radius:12px;border:2px solid var(--border);font-size:14px;">' +
-        '温暖值：<span style="font-weight:bold;color:#e8a87c;">' + (appData.cozyRoom?.warmth || 100) + '</span>' +
+        '温暖值：<span style="font-weight:bold;color:#e8a87c;">' + warmth + '</span>' +
         '</div>';
     
     html += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:8px 12px;border-radius:10px;margin-bottom:12px;">' +
@@ -161,20 +153,14 @@ function renderShopFullscreen() {
         '</div>';
     
     html += '<div style="max-height:50vh;overflow-y:auto;" id="shopItemsList">加载中...</div>';
-    
     container.innerHTML = html;
     renderShopItemsList();
 }
-
-// 修改原有的 renderShopItemsList 函数，查找 #shopItemsList
-// 如果找不到，使用 document.getElementById('shopItemsList') 会返回 null
-// 在 openShopModal 中我们用了 id="shopItemsList"，所以没问题
 
 function toggleOtherRandomBuySwitch() {
     var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
     var newState = !isEnabled;
     localStorage.setItem('other_random_buy_enabled', newState ? 'true' : 'false');
-    
     var btn = document.getElementById('randomBuySwitchBtn');
     if (btn) {
         btn.style.background = newState ? 'var(--accent)' : '#ccc';
@@ -209,7 +195,6 @@ function renderShopItemsList() {
     container.innerHTML = html;
 }
 
-// 修改 showAddItemModal，让它能在全屏内打开
 function showAddItemModal() {
     var html = '<div style="text-align:center;">' +
         '<h4>添加商品</h4>' +
@@ -236,78 +221,13 @@ function closeSubModal() {
 function addShopItem() {
     var name = document.getElementById('newItemName').value.trim();
     var price = parseFloat(document.getElementById('newItemPrice').value);
-    if (!name) {
-        showToast('请输入商品名称');
-        return;
-    }
-    if (isNaN(price) || price <= 0) {
-        showToast('请输入有效价格');
-        return;
-    }
+    if (!name) { showToast('请输入商品名称'); return; }
+    if (isNaN(price) || price <= 0) { showToast('请输入有效价格'); return; }
     var newId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
     shopItems.push({ id: newId, name: name, price: price });
     saveShopItems();
     closeModal('subOverlay');
     renderShopFullscreen();
-    showToast('商品已添加');
-}
-
-// 修改 exportShopItems 和 importShopItems 弹窗
-function exportShopItems() {
-    if (!shopItems.length) {
-        showToast('商品库为空，无法导出');
-        return;
-    }
-    var exportData = { type: 'shopItems', version: '1.0', data: shopItems, count: shopItems.length };
-    var jsonStr = JSON.stringify(exportData, null, 2);
-    var html = '<div style="text-align:center;">' +
-        '<h4>导出商品库</h4>' +
-        '<div class="subtitle">共 ' + shopItems.length + ' 个商品</div>' +
-        '<div class="btn-row" style="gap:8px;margin:12px 0;">' +
-        '<button class="btn-sm" onclick="copyShopItemsToClipboard()">复制到剪贴板</button>' +
-        '<button class="btn-sm outline" onclick="downloadShopItemsFile()">下载为文件</button>' +
-        '</div>' +
-        '<textarea readonly style="width:100%;height:120px;font-size:11px;margin:8px 0;padding:8px;border-radius:6px;background:var(--item-bg);border:1px solid var(--border);">' + escapeHTML(jsonStr) + '</textarea>' +
-        '<button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>' +
-        '</div>';
-    openSubModal(html);
-}
-
-function showAddItemModal() {
-    var html = '<div style="text-align:center;">' +
-        '<h4>添加商品</h4>' +
-        '<div class="form-row">' +
-        '<label>商品名称</label>' +
-        '<input type="text" id="newItemName" placeholder="例如：玫瑰花">' +
-        '</div>' +
-        '<div class="form-row">' +
-        '<label>价格（元）</label>' +
-        '<input type="number" id="newItemPrice" step="0.01" placeholder="例如：5.20">' +
-        '</div>' +
-        '<div class="btn-row" style="justify-content:center;gap:8px;margin-top:12px;">' +
-        '<button class="btn-sm" onclick="addShopItem()">确认添加</button>' +
-        '<button class="btn-sm outline" onclick="closeModal(\'subOverlay\')">取消</button>' +
-        '</div>' +
-        '</div>';
-    openSubModal(html);
-}
-
-function addShopItem() {
-    var name = document.getElementById('newItemName').value.trim();
-    var price = parseFloat(document.getElementById('newItemPrice').value);
-    if (!name) {
-        showToast('请输入商品名称');
-        return;
-    }
-    if (isNaN(price) || price <= 0) {
-        showToast('请输入有效价格');
-        return;
-    }
-    var newId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    shopItems.push({ id: newId, name: name, price: price });
-    saveShopItems();
-    closeModal('subOverlay');
-    openShopModal();
     showToast('商品已添加');
 }
 
@@ -321,14 +241,8 @@ function deleteShopItem(id) {
 
 function buyItem(itemId, buyer) {
     var item = shopItems.find(function(i) { return i.id === itemId; });
-    if (!item) {
-        showToast('商品不存在');
-        return;
-    }
-    if (!buyer) {
-        showBuyerChoiceModal(item);
-        return;
-    }
+    if (!item) { showToast('商品不存在'); return; }
+    if (!buyer) { showBuyerChoiceModal(item); return; }
     sendPurchaseMessage(item, buyer);
 }
 
@@ -356,7 +270,6 @@ function sendPurchaseMessage(item, buyer) {
     var buyerName = (buyer === 'me') ? appData.myName : appData.otherName;
     var receiverName = (buyer === 'me') ? appData.otherName : appData.myName;
     addPurchaseCard(item, buyer);
-    
     var systemMsg = buyerName + ' 购买了 ' + item.name + '（¥' + item.price.toFixed(2) + '）送给 ' + receiverName;
     var lastMsg = appData.chatHistory[appData.chatHistory.length - 1];
     if (!lastMsg || lastMsg.content !== systemMsg) {
@@ -364,8 +277,6 @@ function sendPurchaseMessage(item, buyer) {
     }
     showToast(buyerName + ' 购买了 ' + item.name);
     saveData();
-    
-    // 如果是对方购买且页面不可见，发送通知
     if (buyer === 'other' && document.hidden && typeof sendNotification === 'function') {
         sendNotification('购物通知', buyerName + ' 购买了 ' + item.name, window.location.href);
     }
@@ -405,10 +316,7 @@ function confirmReceive(cardElement, itemName, itemPrice) {
 }
 
 function exportShopItems() {
-    if (!shopItems.length) {
-        showToast('商品库为空，无法导出');
-        return;
-    }
+    if (!shopItems.length) { showToast('商品库为空，无法导出'); return; }
     var exportData = { type: 'shopItems', version: '1.0', data: shopItems, count: shopItems.length };
     var jsonStr = JSON.stringify(exportData, null, 2);
     var html = '<div style="text-align:center;">' +
@@ -461,7 +369,6 @@ function importShopItems() {
                 if (Array.isArray(data)) newItems = data;
                 else if (data.type === 'shopItems' && Array.isArray(data.data)) newItems = data.data;
                 else if (Array.isArray(data.items)) newItems = data.items;
-                
                 if (newItems && newItems.length > 0) {
                     var valid = true;
                     for (var i = 0; i < newItems.length; i++) {
@@ -489,16 +396,11 @@ function otherRandomBuy() {
     if (isEnabled === 'false') return;
     if (typeof isInCall !== 'undefined' && (isInCall || isRinging)) return;
     if (typeof shopItems === 'undefined' || !shopItems.length) return;
-    
-    // ========== 暖屋联动：5% 概率触发暖屋随机购买 ==========
     if (Math.random() < 0.05 && typeof cozyOtherRandomBuy === 'function') {
         cozyOtherRandomBuy();
         return;
     }
-    // ========== 暖屋联动结束 ==========
-    
     if (Math.random() > 0.1) return;
-    
     var randomIndex = Math.floor(Math.random() * shopItems.length);
     var item = shopItems[randomIndex];
     sendPurchaseMessage(item, 'other');
@@ -507,5 +409,6 @@ function otherRandomBuy() {
 setInterval(function() {
     otherRandomBuy();
 }, 30000);
+
 window.openShopModal = openShopModal;
 window.closeShopFullscreen = closeShopFullscreen;
