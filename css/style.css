@@ -155,7 +155,9 @@ body {
     padding: 10px 12px 8px 12px;
     overflow-y: auto;
 }
-#desktopView.active { display: flex; }
+#desktopView.active {
+    display: flex;
+}
 
 /* ========== 聊天视图 ========== */
 #chatView {
@@ -165,7 +167,9 @@ body {
     min-height: 0;
     background: var(--chat-bg);
 }
-#chatView.active { display: flex; }
+#chatView.active {
+    display: flex;
+}
 
 /* ========== 音乐播放器 ========== */
 .music-player {
