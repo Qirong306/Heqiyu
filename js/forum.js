@@ -1,33 +1,22 @@
-// ==================== 论坛功能模块（完整版·单选/多选·删除话题·全量备份兼容） ====================
+// ==================== 论坛功能模块 ====================
 
-// 论坛数据初始化
 if (!Array.isArray(appData.forumTopics)) {
     appData.forumTopics = [];
 }
-
 if (!appData.forumReplies) {
     appData.forumReplies = {};
 }
-
 if (!Array.isArray(appData.forumReplyLib)) {
     appData.forumReplyLib = [
-        {
-            name: '默认话题词库',
-            replies: ['有道理', '我也这么想', '没想过这个问题呢', '挺有意思的', '让我想想...']
-        }
+        { name: '默认话题词库', replies: ['有道理', '我也这么想', '没想过这个问题呢', '挺有意思的', '让我想想...'] }
     ];
 }
-
 if (!Array.isArray(appData.forumTopicTemplates)) {
     appData.forumTopicTemplates = [
-        '你觉得{词}怎么样？',
-        '聊聊{词}吧',
-        '最近{词}有什么新鲜事吗？',
-        '你喜欢{词}吗？',
-        '{词}这个话题你感兴趣吗？'
+        '你觉得{词}怎么样？', '聊聊{词}吧', '最近{词}有什么新鲜事吗？',
+        '你喜欢{词}吗？', '{词}这个话题你感兴趣吗？'
     ];
 }
-
 if (!Array.isArray(appData.forumTopicWords)) {
     appData.forumTopicWords = [
         '夏天的夜晚', '一个人旅行', '养宠物', '下雨天', '深夜食堂',
@@ -35,15 +24,12 @@ if (!Array.isArray(appData.forumTopicWords)) {
     ];
 }
 
-// 当前状态
 var currentViewingTopicId = null;
 var newTopicType = 'normal';
 var newTopicOptions = [];
-var newTopicSelectMode = 'multi'; // 'single' 或 'multi'
+var newTopicSelectMode = 'multi';
 
-// ==================== 论坛面板管理 ====================
 function openForum() {
-    // 创建全屏容器
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'forumFullscreen';
@@ -60,32 +46,24 @@ function openForum() {
             <div id="forumTopicList" style="text-align:left;"></div>
         </div>
     `;
-    
     document.body.appendChild(overlay);
     
-    // 论坛菜单
-    var menu = document.getElementById('forumDropdownMenu');
-    if (!menu) {
-        var menuDiv = document.createElement('div');
-        menuDiv.id = 'forumDropdownMenu';
-        menuDiv.style.cssText = 'display:none;position:absolute;top:50px;right:16px;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
-        menuDiv.innerHTML = `
-            <div onclick="newForumTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">新建话题</div>
-            <div onclick="importForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入话题</div>
-            <div onclick="exportForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出话题</div>
-            <div onclick="openForumReplyLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">回复词库</div>
-            <div onclick="openForumTemplateLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">模板词库</div>
-            <div onclick="autoGenerateTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">自动生成</div>
-        `;
-        var header = overlay.querySelector('.fullscreen-header');
-        header.appendChild(menuDiv);
-    }
+    var menuDiv = document.createElement('div');
+    menuDiv.id = 'forumDropdownMenu';
+    menuDiv.style.cssText = 'display:none;position:absolute;top:50px;right:16px;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
+    menuDiv.innerHTML = `
+        <div onclick="newForumTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">新建话题</div>
+        <div onclick="importForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入话题</div>
+        <div onclick="exportForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出话题</div>
+        <div onclick="openForumReplyLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">回复词库</div>
+        <div onclick="openForumTemplateLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">模板词库</div>
+        <div onclick="autoGenerateTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">自动生成</div>
+    `;
+    var header = overlay.querySelector('.fullscreen-header');
+    header.appendChild(menuDiv);
     
     currentViewingTopicId = null;
     renderForumTopics();
-    
-    // 覆盖原有的 closeForum
-    window._closeForumOriginal = window.closeForum;
 }
 
 function closeForumFullscreen() {
@@ -97,9 +75,7 @@ function closeForumFullscreen() {
 
 function toggleForumMenu() {
     var menu = document.getElementById('forumDropdownMenu');
-    if (menu) {
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
 }
 
 function closeForumMenu() {
@@ -107,23 +83,19 @@ function closeForumMenu() {
     if (menu) menu.style.display = 'none';
 }
 
-// ==================== 话题列表渲染 ====================
 function renderForumTopics() {
     var list = document.getElementById('forumTopicList');
     if (!list) return;
-
     if (appData.forumTopics.length === 0) {
         list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-system);">暂无话题<br><span style="font-size:11px;">点击右上角菜单创建话题</span></div>';
         return;
     }
-
     var html = '';
     for (var i = appData.forumTopics.length - 1; i >= 0; i--) {
         var topic = appData.forumTopics[i];
         var safeId = (topic.id || '').replace(/'/g, "\\'");
         var replyCount = (appData.forumReplies[topic.id] || []).length;
         var typeLabel = topic.isOption ? (topic.selectMode === 'single' ? '单选' : '多选') : '讨论';
-
         html += '<div class="list-item" onclick="openTopicDetail(\'' + safeId + '\')" style="cursor:pointer;flex-direction:column;align-items:flex-start;">';
         html += '<div style="display:flex;align-items:center;gap:6px;width:100%;">';
         html += '<span style="font-size:10px;background:var(--accent);padding:2px 6px;border-radius:8px;color:var(--text);flex-shrink:0;">' + typeLabel + '</span>';
@@ -144,16 +116,11 @@ function renderForumTopics() {
         html += '</div>';
         html += '</div>';
     }
-
     list.innerHTML = html;
 }
 
-// ==================== 新建话题 ====================
 function newForumTopic() {
     closeForumMenu();
-    var overlay = document.getElementById('forumOverlay');
-    if (overlay) overlay.classList.remove('show');
-
     newTopicType = 'normal';
     newTopicOptions = [];
     newTopicSelectMode = 'multi';
@@ -162,17 +129,14 @@ function newForumTopic() {
 
 function renderNewTopicForm() {
     var html = '<h4>新建话题</h4>';
-
     html += '<div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">';
     html += '<button class="btn-sm ' + (newTopicType === 'normal' ? '' : 'outline') + '" onclick="setTopicType(\'normal\')">普通话题</button>';
     html += '<button class="btn-sm ' + (newTopicType === 'option' ? '' : 'outline') + '" onclick="setTopicType(\'option\')">选项话题</button>';
     html += '</div>';
-
     html += '<div class="form-row">';
     html += '<label>话题标题</label>';
     html += '<input type="text" id="newTopicTitle" placeholder="输入话题标题">';
     html += '</div>';
-
     if (newTopicType === 'option') {
         html += '<div class="form-row">';
         html += '<label>选项列表</label>';
@@ -188,45 +152,35 @@ function renderNewTopicForm() {
         }
         html += '</div>';
         html += '</div>';
-
         html += '<div class="form-row">';
         html += '<div style="display:flex;gap:6px;">';
         html += '<input type="text" id="newOptionInput" placeholder="输入选项内容" style="flex:1;">';
         html += '<button class="btn-sm" onclick="addNewOption()" style="flex-shrink:0;">添加</button>';
         html += '</div>';
         html += '</div>';
-
-        // 单选/多选切换
         html += '<div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px;">';
         html += '<span style="font-size:11px;color:var(--text-secondary);">选择模式：</span>';
         html += '<button class="btn-sm ' + (newTopicSelectMode === 'single' ? '' : 'outline') + '" onclick="setSelectMode(\'single\')" style="font-size:11px;padding:4px 10px;">单选</button>';
         html += '<button class="btn-sm ' + (newTopicSelectMode === 'multi' ? '' : 'outline') + '" onclick="setSelectMode(\'multi\')" style="font-size:11px;padding:4px 10px;">多选</button>';
         html += '</div>';
-
         html += '<div style="font-size:11px;color:var(--text-system);margin-bottom:8px;text-align:center;">';
         html += '对方看到后会' + (newTopicSelectMode === 'single' ? '随机选择1个选项回复' : '随机选择1~3个选项回复');
         html += '</div>';
     }
-
     html += '<div class="form-row">';
     html += '<label>补充说明（可选）</label>';
     html += '<textarea id="newTopicContent" placeholder="补充说明内容..."></textarea>';
     html += '</div>';
-
     html += '<div class="btn-row" style="justify-content:center;">';
     html += '<button class="btn-sm" onclick="createNewTopic()">发布话题</button>';
     html += '<button class="btn-sm outline" onclick="cancelNewTopic()">取消</button>';
     html += '</div>';
-
     openForumSubModal(html);
 }
 
 function setTopicType(type) {
     newTopicType = type;
-    if (type === 'option') {
-        newTopicOptions = [];
-        newTopicSelectMode = 'multi';
-    }
+    if (type === 'option') { newTopicOptions = []; newTopicSelectMode = 'multi'; }
     renderNewTopicForm();
 }
 
@@ -239,14 +193,8 @@ function addNewOption() {
     var input = document.getElementById('newOptionInput');
     if (!input) return;
     var val = input.value.trim();
-    if (!val) {
-        showToast('请输入选项内容');
-        return;
-    }
-    if (newTopicOptions.length >= 20) {
-        showToast('最多20个选项');
-        return;
-    }
+    if (!val) { showToast('请输入选项内容'); return; }
+    if (newTopicOptions.length >= 20) { showToast('最多20个选项'); return; }
     newTopicOptions.push(val);
     input.value = '';
     renderNewTopicForm();
@@ -262,17 +210,8 @@ function createNewTopic() {
     var contentEl = document.getElementById('newTopicContent');
     var title = titleEl ? titleEl.value.trim() : '';
     var content = contentEl ? contentEl.value.trim() : '';
-
-    if (!title) {
-        showToast('请输入话题标题');
-        return;
-    }
-
-    if (newTopicType === 'option' && newTopicOptions.length < 2) {
-        showToast('选项话题至少需要2个选项');
-        return;
-    }
-
+    if (!title) { showToast('请输入话题标题'); return; }
+    if (newTopicType === 'option' && newTopicOptions.length < 2) { showToast('选项话题至少需要2个选项'); return; }
     var topic = {
         id: 'topic_' + Date.now(),
         title: title,
@@ -284,21 +223,14 @@ function createNewTopic() {
         optionSelections: newTopicType === 'option' ? {} : null,
         selectMode: newTopicType === 'option' ? newTopicSelectMode : null
     };
-
     appData.forumTopics.push(topic);
     appData.forumReplies[topic.id] = [];
-
     saveData();
-    
     closeModal('subOverlay');
     openForum();
-
     if (topic.isOption) {
-        setTimeout(function() {
-            autoSelectOption(topic);
-        }, 1000 + Math.random() * 2000);
+        setTimeout(function() { autoSelectOption(topic); }, 1000 + Math.random() * 2000);
     }
-
     showToast('话题发布成功');
 }
 
@@ -307,30 +239,15 @@ function cancelNewTopic() {
     openForum();
 }
 
-// ==================== AI 自动选择选项（支持单选/多选） ====================
 function autoSelectOption(topic) {
     if (!topic.isOption || !topic.options || topic.options.length === 0) return;
-
     var freshTopic = appData.forumTopics.find(function(t) { return t.id === topic.id; });
     if (!freshTopic) return;
-
     if (!freshTopic.optionSelections) freshTopic.optionSelections = {};
-
-    // 根据模式决定选几个
-    var count;
-    if (freshTopic.selectMode === 'single') {
-        count = 1;
-    } else {
-        count = Math.min(Math.floor(Math.random() * 3) + 1, freshTopic.options.length);
-    }
-
+    var count = freshTopic.selectMode === 'single' ? 1 : Math.min(Math.floor(Math.random() * 3) + 1, freshTopic.options.length);
     var shuffled = freshTopic.options.slice().sort(function() { return Math.random() - 0.5; });
     var selected = shuffled.slice(0, count);
-
-    if (!appData.forumReplies[topic.id]) {
-        appData.forumReplies[topic.id] = [];
-    }
-
+    if (!appData.forumReplies[topic.id]) { appData.forumReplies[topic.id] = []; }
     var selectedNames = [];
     selected.forEach(function(opt) {
         var idx = freshTopic.options.indexOf(opt);
@@ -339,9 +256,7 @@ function autoSelectOption(topic) {
             selectedNames.push(opt);
         }
     });
-
     var replyContent = '我选：' + selectedNames.join('、');
-
     appData.forumReplies[topic.id].push({
         author: appData.otherName || '甜心助手',
         content: replyContent,
@@ -349,87 +264,53 @@ function autoSelectOption(topic) {
         isOptionSelect: true,
         selectedOptions: selectedNames
     });
-
     saveData();
-
-    if (currentViewingTopicId === topic.id) {
-        openTopicDetail(topic.id);
-    }
+    if (currentViewingTopicId === topic.id) { openTopicDetail(topic.id); }
     renderForumTopics();
 }
 
-// ==================== 快速回复 ====================
 function quickReplyToTopic(topicId) {
     var allReplies = [];
     (appData.forumReplyLib || []).forEach(function(group) {
-        if (Array.isArray(group.replies)) {
-            allReplies = allReplies.concat(group.replies);
-        }
+        if (Array.isArray(group.replies)) { allReplies = allReplies.concat(group.replies); }
     });
-
-    if (allReplies.length === 0) {
-        showToast('回复词库为空，请先去菜单中添加');
-        return;
-    }
-
+    if (allReplies.length === 0) { showToast('回复词库为空，请先去菜单中添加'); return; }
     var randomReply = allReplies[Math.floor(Math.random() * allReplies.length)];
     addTopicReply(topicId, randomReply);
-
     showToast('已回复：' + randomReply.substring(0, 20) + '...');
-
-    if (currentViewingTopicId === topicId) {
-        openTopicDetail(topicId);
-    }
+    if (currentViewingTopicId === topicId) { openTopicDetail(topicId); }
     renderForumTopics();
 }
 
 function addTopicReply(topicId, content) {
-    if (!appData.forumReplies[topicId]) {
-        appData.forumReplies[topicId] = [];
-    }
-
+    if (!appData.forumReplies[topicId]) { appData.forumReplies[topicId] = []; }
     appData.forumReplies[topicId].push({
         author: appData.otherName || '甜心助手',
         content: content,
         time: Date.now()
     });
-
     saveData();
 }
 
-// ==================== 话题详情 ====================
 function openTopicDetail(topicId) {
     var topic = appData.forumTopics.find(function(t) { return t.id === topicId; });
-    if (!topic) {
-        showToast('话题不存在');
-        return;
-    }
-
+    if (!topic) { showToast('话题不存在'); return; }
     currentViewingTopicId = topicId;
-    closeForum();
-
+    closeForumFullscreen();
     var safeId = topicId.replace(/'/g, "\\'");
     var replies = appData.forumReplies[topicId] || [];
-
     var html = '';
-    
     html += '<div style="max-height:50vh;overflow-y:auto;padding-right:2px;">';
-
     html += '<h4>' + escapeHTML(topic.title || '') + '</h4>';
-
     html += '<div style="font-size:11px;color:var(--text-system);margin-bottom:10px;">';
     html += escapeHTML(topic.author || '') + ' · ' + formatTime(topic.time);
-    if (topic.isOption) {
-        html += ' · ' + (topic.selectMode === 'single' ? '单选' : '多选');
-    }
+    if (topic.isOption) { html += ' · ' + (topic.selectMode === 'single' ? '单选' : '多选'); }
     html += '</div>';
-
     if (topic.content) {
         html += '<div style="background:var(--bubble-me);padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:10px;font-size:14px;">';
         html += escapeHTML(topic.content);
         html += '</div>';
     }
-
     if (topic.isOption && topic.options) {
         html += '<div style="margin-bottom:10px;">';
         html += '<div style="font-size:12px;color:var(--text);margin-bottom:4px;">选项：</div>';
@@ -442,16 +323,12 @@ function openTopicDetail(topicId) {
             }
             html += '<div style="background:var(--item-bg);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:4px;font-size:13px;border:2px solid ' + (isSelected ? 'var(--accent)' : 'transparent') + ';">';
             html += escapeHTML(topic.options[o]);
-            if (isSelected) {
-                html += '<span style="font-size:10px;color:var(--accent);margin-left:4px;">已选</span>';
-            }
+            if (isSelected) { html += '<span style="font-size:10px;color:var(--accent);margin-left:4px;">已选</span>'; }
             html += '</div>';
         }
         html += '</div>';
     }
-
     html += '<div style="font-size:12px;color:var(--text);margin-bottom:6px;">回复 (' + replies.length + ')</div>';
-
     if (replies.length === 0) {
         html += '<div style="text-align:center;padding:8px;color:var(--text-system);font-size:12px;">暂无回复，来说点什么吧</div>';
     } else {
@@ -459,7 +336,6 @@ function openTopicDetail(topicId) {
             var reply = replies[r];
             var isMe = reply.author === appData.myName;
             var bubbleStyle = isMe ? 'var(--bubble-me)' : 'var(--bubble-other)';
-
             html += '<div style="background:' + bubbleStyle + ';border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:4px;font-size:12px;">';
             html += '<div style="color:var(--text-secondary);font-size:10px;margin-bottom:2px;">';
             html += escapeHTML(reply.author || '') + ' · ' + formatTimeShort(reply.time);
@@ -468,27 +344,21 @@ function openTopicDetail(topicId) {
             html += '</div>';
         }
     }
-    
     html += '</div>';
-
-    // 底部固定栏
     html += '<div style="display:flex;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);flex-shrink:0;">';
     html += '<input type="text" id="topicReplyInput" placeholder="说点什么吧..." style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:20px;background:var(--input-box);font-size:13px;font-family:var(--font-main);outline:none;color:var(--text);height:36px;min-width:0;" onkeypress="if(event.key==\'Enter\')sendTopicReply(\'' + safeId + '\')">';
     html += '<button class="btn-sm" onclick="sendTopicReply(\'' + safeId + '\')" style="flex-shrink:0;">发送</button>';
     html += '<button class="btn-sm outline" onclick="quickReplyToTopic(\'' + safeId + '\')" style="flex-shrink:0;">快捷回复</button>';
     html += '<button class="btn-sm danger-sm" onclick="deleteTopicFromDetail(\'' + safeId + '\')" style="flex-shrink:0;">删除</button>';
     html += '</div>';
-
     var detailContent = document.getElementById('forumDetailContent');
     var detailOverlay = document.getElementById('forumDetailOverlay');
-    
     if (detailContent && detailOverlay) {
         detailContent.innerHTML = html;
         detailOverlay.classList.add('show');
     }
 }
 
-// ==================== 关闭话题详情 ====================
 function closeTopicDetail() {
     var overlay = document.getElementById('forumDetailOverlay');
     if (overlay) overlay.classList.remove('show');
@@ -496,38 +366,25 @@ function closeTopicDetail() {
     openForum();
 }
 
-// ==================== 发送回复 ====================
 function sendTopicReply(topicId) {
     var input = document.getElementById('topicReplyInput');
     if (!input) return;
-
     var content = input.value.trim();
-    if (!content) {
-        showToast('请输入回复内容');
-        return;
-    }
-
-    if (!appData.forumReplies[topicId]) {
-        appData.forumReplies[topicId] = [];
-    }
-
+    if (!content) { showToast('请输入回复内容'); return; }
+    if (!appData.forumReplies[topicId]) { appData.forumReplies[topicId] = []; }
     appData.forumReplies[topicId].push({
         author: appData.myName || '我',
         content: content,
         time: Date.now()
     });
-
     input.value = '';
     saveData();
-
     openTopicDetail(topicId);
     renderForumTopics();
 }
 
-// ==================== 删除话题 ====================
 function deleteTopicFromDetail(topicId) {
     if (!confirm('确定删除这个话题及其所有回复吗？')) return;
-
     var index = appData.forumTopics.findIndex(function(t) { return t.id === topicId; });
     if (index !== -1) {
         appData.forumTopics.splice(index, 1);
@@ -539,25 +396,18 @@ function deleteTopicFromDetail(topicId) {
     }
 }
 
-// ==================== 自动生成话题 ====================
 function autoGenerateTopic() {
     closeForumMenu();
-    var overlay = document.getElementById('forumOverlay');
-    if (overlay) overlay.classList.remove('show');
-
     var templates = appData.forumTopicTemplates || [];
     var words = appData.forumTopicWords || [];
-
     if (templates.length === 0 || words.length === 0) {
         showToast('模板词库为空，请先去菜单中添加');
         openForum();
         return;
     }
-
     var template = templates[Math.floor(Math.random() * templates.length)];
     var word = words[Math.floor(Math.random() * words.length)];
     var title = template.replace(/\{词\}/g, word);
-
     var topic = {
         id: 'topic_' + Date.now(),
         title: title,
@@ -569,24 +419,16 @@ function autoGenerateTopic() {
         optionSelections: null,
         selectMode: null
     };
-
     appData.forumTopics.push(topic);
     appData.forumReplies[topic.id] = [];
-
     saveData();
     openForum();
     showToast('已自动生成一个新话题');
 }
 
-// ==================== JSON 导出 ====================
 function exportForumJSON() {
     closeForumMenu();
-
-    if (appData.forumTopics.length === 0) {
-        showToast('当前没有话题可导出');
-        return;
-    }
-
+    if (appData.forumTopics.length === 0) { showToast('当前没有话题可导出'); return; }
     var exportData = [];
     for (var i = 0; i < appData.forumTopics.length; i++) {
         var topic = appData.forumTopics[i];
@@ -603,9 +445,7 @@ function exportForumJSON() {
             replies: replies
         });
     }
-
     var jsonStr = JSON.stringify(exportData, null, 2);
-    
     if (typeof copyToClipboard === 'function') {
         copyToClipboard(jsonStr, '话题数据');
     } else {
@@ -619,16 +459,11 @@ function exportForumJSON() {
         document.body.removeChild(ta);
         showToast('话题数据已复制到剪贴板');
     }
-    
-    closeForum();
+    closeForumFullscreen();
 }
 
-// ==================== JSON 导入 ====================
 function importForumJSON() {
     closeForumMenu();
-    var overlay = document.getElementById('forumOverlay');
-    if (overlay) overlay.classList.remove('show');
-
     var html = '<h4>导入话题JSON</h4>';
     html += '<div class="form-row">';
     html += '<label>粘贴JSON内容</label>';
@@ -638,26 +473,17 @@ function importForumJSON() {
     html += '<button class="btn-sm" onclick="doImportForumJSON()">导入</button>';
     html += '<button class="btn-sm outline" onclick="cancelImportForumJSON()">取消</button>';
     html += '</div>';
-
     openForumSubModal(html);
 }
 
 function doImportForumJSON() {
     var textarea = document.getElementById('importForumJSON');
     if (!textarea) return;
-    
     var jsonText = textarea.value.trim();
-    if (!jsonText) {
-        showToast('请粘贴JSON内容');
-        return;
-    }
-
+    if (!jsonText) { showToast('请粘贴JSON内容'); return; }
     try {
         var topics = JSON.parse(jsonText);
-        if (!Array.isArray(topics)) {
-            throw new Error('JSON格式错误');
-        }
-
+        if (!Array.isArray(topics)) throw new Error('JSON格式错误');
         var importedCount = 0;
         for (var i = 0; i < topics.length; i++) {
             var item = topics[i];
@@ -675,7 +501,6 @@ function doImportForumJSON() {
                     optionSelections: item.optionSelections || null
                 };
                 appData.forumTopics.push(topic);
-
                 appData.forumReplies[newId] = [];
                 if (Array.isArray(item.replies)) {
                     for (var r = 0; r < item.replies.length; r++) {
@@ -690,19 +515,12 @@ function doImportForumJSON() {
                 importedCount++;
             }
         }
-
-        if (importedCount === 0) {
-            showToast('没有有效的话题数据');
-            return;
-        }
-
+        if (importedCount === 0) { showToast('没有有效的话题数据'); return; }
         saveData();
         closeModal('subOverlay');
         openForum();
         showToast('成功导入 ' + importedCount + ' 个话题');
-    } catch (e) {
-        showToast('JSON解析失败：' + e.message);
-    }
+    } catch (e) { showToast('JSON解析失败：' + e.message); }
 }
 
 function cancelImportForumJSON() {
@@ -710,36 +528,25 @@ function cancelImportForumJSON() {
     openForum();
 }
 
-// ==================== 回复词库管理 ====================
 function openForumReplyLib() {
     closeForumMenu();
-    var overlay = document.getElementById('forumOverlay');
-    if (overlay) overlay.classList.remove('show');
-
     var templates = appData.forumReplyLib || [];
-
     var html = '<h4>回复词库</h4>';
     html += '<div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">管理快捷回复的素材库</div>';
-
     for (var g = 0; g < templates.length; g++) {
         var template = templates[g];
         var replies = template.replies || [];
-
         html += '<div class="group-block" style="margin-bottom:8px;">';
         html += '<div class="group-header">';
         html += '<span>' + escapeHTML(template.name) + ' (' + replies.length + '条)</span>';
         html += '<div>';
         html += '<button onclick="renameForumReplyLib(' + g + ')">重命名</button>';
-        if (templates.length > 1) {
-            html += '<button onclick="deleteForumReplyLib(' + g + ')" style="color:var(--danger);">删除</button>';
-        }
+        if (templates.length > 1) { html += '<button onclick="deleteForumReplyLib(' + g + ')" style="color:var(--danger);">删除</button>'; }
         html += '</div></div>';
-
         html += '<div class="form-row">';
         html += '<textarea id="batchAddForumReply_' + g + '" placeholder="批量添加回复（一行一个，自动去重）"></textarea>';
         html += '</div>';
         html += '<button class="btn-sm" onclick="addForumReplyBatch(' + g + ')">批量添加</button>';
-
         if (replies.length > 0) {
             html += '<div style="max-height:150px;overflow-y:auto;margin-top:8px;">';
             for (var r = 0; r < replies.length; r++) {
@@ -752,29 +559,23 @@ function openForumReplyLib() {
         }
         html += '</div>';
     }
-
     html += '<div class="btn-row">';
     html += '<button class="btn-sm" onclick="addForumReplyLibGroup()">新建分组</button>';
     html += '<button class="btn-sm outline" onclick="cancelForumSubAction()">关闭</button>';
     html += '</div>';
-
     openForumSubModal(html);
 }
 
 function addForumReplyBatch(g) {
     var textarea = document.getElementById('batchAddForumReply_' + g);
     if (!textarea) return;
-
     var text = textarea.value.trim();
     if (!text) { showToast('请输入回复内容'); return; }
-
     var lines = text.split('\n').filter(function(line) { return line.trim(); });
     if (lines.length === 0) { showToast('没有有效的回复内容'); return; }
-
     var existing = appData.forumReplyLib[g].replies || [];
     var newLines = lines.filter(function(line) { return existing.indexOf(line) === -1; });
     if (newLines.length === 0) { showToast('所有内容已存在，无新增'); return; }
-
     appData.forumReplyLib[g].replies = existing.concat(newLines);
     saveData();
     openForumReplyLib();
@@ -819,18 +620,12 @@ function deleteForumReplyLib(g) {
     }
 }
 
-// ==================== 模板词库管理 ====================
 function openForumTemplateLib() {
     closeForumMenu();
-    var overlay = document.getElementById('forumOverlay');
-    if (overlay) overlay.classList.remove('show');
-
     var templates = appData.forumTopicTemplates || [];
     var words = appData.forumTopicWords || [];
-
     var html = '<h4>话题模板词库</h4>';
     html += '<div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">用于"自动生成话题"的素材库</div>';
-
     html += '<div class="group-block" style="margin-bottom:8px;">';
     html += '<div class="group-header"><span>句子模板 (' + templates.length + '条)</span></div>';
     html += '<div class="form-row"><textarea id="batchAddTemplates" placeholder="批量添加模板（一行一个）&#10;使用 {词} 作为占位符"></textarea></div>';
@@ -843,7 +638,6 @@ function openForumTemplateLib() {
         html += '</div>';
     }
     html += '</div>';
-
     html += '<div class="group-block" style="margin-bottom:8px;">';
     html += '<div class="group-header"><span>词语库 (' + words.length + '个)</span></div>';
     html += '<div class="form-row"><textarea id="batchAddWords" placeholder="批量添加词语（一行一个）"></textarea></div>';
@@ -856,7 +650,6 @@ function openForumTemplateLib() {
         html += '</div>';
     }
     html += '</div>';
-
     html += '<div class="btn-row"><button class="btn-sm outline" onclick="cancelForumSubAction()">关闭</button></div>';
     openForumSubModal(html);
 }
@@ -905,7 +698,6 @@ function deleteForumWordItem(index) {
     }
 }
 
-// ==================== 辅助函数 ====================
 function openForumSubModal(html) {
     var subModal = document.getElementById('subModal');
     var subOverlay = document.getElementById('subOverlay');
@@ -920,36 +712,9 @@ function cancelForumSubAction() {
     openForum();
 }
 
-// ==================== 更多面板入口 ====================
-function addForumToMorePanel() {
-    var morePanel = document.querySelector('.more-panel-grid-top');
-    if (morePanel && !document.getElementById('forumMoreBtn')) {
-        var forumBtn = document.createElement('div');
-        forumBtn.className = 'more-item-text';
-        forumBtn.id = 'forumMoreBtn';
-        forumBtn.onclick = function() {
-            if (typeof toggleMorePanel === 'function') toggleMorePanel();
-            openForum();
-        };
-        forumBtn.textContent = '论坛';
-        morePanel.appendChild(forumBtn);
-    }
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(addForumToMorePanel, 200);
-    });
-} else {
-    setTimeout(addForumToMorePanel, 200);
-}
-// 修复：点击话题详情背景关闭
 document.addEventListener('click', function(e) {
-    if (e.target.id === 'forumDetailOverlay') {
-        closeTopicDetail();
-    }
+    if (e.target.id === 'forumDetailOverlay') { closeTopicDetail(); }
 });
 
-console.log('论坛模块已加载');
 window.openForum = openForum;
 window.closeForumFullscreen = closeForumFullscreen;
