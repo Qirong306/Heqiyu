@@ -1,4 +1,4 @@
-// ==================== 书籍阅读模块 ====================
+// ==================== 书籍阅读模块（小说阅读软件风格） ====================
 
 function getBooks() {
     if (!appData.books) appData.books = [];
@@ -9,13 +9,143 @@ function saveBookData() {
     saveData(true);
 }
 
-function showAddBookForm() {
-    var html = '<h4>添加书籍</h4>';
-    html += '<div class="form-row"><label>书名</label><input type="text" id="newBookTitle" placeholder="输入书名"></div>';
-    html += '<div class="form-row"><label>内容（粘贴文本或选择文件）</label><textarea id="newBookContent" placeholder="在此粘贴文本内容..." style="min-height:120px;"></textarea></div>';
-    html += '<div class="btn-row"><button class="btn-sm outline" onclick="document.getElementById(\'bookFileInput\').click()">上传文件 (txt/epub)</button><input type="file" id="bookFileInput" accept=".txt,.epub" style="display:none" onchange="loadBookFile()"></div>';
-    html += '<div class="btn-row"><button class="btn-sm" onclick="saveNewBook()">保存</button><button class="btn-sm outline" onclick="openBookManageModal()">返回</button></div>';
-    openSubModal(html);
+// ==================== 书籍列表界面（书架风格，一行三本） ====================
+
+function openBookManageModal() {
+    closeAllFullscreens();
+    
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'bookFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeBookFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">书籍阅读</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <button onclick="showAddBookFormFullscreen()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</button>
+                <button onclick="closeBookFullscreen()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-secondary);padding:4px 8px;">✕</button>
+            </div>
+        </div>
+        <div class="fullscreen-body" id="bookFullscreenBody" style="padding:16px;flex:1;overflow-y:auto;background:var(--bg);">
+            <div id="bookGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px 12px;padding:8px 4px;"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    renderBookGrid();
+}
+
+function closeBookFullscreen() {
+    var el = document.getElementById('bookFullscreen');
+    if (el) el.remove();
+}
+
+// ==================== 渲染书架（一行三本） ====================
+
+function renderBookGrid() {
+    var grid = document.getElementById('bookGrid');
+    if (!grid) return;
+    var books = getBooks();
+    
+    if (books.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-system);padding:40px 20px;font-size:14px;">📚 书架上还没有书<br><span style="font-size:12px;color:var(--text-system);">点击右上角 ☰ 添加书籍</span></div>';
+        return;
+    }
+    
+    var html = '';
+    books.forEach(function(book, index) {
+        var coverColor = ['#e8d5c4', '#d4c8b8', '#c5c4e8', '#b8d9c6', '#f0c8c8', '#d4d8c8', '#f0d8c8', '#c8d8e8'][index % 8];
+        var titleShort = book.title.length > 6 ? book.title.substring(0, 6) + '..' : book.title;
+        var wordCount = book.content ? book.content.length : 0;
+        var wordDisplay = wordCount > 10000 ? (wordCount / 10000).toFixed(1) + '万' : wordCount + '字';
+        
+        html += `
+            <div class="book-card" onclick="openBookReader(${index})" style="
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                cursor:pointer;
+                transition:transform 0.2s;
+                border-radius:8px;
+                padding:8px 4px;
+            ">
+                <div style="
+                    width:100%;
+                    aspect-ratio:0.7;
+                    background:${coverColor};
+                    border-radius:8px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:22px;
+                    font-weight:bold;
+                    color:#4a3728;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border:1px solid rgba(255,255,255,0.3);
+                    text-align:center;
+                    padding:8px;
+                    word-break:break-all;
+                    line-height:1.3;
+                ">${escapeHTML(titleShort)}</div>
+                <div style="
+                    font-size:12px;
+                    color:var(--text);
+                    margin-top:6px;
+                    text-align:center;
+                    width:100%;
+                    overflow:hidden;
+                    text-overflow:ellipsis;
+                    white-space:nowrap;
+                ">${escapeHTML(book.title)}</div>
+                <div style="
+                    font-size:10px;
+                    color:var(--text-system);
+                ">${wordDisplay}</div>
+            </div>
+        `;
+    });
+    grid.innerHTML = html;
+}
+
+// ==================== 添加书籍界面 ====================
+
+function showAddBookFormFullscreen() {
+    var body = document.getElementById('bookFullscreenBody');
+    if (!body) return;
+    body.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:400px;margin:0 auto;width:100%;padding:8px 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:16px;color:var(--text);font-weight:bold;">添加书籍</span>
+                <button onclick="renderBookGrid();showAddBookFormFullscreenCancel();" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-secondary);">✕</button>
+            </div>
+            <div class="form-row">
+                <label>书名</label>
+                <input type="text" id="newBookTitle" placeholder="输入书名" style="width:100%;">
+            </div>
+            <div class="form-row">
+                <label>内容（粘贴文本或选择文件）</label>
+                <textarea id="newBookContent" placeholder="在此粘贴文本内容..." style="min-height:150px;width:100%;"></textarea>
+            </div>
+            <div class="btn-row" style="gap:8px;flex-wrap:wrap;">
+                <button class="btn-sm outline" onclick="document.getElementById('bookFileInput').click()">📄 上传文件 (txt/epub)</button>
+                <input type="file" id="bookFileInput" accept=".txt,.epub" style="display:none" onchange="loadBookFile()">
+            </div>
+            <div class="btn-row" style="gap:8px;margin-top:4px;">
+                <button class="btn-sm" onclick="saveNewBookFullscreen()">保存</button>
+                <button class="btn-sm outline" onclick="renderBookGrid();showAddBookFormFullscreenCancel();">取消</button>
+            </div>
+        </div>
+    `;
+}
+
+function showAddBookFormFullscreenCancel() {
+    var body = document.getElementById('bookFullscreenBody');
+    if (!body) return;
+    body.innerHTML = `<div id="bookGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px 12px;padding:8px 4px;"></div>`;
+    renderBookGrid();
 }
 
 function loadBookFile() {
@@ -43,6 +173,7 @@ function loadBookFile() {
                         if (!document.getElementById('newBookTitle').value) {
                             document.getElementById('newBookTitle').value = fileName.replace(/\.epub$/i, '');
                         }
+                        showToast('文件加载成功');
                     });
                 });
             }).catch(function(err) {
@@ -58,6 +189,7 @@ function loadBookFile() {
             if (!document.getElementById('newBookTitle').value) {
                 document.getElementById('newBookTitle').value = fileName.replace(/\.txt$/i, '');
             }
+            showToast('文件加载成功');
         };
         var blob = file.slice(0, Math.min(file.size, 2000));
         var testReader = new FileReader();
@@ -70,6 +202,7 @@ function loadBookFile() {
                 if (!document.getElementById('newBookTitle').value) {
                     document.getElementById('newBookTitle').value = fileName.replace(/\.txt$/i, '');
                 }
+                showToast('文件加载成功');
             };
             if (weirdCount > sample.length * 0.1) {
                 fullReader.readAsText(file, 'GBK');
@@ -79,122 +212,6 @@ function loadBookFile() {
         };
         testReader.readAsText(blob);
     }
-}
-
-function saveNewBook() {
-    var title = document.getElementById('newBookTitle').value.trim();
-    var content = document.getElementById('newBookContent').value.trim();
-    if (!title) { showToast('请输入书名'); return; }
-    if (!content) { showToast('请输入或选择文本内容'); return; }
-    var books = getBooks();
-    books.push({
-        id: 'book_' + Date.now(),
-        title: title,
-        content: content,
-        annotations: [],
-        addedTime: Date.now()
-    });
-    saveBookData();
-    showToast('书籍已添加');
-    openBookManageModal();
-}
-
-function deleteBook(index) {
-    if (!confirm('删除这本书？')) return;
-    var books = getBooks();
-    books.splice(index, 1);
-    saveBookData();
-    openBookManageModal();
-}
-
-function openBookManageModal() {
-    var overlay = document.createElement('div');
-    overlay.className = 'fullscreen-overlay active';
-    overlay.id = 'bookFullscreen';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
-    
-    overlay.innerHTML = `
-        <div class="fullscreen-header">
-            <button class="fullscreen-back" onclick="closeBookFullscreen()">
-                <span class="back-arrow"></span> 返回
-            </button>
-            <span class="fullscreen-title">书籍阅读</span>
-            <span style="width:50px;"></span>
-        </div>
-        <div class="fullscreen-body" id="bookFullscreenBody" style="padding:16px;flex:1;overflow-y:auto;">
-            <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">上传 txt 文件或粘贴内容</div>
-            <div class="btn-row" style="justify-content:center;margin-bottom:12px;">
-                <button class="btn-sm" onclick="showAddBookFormFullscreen()">添加书籍</button>
-            </div>
-            <div id="bookList" style="max-height:60vh;overflow-y:auto;"></div>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    renderBookListFullscreen();
-}
-
-function closeBookFullscreen() {
-    var el = document.getElementById('bookFullscreen');
-    if (el) el.remove();
-}
-
-function renderBookListFullscreen() {
-    var container = document.getElementById('bookList');
-    if (!container) return;
-    var books = getBooks();
-    if (books.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:20px;">书架上还没有书</div>';
-        return;
-    }
-    var html = '';
-    books.forEach(function(book, i) {
-        html += '<div class="book-list-item" onclick="openBookReader(' + i + ')" style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--item-bg);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;border:2px solid transparent;">' +
-            '<span>' + escapeHTML(book.title) + ' <span style="font-size:10px;color:var(--text-system);">(' + book.content.length + '字)</span></span>' +
-            '<button class="del-sm" onclick="event.stopPropagation();deleteBook(' + i + ')" style="margin-left:10px;">删除</button>' +
-            '</div>';
-    });
-    container.innerHTML = html;
-}
-
-function showAddBookFormFullscreen() {
-    var body = document.getElementById('bookFullscreenBody');
-    if (!body) return;
-    body.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:12px;">
-            <div class="form-row">
-                <label>书名</label>
-                <input type="text" id="newBookTitle" placeholder="输入书名">
-            </div>
-            <div class="form-row">
-                <label>内容（粘贴文本或选择文件）</label>
-                <textarea id="newBookContent" placeholder="在此粘贴文本内容..." style="min-height:120px;"></textarea>
-            </div>
-            <div class="btn-row">
-                <button class="btn-sm outline" onclick="document.getElementById('bookFileInput').click()">上传文件 (txt/epub)</button>
-                <input type="file" id="bookFileInput" accept=".txt,.epub" style="display:none" onchange="loadBookFile()">
-            </div>
-            <div class="btn-row">
-                <button class="btn-sm" onclick="saveNewBookFullscreen()">保存</button>
-                <button class="btn-sm outline" onclick="renderBookListFullscreen();showAddBookFormFullscreenCancel();">取消</button>
-            </div>
-            <div id="bookList" style="max-height:40vh;overflow-y:auto;"></div>
-        </div>
-    `;
-    renderBookListFullscreen();
-}
-
-function showAddBookFormFullscreenCancel() {
-    var body = document.getElementById('bookFullscreenBody');
-    if (!body) return;
-    body.innerHTML = `
-        <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">上传 txt 文件或粘贴内容</div>
-        <div class="btn-row" style="justify-content:center;margin-bottom:12px;">
-            <button class="btn-sm" onclick="showAddBookFormFullscreen()">添加书籍</button>
-        </div>
-        <div id="bookList" style="max-height:60vh;overflow-y:auto;"></div>
-    `;
-    renderBookListFullscreen();
 }
 
 function saveNewBookFullscreen() {
@@ -215,12 +232,253 @@ function saveNewBookFullscreen() {
     showAddBookFormFullscreenCancel();
 }
 
+function deleteBook(index) {
+    if (!confirm('确定删除这本书吗？')) return;
+    var books = getBooks();
+    books.splice(index, 1);
+    saveBookData();
+    renderBookGrid();
+    showToast('已删除');
+}
+
+// ==================== 小说阅读器（全屏阅读模式） ====================
+
+var readerState = {
+    currentBookIndex: -1,
+    currentChapterIndex: 0,
+    fontSize: 18,
+    theme: 'default',
+    showSettings: false
+};
+
+function openBookReader(index) {
+    var books = getBooks();
+    if (index >= books.length) return;
+    
+    readerState.currentBookIndex = index;
+    readerState.currentChapterIndex = 0;
+    readerState.showSettings = false;
+    
+    var book = books[index];
+    var chapters = parseChapters(book.content);
+    
+    // 关闭书架
+    var bookshelf = document.getElementById('bookFullscreen');
+    if (bookshelf) bookshelf.style.display = 'none';
+    
+    // 创建阅读器全屏
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'bookReaderFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:' + getReaderBgColor() + ';z-index:600;display:flex;flex-direction:column;';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header" style="background:${getReaderHeaderColor()};border-bottom:1px solid ${getReaderBorderColor()};">
+            <button class="fullscreen-back" onclick="closeBookReader()" style="color:${getReaderTextColor()};">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title" style="color:${getReaderTextColor()};font-size:15px;">${escapeHTML(book.title)}</span>
+            <button onclick="toggleReaderSettings()" style="background:none;border:none;font-size:18px;cursor:pointer;color:${getReaderTextColor()};padding:4px 8px;">⚙</button>
+        </div>
+        <div class="fullscreen-body" id="bookReaderBody" style="padding:20px 24px;flex:1;overflow-y:auto;background:${getReaderBgColor()};">
+            <div id="readerContent" style="font-size:${readerState.fontSize}px;line-height:1.8;color:${getReaderTextColor()};max-width:600px;margin:0 auto;padding:8px 0;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:${getReaderHeaderColor()};border-top:1px solid ${getReaderBorderColor()};flex-shrink:0;">
+            <button onclick="prevChapter()" style="background:none;border:none;font-size:14px;cursor:pointer;color:${getReaderTextColor()};padding:6px 12px;">上一章</button>
+            <span id="chapterIndicator" style="font-size:12px;color:${getReaderTextSecondaryColor()};">第 1/${chapters.length} 章</span>
+            <button onclick="nextChapter()" style="background:none;border:none;font-size:14px;cursor:pointer;color:${getReaderTextColor()};padding:6px 12px;">下一章</button>
+        </div>
+        <!-- 阅读设置面板 -->
+        <div id="readerSettingsPanel" style="display:none;position:absolute;bottom:60px;left:0;right:0;background:var(--panel-bg);padding:16px 20px;border-top:1px solid var(--border);z-index:10;">
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;">
+                <span style="font-size:12px;color:var(--text-secondary);">字号</span>
+                <button onclick="changeReaderFontSize(-2)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--item-bg);cursor:pointer;font-size:14px;">A-</button>
+                <span id="fontSizeDisplay" style="font-size:13px;color:var(--text);min-width:30px;text-align:center;">${readerState.fontSize}</span>
+                <button onclick="changeReaderFontSize(2)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--item-bg);cursor:pointer;font-size:14px;">A+</button>
+                <span style="font-size:12px;color:var(--text-secondary);margin-left:8px;">主题</span>
+                <button onclick="setReaderTheme('default')" style="width:24px;height:24px;border-radius:50%;border:2px solid ${readerState.theme === 'default' ? 'var(--accent)' : 'transparent'};background:#f5f0eb;cursor:pointer;"></button>
+                <button onclick="setReaderTheme('dark')" style="width:24px;height:24px;border-radius:50%;border:2px solid ${readerState.theme === 'dark' ? 'var(--accent)' : 'transparent'};background:#2c2420;cursor:pointer;"></button>
+                <button onclick="setReaderTheme('sepia')" style="width:24px;height:24px;border-radius:50%;border:2px solid ${readerState.theme === 'sepia' ? 'var(--accent)' : 'transparent'};background:#f4edd5;cursor:pointer;"></button>
+                <button onclick="setReaderTheme('green')" style="width:24px;height:24px;border-radius:50%;border:2px solid ${readerState.theme === 'green' ? 'var(--accent)' : 'transparent'};background:#d4e8d4;cursor:pointer;"></button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // 渲染章节内容
+    renderChapter(0);
+}
+
+// ==================== 阅读器主题配置 ====================
+
+var readerThemes = {
+    'default': { bg: '#f5f0eb', text: '#4a3728', header: '#faf7f4', border: '#e8d5c4', textSecondary: '#8b7355' },
+    'dark': { bg: '#1a1a1a', text: '#e0e0e0', header: '#2a2a2a', border: '#333333', textSecondary: '#888888' },
+    'sepia': { bg: '#f4edd5', text: '#5a4a3a', header: '#e8dfc8', border: '#d4c8b8', textSecondary: '#8a7a6a' },
+    'green': { bg: '#d4e8d4', text: '#2a4a2a', header: '#c8dcc8', border: '#b0c8b0', textSecondary: '#5a7a5a' }
+};
+
+function getReaderBgColor() {
+    return readerThemes[readerState.theme]?.bg || '#f5f0eb';
+}
+
+function getReaderTextColor() {
+    return readerThemes[readerState.theme]?.text || '#4a3728';
+}
+
+function getReaderHeaderColor() {
+    return readerThemes[readerState.theme]?.header || '#faf7f4';
+}
+
+function getReaderBorderColor() {
+    return readerThemes[readerState.theme]?.border || '#e8d5c4';
+}
+
+function getReaderTextSecondaryColor() {
+    return readerThemes[readerState.theme]?.textSecondary || '#8b7355';
+}
+
+function setReaderTheme(theme) {
+    if (readerThemes[theme]) {
+        readerState.theme = theme;
+        // 更新阅读器样式
+        var reader = document.getElementById('bookReaderFullscreen');
+        if (reader) {
+            reader.style.background = getReaderBgColor();
+            var header = reader.querySelector('.fullscreen-header');
+            if (header) {
+                header.style.background = getReaderHeaderColor();
+                header.style.borderBottomColor = getReaderBorderColor();
+                var title = header.querySelector('.fullscreen-title');
+                if (title) title.style.color = getReaderTextColor();
+                var backBtn = header.querySelector('.fullscreen-back');
+                if (backBtn) backBtn.style.color = getReaderTextColor();
+            }
+            var body = document.getElementById('bookReaderBody');
+            if (body) body.style.background = getReaderBgColor();
+            var content = document.getElementById('readerContent');
+            if (content) content.style.color = getReaderTextColor();
+            var footer = reader.querySelector('div:last-child');
+            if (footer) {
+                footer.style.background = getReaderHeaderColor();
+                footer.style.borderTopColor = getReaderBorderColor();
+                var btns = footer.querySelectorAll('button');
+                btns.forEach(function(btn) { btn.style.color = getReaderTextColor(); });
+                var indicator = document.getElementById('chapterIndicator');
+                if (indicator) indicator.style.color = getReaderTextSecondaryColor();
+            }
+            // 更新设置面板按钮边框
+            var themeBtns = document.querySelectorAll('#readerSettingsPanel button');
+            themeBtns.forEach(function(btn) {
+                if (btn.style.background && btn.style.background.includes('#')) {
+                    var color = btn.style.background;
+                    if (color === 'rgb(245, 240, 235)' || color === '#f5f0eb') {
+                        btn.style.borderColor = readerState.theme === 'default' ? 'var(--accent)' : 'transparent';
+                    } else if (color === 'rgb(44, 36, 32)' || color === '#2c2420') {
+                        btn.style.borderColor = readerState.theme === 'dark' ? 'var(--accent)' : 'transparent';
+                    } else if (color === 'rgb(244, 237, 213)' || color === '#f4edd5') {
+                        btn.style.borderColor = readerState.theme === 'sepia' ? 'var(--accent)' : 'transparent';
+                    } else if (color === 'rgb(212, 232, 212)' || color === '#d4e8d4') {
+                        btn.style.borderColor = readerState.theme === 'green' ? 'var(--accent)' : 'transparent';
+                    }
+                }
+            });
+        }
+        showToast('已切换主题');
+    }
+}
+
+function toggleReaderSettings() {
+    var panel = document.getElementById('readerSettingsPanel');
+    if (panel) {
+        readerState.showSettings = !readerState.showSettings;
+        panel.style.display = readerState.showSettings ? 'block' : 'none';
+    }
+}
+
+function changeReaderFontSize(delta) {
+    var newSize = readerState.fontSize + delta;
+    if (newSize < 12 || newSize > 32) return;
+    readerState.fontSize = newSize;
+    var content = document.getElementById('readerContent');
+    if (content) content.style.fontSize = newSize + 'px';
+    var display = document.getElementById('fontSizeDisplay');
+    if (display) display.textContent = newSize;
+}
+
+// ==================== 章节渲染 ====================
+
+function renderChapter(chapterIndex) {
+    var books = getBooks();
+    var book = books[readerState.currentBookIndex];
+    if (!book) return;
+    
+    var chapters = parseChapters(book.content);
+    if (chapterIndex < 0) chapterIndex = 0;
+    if (chapterIndex >= chapters.length) chapterIndex = chapters.length - 1;
+    
+    readerState.currentChapterIndex = chapterIndex;
+    
+    var content = document.getElementById('readerContent');
+    if (content) {
+        var chapter = chapters[chapterIndex];
+        var text = chapter.text || '';
+        // 段落处理
+        var paragraphs = text.split('\n').filter(function(p) { return p.trim(); });
+        var html = '<div style="margin-bottom:20px;font-weight:bold;font-size:' + (readerState.fontSize + 4) + 'px;text-align:center;color:' + getReaderTextColor() + ';">' + escapeHTML(chapter.title) + '</div>';
+        paragraphs.forEach(function(p) {
+            html += '<p style="text-indent:2em;margin-bottom:12px;">' + escapeHTML(p.trim()) + '</p>';
+        });
+        content.innerHTML = html;
+        // 滚动到顶部
+        var body = document.getElementById('bookReaderBody');
+        if (body) body.scrollTop = 0;
+    }
+    
+    // 更新章节指示器
+    var indicator = document.getElementById('chapterIndicator');
+    if (indicator) {
+        indicator.textContent = '第 ' + (chapterIndex + 1) + '/' + chapters.length + ' 章';
+    }
+}
+
+function nextChapter() {
+    var books = getBooks();
+    var book = books[readerState.currentBookIndex];
+    if (!book) return;
+    var chapters = parseChapters(book.content);
+    if (readerState.currentChapterIndex < chapters.length - 1) {
+        renderChapter(readerState.currentChapterIndex + 1);
+    } else {
+        showToast('已到最后一章');
+    }
+}
+
+function prevChapter() {
+    if (readerState.currentChapterIndex > 0) {
+        renderChapter(readerState.currentChapterIndex - 1);
+    } else {
+        showToast('已到第一章');
+    }
+}
+
+function closeBookReader() {
+    var overlay = document.getElementById('bookReaderFullscreen');
+    if (overlay) overlay.remove();
+    // 恢复书架显示
+    var bookshelf = document.getElementById('bookFullscreen');
+    if (bookshelf) bookshelf.style.display = 'flex';
+}
+
+// ==================== 解析章节 ====================
+
 function parseChapters(content) {
+    if (!content) return [{ title: '正文', text: '' }];
     var lines = content.split('\n');
     var chapters = [];
     var currentTitle = '开始';
     var currentContent = '';
-    var chapterRegex = /^(第[一二三四五六七八九十百千0-9]+章|Chapter\s*\d+|#+\s+)/;
+    var chapterRegex = /^(第[一二三四五六七八九十百千0-9]+章|Chapter\s*\d+|#+\s+)/i;
     
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i].trim();
@@ -243,249 +501,23 @@ function parseChapters(content) {
     return chapters;
 }
 
-function openBookReader(index) {
-    var books = getBooks();
-    if (index >= books.length) return;
-    var book = books[index];
-    var chapters = parseChapters(book.content);
-    
-    var html = '<h4 style="text-align:center;font-size:19px;margin-bottom:6px;color:var(--text);letter-spacing:2px;font-weight:400;">' + escapeHTML(book.title) + '</h4>';
-    html += '<div style="display:flex;gap:10px;max-height:60vh;">';
-    html += '<div style="width:30%;overflow-y:auto;border-right:1px solid var(--border);padding-right:8px;">';
-    html += '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;">目录</div>';
-    chapters.forEach(function(ch, i) {
-        html += '<div style="cursor:pointer;padding:4px 4px;font-size:13px;color:var(--text-secondary);" onclick="jumpToChapter(' + i + ')">' + escapeHTML(ch.title) + '</div>';
-    });
-    html += '</div>';
-    html += '<div id="bookContentArea" style="flex:1;overflow-y:auto;max-height:55vh;padding:0 8px;position:relative;">';
-    html += '<div id="bookTextInner" style="white-space:pre-wrap;line-height:1.8;font-size:15px;">';
-    chapters.forEach(function(ch, i) {
-        html += '<div class="chapter-block" id="chapter_' + i + '">';
-        html += '<div style="font-weight:bold;font-size:18px;margin:16px 0 8px;">' + escapeHTML(ch.title) + '</div>';
-        html += '<div class="chapter-text" id="chapter_text_' + i + '">' + renderAnnotatedText(ch.text, book.annotations, i) + '</div>';
-        html += '</div>';
-    });
-    html += '</div></div></div>';
-    
-    html += '<div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
-    html += '<button class="btn-sm outline" id="toggleHighlightBtn" onclick="toggleHighlightMode()">划线模式</button>';
-    html += '<button class="btn-sm outline" onclick="clearAllAnnotations(' + index + ')">清除划线</button>';
-    html += '<span id="highlightStatus" style="font-size:12px;color:var(--text-system);">点击按钮开启划线模式</span>';
-    html += '</div>';
-    
-    html += '<button class="btn-close" onclick="exitBookReader()" style="margin-top:10px;">关闭</button>';
-    openSubModal(html);
-    
-    window._currentBookIndex = index;
-    window._highlightMode = false;
-}
-
-function exitBookReader() {
-    var contentArea = document.getElementById('bookTextInner');
-    if (contentArea) {
-        contentArea.removeEventListener('touchend', handleTextSelection);
-        contentArea.removeEventListener('mouseup', handleTextSelection);
-    }
-    closeModal('subOverlay');
-}
-
-function renderAnnotatedText(text, annotations, chapterIndex) {
-    if (!annotations || annotations.length === 0) return escapeHTML(text);
-    var lines = text.split('\n');
-    var result = '';
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        var lineAnnotations = annotations.filter(function(a) { return a.chapterIndex === chapterIndex && a.lineIndex === i; });
-        if (lineAnnotations.length === 0) {
-            result += escapeHTML(line) + '\n';
-        } else {
-            lineAnnotations.sort(function(a,b) { return a.startOffset - b.startOffset; });
-            var htmlLine = '';
-            var lastIdx = 0;
-            lineAnnotations.forEach(function(ann) {
-                htmlLine += escapeHTML(line.substring(lastIdx, ann.startOffset));
-                var hasNote = ann.note && ann.note.trim().length > 0;
-                var escapedText = escapeHTML(ann.text).replace(/'/g, "&#39;");
-                var escapedNote = escapeHTML(ann.note || '').replace(/'/g, "&#39;");
-                var supIcon = hasNote ? ' <sup style="font-size:10px;color:var(--accent-dark);">[笔记]</sup>' : '';
-                htmlLine += '<mark style="background-color:#ffeaa7;cursor:pointer;position:relative;" title="' + (hasNote ? escapedNote : escapedText) + '" onclick="showAnnotationDetail(\'' + escapedText + '\', \'' + escapedNote + '\')">' + escapeHTML(line.substring(ann.startOffset, ann.endOffset)) + supIcon + '</mark>';
-                lastIdx = ann.endOffset;
-            });
-            htmlLine += escapeHTML(line.substring(lastIdx));
-            result += htmlLine + '\n';
-        }
-    }
-    return result;
-}
-
-function jumpToChapter(chapterIndex) {
-    var target = document.getElementById('chapter_' + chapterIndex);
-    if (target) {
-        target.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-function toggleHighlightMode() {
-    window._highlightMode = !window._highlightMode;
-    var status = document.getElementById('highlightStatus');
-    var btn = document.getElementById('toggleHighlightBtn');
-    if (status) {
-        status.textContent = window._highlightMode ? '划线模式已开启，选中文字后添加笔记' : '点击按钮开启划线模式';
-    }
-    if (btn) {
-        btn.textContent = window._highlightMode ? '退出划线' : '划线模式';
-        if (window._highlightMode) {
-            btn.style.background = 'var(--accent)';
-            btn.style.borderColor = 'var(--accent)';
-            btn.style.color = 'var(--text)';
-        } else {
-            btn.style.background = 'transparent';
-            btn.style.borderColor = 'var(--border)';
-            btn.style.color = 'var(--text-secondary)';
-        }
-    }
-    var contentArea = document.getElementById('bookTextInner');
-    if (contentArea) {
-        if (window._highlightMode) {
-            contentArea.style.cursor = 'text';
-            contentArea.addEventListener('touchend', handleTextSelection);
-            contentArea.addEventListener('mouseup', handleTextSelection);
-        } else {
-            contentArea.removeEventListener('touchend', handleTextSelection);
-            contentArea.removeEventListener('mouseup', handleTextSelection);
-            contentArea.style.cursor = 'default';
-        }
-    }
-}
-
-function handleTextSelection(e) {
-    if (!window._highlightMode) return;
-    
-    setTimeout(function() {
-        var sel = window.getSelection();
-        if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
-        
-        var selectedText = sel.toString().trim();
-        if (!selectedText || selectedText.length < 2) return;
-        
-        var range = sel.getRangeAt(0);
-        var container = range.commonAncestorContainer;
-        var chapterDiv = container.parentNode;
-        while (chapterDiv && !chapterDiv.classList.contains('chapter-text')) {
-            chapterDiv = chapterDiv.parentNode;
-        }
-        if (!chapterDiv) return;
-        
-        var chapterId = chapterDiv.id;
-        var chapterIndex = parseInt(chapterId.split('_')[2]);
-        
-        var offsetStart = getTextOffset(chapterDiv, range.startContainer, range.startOffset);
-        var offsetEnd = getTextOffset(chapterDiv, range.endContainer, range.endOffset);
-        
-        showAnnotationInput(selectedText, chapterIndex, offsetStart, offsetEnd);
-        sel.removeAllRanges();
-    }, 100);
-}
-
-function showAnnotationInput(selectedText, chapterIndex, startOffset, endOffset) {
-    var overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;';
-    overlay.id = 'annotationInputOverlay';
-    
-    var box = document.createElement('div');
-    box.style.cssText = 'background:var(--panel-bg);border-radius:var(--radius-lg);padding:18px;width:85%;max-width:350px;box-shadow:0 8px 30px rgba(0,0,0,0.2);';
-    box.innerHTML = '<h4 style="margin-bottom:8px;color:var(--text);">添加笔记</h4>' +
-        '<div style="background:var(--item-bg);padding:8px 12px;border-radius:8px;margin-bottom:10px;font-size:13px;color:var(--text-secondary);max-height:60px;overflow-y:auto;">"' + escapeHTML(selectedText) + '"</div>' +
-        '<textarea id="annotationNoteInput" placeholder="写点笔记..." style="width:100%;padding:10px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-main);font-size:14px;color:var(--text);background:var(--input-box);min-height:80px;resize:vertical;outline:none;"></textarea>' +
-        '<div class="btn-row" style="margin-top:10px;justify-content:flex-end;">' +
-        '<button class="btn-sm outline" id="cancelAnnotationBtn">取消</button>' +
-        '<button class="btn-sm" id="saveAnnotationBtn">保存</button>' +
-        '</div>';
-    
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-    
-    document.getElementById('saveAnnotationBtn').onclick = function() {
-        var note = document.getElementById('annotationNoteInput').value.trim();
-        saveAnnotation(selectedText, chapterIndex, startOffset, endOffset, note);
-        document.body.removeChild(overlay);
-    };
-    document.getElementById('cancelAnnotationBtn').onclick = function() {
-        document.body.removeChild(overlay);
-    };
-    overlay.onclick = function(e) {
-        if (e.target === overlay) document.body.removeChild(overlay);
-    };
-    
-    setTimeout(function() {
-        var input = document.getElementById('annotationNoteInput');
-        if (input) input.focus();
-    }, 200);
-}
-
-function saveAnnotation(text, chapterIndex, startOffset, endOffset, note) {
-    var books = getBooks();
-    var book = books[window._currentBookIndex];
-    if (!book.annotations) book.annotations = [];
-    book.annotations.push({
-        chapterIndex: chapterIndex,
-        startOffset: startOffset,
-        endOffset: endOffset,
-        text: text,
-        note: note || '',
-        color: '#ffeaa7',
-        lineIndex: 0
-    });
-    saveBookData();
-    showToast(note ? '笔记已保存' : '划线已保存');
-    openBookReader(window._currentBookIndex);
-}
-
-function getTextOffset(root, node, offset) {
-    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
-    var currentOffset = 0;
-    var currentNode;
-    while (currentNode = walker.nextNode()) {
-        if (currentNode === node) {
-            return currentOffset + offset;
-        }
-        currentOffset += currentNode.textContent.length;
-    }
-    return 0;
-}
-
-function showAnnotationDetail(text, note) {
-    var overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;';
-    overlay.onclick = function(e) { if (e.target === overlay) document.body.removeChild(overlay); };
-    
-    var box = document.createElement('div');
-    box.style.cssText = 'background:var(--panel-bg);border-radius:var(--radius-lg);padding:18px;width:85%;max-width:350px;box-shadow:0 8px 30px rgba(0,0,0,0.2);text-align:center;';
-    box.innerHTML = '<h4 style="margin-bottom:8px;color:var(--text);">笔记详情</h4>' +
-        '<div style="background:var(--item-bg);padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:14px;color:var(--text);line-height:1.6;">"' + escapeHTML(text) + '"</div>' +
-        '<div style="background:var(--item-bg);padding:10px 14px;border-radius:8px;font-size:13px;color:var(--text-secondary);min-height:50px;line-height:1.6;text-align:left;">' + (note ? escapeHTML(note) : '<span style="color:var(--text-system);">没有笔记内容</span>') + '</div>' +
-        '<button class="btn-close" onclick="this.parentElement.parentElement.remove()" style="margin-top:12px;">关闭</button>';
-    
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-}
-
-function clearAllAnnotations(index) {
-    if (!confirm('确定要清除本书所有划线和笔记吗？')) return;
-    var books = getBooks();
-    if (books[index]) {
-        books[index].annotations = [];
-        saveBookData();
-        openBookReader(index);
-        showToast('所有划线和笔记已清除');
-    }
-}
+// ==================== 导出到全局 ====================
 
 window.openBookManageModal = openBookManageModal;
 window.closeBookFullscreen = closeBookFullscreen;
 window.openBookReader = openBookReader;
-window.exitBookReader = exitBookReader;
-window.jumpToChapter = jumpToChapter;
-window.toggleHighlightMode = toggleHighlightMode;
-window.clearAllAnnotations = clearAllAnnotations;
-window.showAnnotationDetail = showAnnotationDetail;
+window.closeBookReader = closeBookReader;
+window.renderBookGrid = renderBookGrid;
+window.showAddBookFormFullscreen = showAddBookFormFullscreen;
+window.showAddBookFormFullscreenCancel = showAddBookFormFullscreenCancel;
+window.saveNewBookFullscreen = saveNewBookFullscreen;
+window.loadBookFile = loadBookFile;
+window.deleteBook = deleteBook;
+window.nextChapter = nextChapter;
+window.prevChapter = prevChapter;
+window.renderChapter = renderChapter;
+window.toggleReaderSettings = toggleReaderSettings;
+window.changeReaderFontSize = changeReaderFontSize;
+window.setReaderTheme = setReaderTheme;
+
+console.log('书籍阅读模块已加载（小说阅读软件风格）');
