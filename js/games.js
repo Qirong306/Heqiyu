@@ -908,6 +908,3 @@ window.openGomoku = openGomoku;
 window.closeGomokuFullscreen = closeGomokuFullscreen;
 window.openMurderMystery = openMurderMystery;
 window.closeMurderFullscreen = closeMurderFullscreen;
-window.closeGomokuFullscreen = closeGomokuFullscreen;
-window.openMurderMystery = openMurderMystery;
-window.closeMurderFullscreen = closeMurderFullscreen;
