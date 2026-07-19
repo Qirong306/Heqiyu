@@ -407,7 +407,7 @@ function formatTime(ts) { if (!ts) return ''; var d = new Date(ts); return d.get
 function formatTimeShort(ts) { if (!ts) return ''; var d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
 function escapeHTML(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-// ========== 颜色主题（新增全黑/全白） ==========
+// ========== 颜色主题 ==========
 var colorThemes = {
     'default': {
         name: '杏色',
@@ -685,7 +685,6 @@ var colorThemes = {
         toastBg: 'rgba(58,58,58,0.92)',
         toastText: '#ffffff'
     },
-    // ===== 新增：全黑 =====
     'black': {
         name: '全黑',
         accent: '#4a4a4a',
@@ -709,7 +708,6 @@ var colorThemes = {
         toastBg: 'rgba(20,20,20,0.95)',
         toastText: '#e8e8e8'
     },
-    // ===== 新增：全白 =====
     'white': {
         name: '全白',
         accent: '#d4d4d4',
@@ -752,7 +750,6 @@ function applyColorTheme(themeKey) {
     var theme = colorThemes[themeKey];
     if (!theme) return;
     localStorage.setItem('color_theme', themeKey);
-    
     document.documentElement.style.setProperty('--accent', theme.accent);
     document.documentElement.style.setProperty('--accent-dark', theme.accentDark);
     document.documentElement.style.setProperty('--bg', theme.bg);
@@ -774,7 +771,6 @@ function applyColorTheme(themeKey) {
     document.documentElement.style.setProperty('--success', theme.success || '#6b8f5e');
     document.documentElement.style.setProperty('--toast-bg', theme.toastBg || 'rgba(74,55,40,0.92)');
     document.documentElement.style.setProperty('--toast-text', theme.toastText || '#ffffff');
-    
     showToast('已切换至 ' + theme.name + ' 主题');
     closeModal('subOverlay');
 }
@@ -983,7 +979,6 @@ function openLetterModal() {
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'letterFullscreen';
-    
     overlay.innerHTML = `
         <div class="fullscreen-header">
             <button class="fullscreen-back" onclick="closeLetterFullscreen()">
@@ -998,7 +993,6 @@ function openLetterModal() {
             <button class="btn-sm" onclick="sendLetterFullscreen()" style="padding:12px;font-size:15px;">寄出信件</button>
         </div>
     `;
-    
     document.body.appendChild(overlay);
     document.getElementById('letterRecipient').textContent = appData.otherName;
 }
@@ -1775,7 +1769,7 @@ function renderSettingsContent() {
         
         <div class="settings-group">
             <div class="settings-group-title">音乐</div>
-            <div class="settings-item" onclick="openMusicPlayer()">
+            <div class="settings-item" onclick="openMusicPlayerInSettings()">
                 <div class="settings-item-left">
                     <div class="settings-item-icon s-icon-music"></div>
                     <span class="settings-item-name">音乐播放器</span>
@@ -1786,7 +1780,7 @@ function renderSettingsContent() {
         
         <div class="settings-group">
             <div class="settings-group-title">隐私与数据</div>
-            <div class="settings-item" onclick="if(confirm('确定清除所有聊天记录？')){clearChatHistory();}">
+            <div class="settings-item" onclick="if(confirm('确定清除所有聊天记录吗？')){clearChatHistory();}">
                 <div class="settings-item-left">
                     <div class="settings-item-icon s-icon-privacy"></div>
                     <span class="settings-item-name">清空聊天记录</span>
@@ -1820,6 +1814,69 @@ function renderSettingsContent() {
             </div>
         </div>
     `;
+}
+
+// 设置里的音乐播放器 - 在当前全屏内打开
+function openMusicPlayerInSettings() {
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'musicPlayerFullscreen';
+    overlay.style.zIndex = '600';
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeMusicPlayerFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">音乐播放器</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;justify-content:center;padding:20px;">
+            <div id="musicPlayerContainerSettings" style="width:100%;min-height:200px;"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // 复制音乐播放器内容到设置内
+    var musicOverlay = document.getElementById('musicOverlay');
+    if (musicOverlay) {
+        var modal = musicOverlay.querySelector('.modal');
+        if (modal) {
+            var clone = modal.cloneNode(true);
+            var container = document.getElementById('musicPlayerContainerSettings');
+            if (container) {
+                container.innerHTML = '';
+                container.appendChild(clone);
+            }
+        }
+    } else {
+        // 如果音乐播放器还没初始化，直接调用 openMusicPlayer 然后复制
+        if (typeof openMusicPlayer === 'function') {
+            openMusicPlayer();
+            setTimeout(function() {
+                var musicOverlay2 = document.getElementById('musicOverlay');
+                if (musicOverlay2) {
+                    var modal2 = musicOverlay2.querySelector('.modal');
+                    if (modal2) {
+                        var clone2 = modal2.cloneNode(true);
+                        var container2 = document.getElementById('musicPlayerContainerSettings');
+                        if (container2) {
+                            container2.innerHTML = '';
+                            container2.appendChild(clone2);
+                        }
+                        musicOverlay2.style.display = 'none';
+                    }
+                }
+            }, 300);
+        }
+    }
+}
+
+function closeMusicPlayerFullscreen() {
+    var el = document.getElementById('musicPlayerFullscreen');
+    if (el) el.remove();
+    // 恢复音乐播放器
+    var musicOverlay = document.getElementById('musicOverlay');
+    if (musicOverlay) musicOverlay.style.display = '';
 }
 
 // ==================== 关闭设置 ====================
@@ -1865,3 +1922,5 @@ window.sendLetterFullscreen = sendLetterFullscreen;
 window.openColorThemeModal = openColorThemeModal;
 window.clearChatHistory = clearChatHistory;
 window.closeAllFullscreens = closeAllFullscreens;
+window.openMusicPlayerInSettings = openMusicPlayerInSettings;
+window.closeMusicPlayerFullscreen = closeMusicPlayerFullscreen;
