@@ -35,11 +35,14 @@ var scratchTimer = null;
 
 // ==================== 打开刮刮乐 ====================
 function openScratchCard() {
-    // 关闭已有弹窗
-    closeModal('settingsOverlay');
-    closeModal('subOverlay');
-    closeModal('photoOverlay');
-    closeModal('letterOverlay');
+    // 只关闭必要的弹窗，不关闭全屏
+    var subOverlay = document.getElementById('subOverlay');
+    if (subOverlay) subOverlay.classList.remove('show');
+    var photoOverlay = document.getElementById('photoOverlay');
+    if (photoOverlay) photoOverlay.classList.remove('show');
+    var letterOverlay = document.getElementById('letterOverlay');
+    if (letterOverlay) letterOverlay.classList.remove('show');
+    
     var morePanel = document.getElementById('morePanel');
     if (morePanel) morePanel.style.display = 'none';
 
@@ -57,6 +60,10 @@ function openScratchCard() {
 
     scratchCurrentPrize = getRandomPrize();
     if (!scratchCurrentPrize) scratchCurrentPrize = { text: '神秘礼物', weight: 1 };
+
+    // 检查是否已存在全屏
+    var existing = document.getElementById('scratchFullscreen');
+    if (existing) existing.remove();
 
     // 创建全屏容器
     var overlay = document.createElement('div');
@@ -108,7 +115,8 @@ function closeScratchCard() {
     scratchCtx = null;
     scratchIsDrawing = false;
     scratchCurrentPrize = null;
-    closeModal('subOverlay');
+    var el = document.getElementById('scratchFullscreen');
+    if (el) el.remove();
 }
 
 // ==================== 根据权重随机选奖品 ====================
@@ -118,13 +126,11 @@ function getRandomPrize() {
         return { text: '神秘礼物', weight: 1 };
     }
 
-    // 计算总权重
     var totalWeight = 0;
     for (var i = 0; i < prizes.length; i++) {
         totalWeight += (prizes[i].weight || 1);
     }
 
-    // 防止总权重为0
     if (totalWeight <= 0) {
         return prizes[0];
     }
@@ -146,7 +152,6 @@ function getRandomPrize() {
 function initScratchCanvas() {
     var canvas = document.getElementById('scratchCanvas');
     if (!canvas) {
-        console.log('刮刮乐画布未找到，重试...');
         scratchTimer = setTimeout(function() {
             initScratchCanvas();
         }, 200);
@@ -160,11 +165,9 @@ function initScratchCanvas() {
     var w = rect.width;
     var h = rect.height;
 
-    // 如果尺寸为0，使用固定尺寸并再次重试
     if (w <= 0 || h <= 0) {
         w = 280;
         h = 180;
-        console.log('刮刮乐画布尺寸为0，使用默认尺寸，重试...');
         scratchTimer = setTimeout(function() {
             initScratchCanvas();
         }, 200);
@@ -179,12 +182,10 @@ function initScratchCanvas() {
     scratchCanvas = canvas;
     scratchCtx = canvas.getContext('2d');
 
-    // 绘制银灰色涂层
     scratchCtx.globalCompositeOperation = 'source-over';
     scratchCtx.fillStyle = '#C0C0C0';
     scratchCtx.fillRect(0, 0, w, h);
 
-    // 添加随机纹理
     for (var i = 0; i < 50; i++) {
         var x = Math.random() * w;
         var y = Math.random() * h;
@@ -195,18 +196,15 @@ function initScratchCanvas() {
         scratchCtx.fill();
     }
 
-    // 提示文字
     scratchCtx.fillStyle = '#999';
     scratchCtx.font = '18px "Ma Shan Zheng", "STKaiti", "KaiTi", "楷体", sans-serif';
     scratchCtx.textAlign = 'center';
     scratchCtx.textBaseline = 'middle';
     scratchCtx.fillText('刮开这里', w / 2, h / 2);
 
-    // 重要：初始化完成后再绑定事件
     canvas._scratchReady = true;
     canvas._scratchRecorded = false;
     
-    // 绑定事件
     bindScratchEvents(canvas);
 }
 
@@ -248,7 +246,6 @@ function bindScratchEvents(canvas) {
         ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
         ctx.fill();
 
-        // 检查刮开比例（防抖）
         clearTimeout(scratchTimer);
         scratchTimer = setTimeout(function() {
             checkScratchProgress(canvas);
@@ -262,13 +259,11 @@ function bindScratchEvents(canvas) {
 
     function stopDraw() {
         scratchIsDrawing = false;
-        // 停止时立即检查一次
         if (scratchCanvas) {
             checkScratchProgress(scratchCanvas);
         }
     }
 
-    // 移除旧事件
     canvas.onmousedown = null;
     canvas.onmousemove = null;
     canvas.onmouseup = null;
@@ -277,7 +272,6 @@ function bindScratchEvents(canvas) {
     canvas.ontouchmove = null;
     canvas.ontouchend = null;
 
-    // 绑定新事件
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mousemove', scratch);
     canvas.addEventListener('mouseup', stopDraw);
@@ -290,7 +284,6 @@ function bindScratchEvents(canvas) {
 // ==================== 检查刮开进度 ====================
 function checkScratchProgress(canvas) {
     if (!canvas) return;
-    // 关键修复：画布未初始化完成时不检测
     if (!canvas._scratchReady) return;
     var ctx = canvas.getContext('2d');
 
@@ -310,19 +303,12 @@ function checkScratchProgress(canvas) {
 
         var progress = transparentCount / totalPixels;
 
-        // 刮开超过35%自动清除
         if (progress > 0.35) {
             ctx.globalCompositeOperation = 'source-over';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // 涂层清除后显示奖品文字
             var result = document.getElementById('scratchResult');
             if (result) result.style.visibility = 'visible';
-            var hint = document.getElementById('scratchHint');
-            if (hint) hint.textContent = '恭喜获得奖品！';
 
-            // 记录刮奖次数（只记录一次）
-
-            // 记录刮奖次数（只记录一次）
             if (!canvas._scratchRecorded) {
                 canvas._scratchRecorded = true;
                 appData.scratchCount++;
@@ -330,9 +316,7 @@ function checkScratchProgress(canvas) {
                 updateScratchRemainCount();
             }
         }
-    } catch (e) {
-        // 跨域或其他错误，忽略
-    }
+    } catch (e) {}
 }
 
 function updateScratchRemainCount() {
@@ -344,7 +328,6 @@ function updateScratchRemainCount() {
 
 // ==================== 再刮一次 ====================
 function resetScratchCard() {
-    // 检查今日次数
     var today = new Date().toDateString();
     if (appData.scratchLastDate !== today) {
         appData.scratchCount = 0;
@@ -356,19 +339,16 @@ function resetScratchCard() {
         return;
     }
 
-    // 重新随机奖品
     scratchCurrentPrize = getRandomPrize();
     if (!scratchCurrentPrize) {
         scratchCurrentPrize = { text: '神秘礼物', weight: 1 };
     }
 
-    // 更新奖品显示
     var result = document.getElementById('scratchResult');
     if (result) {
         result.textContent = scratchCurrentPrize.text;
     }
 
-    // 重新绘制涂层
     var canvas = document.getElementById('scratchCanvas');
     if (canvas && canvas.width > 0 && canvas.height > 0) {
         var ctx = canvas.getContext('2d');
@@ -376,7 +356,6 @@ function resetScratchCard() {
         ctx.fillStyle = '#C0C0C0';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 纹理
         for (var i = 0; i < 50; i++) {
             var x = Math.random() * canvas.width;
             var y = Math.random() * canvas.height;
@@ -387,22 +366,18 @@ function resetScratchCard() {
             ctx.fill();
         }
 
-        // 提示文字
         ctx.fillStyle = '#999';
         ctx.font = '18px "Ma Shan Zheng", "STKaiti", "KaiTi", "楷体", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('刮开这里', canvas.width / 2, canvas.height / 2);
 
-        // 重置记录标记
         canvas._scratchRecorded = false;
         canvas._scratchReady = true;
     }
-// 重新隐藏奖品
+
     var resultEl = document.getElementById('scratchResult');
     if (resultEl) resultEl.style.visibility = 'hidden';
-    var hint = document.getElementById('scratchHint');
-    if (hint) hint.textContent = '用手指刮开涂层查看奖品';
 
     updateScratchRemainCount();
 }
@@ -416,7 +391,6 @@ function openScratchManage() {
     var html = '<h4>刮刮乐奖品管理</h4>';
     html += '<div style="font-size:12px;color:var(--text-system);margin-bottom:8px;">设置奖品及权重（权重越高中奖概率越大）</div>';
 
-    // 奖品列表
     html += '<div style="max-height:250px;overflow-y:auto;">';
     if (prizes.length === 0) {
         html += '<div style="text-align:center;color:var(--text-system);padding:20px;">暂无奖品，请添加</div>';
@@ -431,7 +405,6 @@ function openScratchManage() {
     }
     html += '</div>';
 
-    // 添加新奖品
     html += '<div style="margin-top:12px;">';
     html += '<div style="font-size:12px;color:var(--text);margin-bottom:4px;">添加新奖品</div>';
     html += '<div style="display:flex;gap:6px;align-items:center;">';
@@ -442,7 +415,6 @@ function openScratchManage() {
     html += '<div style="font-size:10px;color:var(--text-system);margin-top:4px;">权重范围1-10，数字越大越容易抽中</div>';
     html += '</div>';
 
-    // 每日次数设置
     html += '<div class="form-row" style="margin-top:12px;">';
     html += '<label>每日刮奖次数上限</label>';
     html += '<div style="display:flex;align-items:center;gap:8px;">';
@@ -451,7 +423,6 @@ function openScratchManage() {
     html += '</div>';
     html += '</div>';
 
-    // 按钮
     html += '<div class="btn-row" style="margin-top:12px;justify-content:center;">';
     html += '<button class="btn-sm" onclick="saveScratchSettings()">保存设置</button>';
     html += '<button class="btn-sm outline" onclick="resetScratchPrizes()">恢复默认</button>';
@@ -501,7 +472,6 @@ function deleteScratchPrizeItem(index) {
 }
 
 function saveScratchSettings() {
-    // 保存奖品权重
     var prizes = appData.scratchPrizes || [];
     for (var i = 0; i < prizes.length; i++) {
         var weightEl = document.getElementById('prizeWeight_' + i);
@@ -513,7 +483,6 @@ function saveScratchSettings() {
         }
     }
 
-    // 保存每日次数
     var maxEl = document.getElementById('scratchMaxPerDayInput');
     if (maxEl) {
         var max = parseInt(maxEl.value) || 3;
@@ -575,6 +544,10 @@ if (document.readyState === 'loading') {
     setTimeout(addScratchToMorePanel, 300);
 }
 
-console.log('刮刮乐模块已加载');
+// ========== 导出到全局 ==========
 window.openScratchCard = openScratchCard;
 window.closeScratchFullscreen = closeScratchFullscreen;
+window.resetScratchCard = resetScratchCard;
+window.openScratchManage = openScratchManage;
+
+console.log('刮刮乐模块已加载（修复版）');
