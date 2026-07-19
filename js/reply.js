@@ -139,3 +139,16 @@ function delSelectedReplies(g) {
     openReplyModal(); 
     showToast('已删除 ' + idxs.length + ' 条'); 
 }
+// 确保导出到全局
+window.openReplyModal = openReplyModal;
+window.exportReplyLib = exportReplyLib;
+window.importReplyLib = importReplyLib;
+window.addNewGroup = addNewGroup;
+window.renameGroup = renameGroup;
+window.delGroup = delGroup;
+window.addReplyBatchToGroup = addReplyBatchToGroup;
+window.delReplySingle = delReplySingle;
+window.selectAllInGroup = selectAllInGroup;
+window.delSelectedReplies = delSelectedReplies;
+window.toggleReplyLibMenu = toggleReplyLibMenu;
+window.closeReplyLibMenu = closeReplyLibMenu;
