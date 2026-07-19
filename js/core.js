@@ -1681,6 +1681,7 @@ function closeAllFullscreens() {
 
 // ==================== Tab 切换 ====================
 
+// ==================== Tab 切换 ====================
 function switchTab(tab) {
     var desktopView = document.getElementById('desktopView');
     var chatView = document.getElementById('chatView');
@@ -1699,6 +1700,7 @@ function switchTab(tab) {
     
     // 聊天Tab - 只显示聊天
     if (tab === 'chat') {
+        desktopView.classList.remove('active');
         desktopView.classList.add('hidden');
         chatView.classList.add('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
@@ -1709,6 +1711,7 @@ function switchTab(tab) {
     // 主界面Tab - 显示功能图标
     if (tab === 'desktop') {
         desktopView.classList.remove('hidden');
+        desktopView.classList.add('active');
         chatView.classList.remove('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
         document.getElementById('statusTitle').textContent = '甜心助手';
@@ -1721,6 +1724,7 @@ function switchTab(tab) {
             startVoiceCall();
         }
         setTimeout(function() {
+            desktopView.classList.remove('active');
             desktopView.classList.add('hidden');
             chatView.classList.add('active');
             document.querySelectorAll('.tab-item').forEach(function(el) {
@@ -1736,6 +1740,7 @@ function switchTab(tab) {
     
     // 设置Tab
     if (tab === 'settings') {
+        desktopView.classList.remove('active');
         desktopView.classList.add('hidden');
         chatView.classList.remove('active');
         if (settingsFullscreen) {
