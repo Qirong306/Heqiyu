@@ -22,7 +22,12 @@ document.addEventListener('DOMContentLoaded', function() {
             grid.appendChild(btn);
         }
     }, 600);
-    createFloatingBall();
+    // 延迟创建浮球，确保界面已渲染
+    setTimeout(function() {
+        if (appData.playlist && appData.playlist.length > 0) {
+            createFloatingBall();
+        }
+    }, 1500);
 });
 
 // ========== 辅助函数 ==========
@@ -42,11 +47,20 @@ function formatSeconds(sec) {
 // ========== 浮动小球（可拖动） ==========
 function createFloatingBall() {
     if (document.getElementById('musicFloatingBall')) return;
+    
+    // 只在聊天Tab或桌面视图显示
+    var chatView = document.getElementById('chatView');
+    var desktopView = document.getElementById('desktopView');
+    if ((!chatView || !chatView.classList.contains('active')) && 
+        (!desktopView || desktopView.classList.contains('hidden'))) {
+        return;
+    }
+    
     var ball = document.createElement('div');
     ball.id = 'musicFloatingBall';
     ball.style.cssText = 'position:fixed;bottom:100px;right:12px;width:44px;height:44px;border-radius:50%;background:var(--accent);z-index:150;display:none;cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,0.15);animation:musicSpin 4s linear infinite;overflow:hidden;border:2px solid var(--border);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;';
     ball.setAttribute('draggable', 'false');
-    ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
+    ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">♫</div>';
     document.body.appendChild(ball);
 
     if (!document.getElementById('musicSpinStyle')) {
@@ -62,12 +76,15 @@ function createFloatingBall() {
         e.preventDefault();
         if (e.type === 'touchstart') {
             var touch = e.touches[0];
-            startX = touch.clientX; startY = touch.clientY;
+            startX = touch.clientX;
+            startY = touch.clientY;
         } else {
-            startX = e.clientX; startY = e.clientY;
+            startX = e.clientX;
+            startY = e.clientY;
         }
         var rect = ball.getBoundingClientRect();
-        startLeft = rect.left; startTop = rect.top;
+        startLeft = rect.left;
+        startTop = rect.top;
         hasMoved = false; isDragging = true;
         ball.style.animation = 'none';
         ball.style.cursor = 'grabbing';
@@ -82,9 +99,12 @@ function createFloatingBall() {
         if (!isDragging) return;
         var clientX, clientY;
         if (e.type === 'touchmove') {
-            clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; e.preventDefault();
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+            e.preventDefault();
         } else {
-            clientX = e.clientX; clientY = e.clientY;
+            clientX = e.clientX;
+            clientY = e.clientY;
         }
         var dx = clientX - startX, dy = clientY - startY;
         if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
@@ -92,8 +112,10 @@ function createFloatingBall() {
         var maxLeft = window.innerWidth - ball.offsetWidth, maxTop = window.innerHeight - ball.offsetHeight;
         newLeft = Math.max(0, Math.min(newLeft, maxLeft));
         newTop = Math.max(0, Math.min(newTop, maxTop));
-        ball.style.left = newLeft + 'px'; ball.style.top = newTop + 'px';
-        ball.style.right = 'auto'; ball.style.bottom = 'auto';
+        ball.style.left = newLeft + 'px';
+        ball.style.top = newTop + 'px';
+        ball.style.right = 'auto';
+        ball.style.bottom = 'auto';
     }
 
     function onEnd() {
@@ -119,7 +141,6 @@ function createFloatingBall() {
             }
         });
     } else if (appData.musicFloatingImg) {
-        // 兼容旧版 base64
         musicFloatingImg = appData.musicFloatingImg;
         showFloatingBall();
     }
@@ -129,23 +150,30 @@ function showFloatingBall() {
     var ball = document.getElementById('musicFloatingBall');
     if (!ball) return;
     
-    // 优先从内存中的 musicFloatingImg 取
+    // 只在聊天Tab或桌面视图显示
+    var chatView = document.getElementById('chatView');
+    var desktopView = document.getElementById('desktopView');
+    if ((!chatView || !chatView.classList.contains('active')) && 
+        (!desktopView || desktopView.classList.contains('hidden'))) {
+        ball.style.display = 'none';
+        return;
+    }
+    
     if (musicFloatingImg) {
         ball.innerHTML = '<img src="' + musicFloatingImg + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;" draggable="false">';
         ball.style.display = 'block';
     } else if (appData.musicFloatingImgId) {
-        // 从 IndexedDB 加载
         getImageFromDB('avatars', appData.musicFloatingImgId).then(function(url) {
             if (url) {
                 musicFloatingImg = url;
                 ball.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;" draggable="false">';
             } else {
-                ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
+                ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">♫</div>';
             }
             ball.style.display = 'block';
         });
     } else {
-        ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">&#9835;</div>';
+        ball.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);pointer-events:none;">♫</div>';
         ball.style.display = 'block';
     }
 }
@@ -164,12 +192,11 @@ function changeFloatingBallImage() {
         compressImage(file, 300, 300, 0.5).then(function(dataUrl) {
             var id = 'music_float_' + Date.now();
             return saveImageToDB('avatars', id, dataUrl).then(function() {
-                // 删除旧球图
                 if (appData.musicFloatingImgId && appData.musicFloatingImgId !== id) {
                     deleteImageFromDB('avatars', appData.musicFloatingImgId).catch(function(){});
                 }
                 appData.musicFloatingImgId = id;
-                appData.musicFloatingImg = ''; // 清空旧 base64
+                appData.musicFloatingImg = '';
                 musicFloatingImg = dataUrl;
                 if (typeof saveData === 'function') saveData();
                 showFloatingBall();
@@ -209,7 +236,7 @@ function openMusicPlayer() {
             '<div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:4px;">' +
             '<h3 style="margin:0;">音乐小憩</h3>' +
             '<div style="position:absolute;right:0;">' +
-            '<span onclick="event.stopPropagation();toggleMusicDropdown()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;letter-spacing:2px;">&#9776;</span>' +
+            '<span onclick="event.stopPropagation();toggleMusicDropdown()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;letter-spacing:2px;">☰</span>' +
             '<div id="musicDropdownMenu" style="display:none;position:absolute;top:32px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">' +
             '<div onclick="importMusicJSON();closeMusicDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入歌单</div>' +
             '<div onclick="exportMusicJSON();closeMusicDropdown();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出歌单</div>' +
@@ -226,14 +253,14 @@ function openMusicPlayer() {
             '<span id="musicDurTime" style="font-size:11px;color:var(--text-system);width:34px;">00:00</span>' +
             '</div>' +
             '<div style="display:flex;align-items:center;justify-content:center;gap:24px;margin:10px 0;">' +
-            '<span onclick="prevSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="上一曲">|&lt;&lt;</span>' +
-            '<span id="btnPlayPause" onclick="togglePlayPause()" style="display:flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:var(--accent);color:var(--text);font-size:20px;cursor:pointer;transition:all 0.2s;" title="播放/暂停">&gt;</span>' +
-            '<span onclick="nextSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="下一曲">&gt;&gt;|</span>' +
+            '<span onclick="prevSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="上一曲">|◀</span>' +
+            '<span id="btnPlayPause" onclick="togglePlayPause()" style="display:flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:var(--accent);color:var(--text);font-size:20px;cursor:pointer;transition:all 0.2s;" title="播放/暂停">▶</span>' +
+            '<span onclick="nextSong()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="下一曲">▶|</span>' +
             '</div>' +
             '<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:6px 0;font-size:18px;">' +
-            '<span id="btnModeLoop" onclick="setPlayMode(\'loop\')" style="cursor:pointer;color:var(--text-system);" title="单曲循环">&#8635;</span>' +
-            '<span id="btnModeOrder" onclick="setPlayMode(\'order\')" style="cursor:pointer;color:var(--accent);" title="顺序播放">&#8801;</span>' +
-            '<span id="btnModeRandom" onclick="setPlayMode(\'random\')" style="cursor:pointer;color:var(--text-system);" title="随机播放">&#8644;</span>' +
+            '<span id="btnModeLoop" onclick="setPlayMode(\'loop\')" style="cursor:pointer;color:var(--text-system);" title="单曲循环">⟳</span>' +
+            '<span id="btnModeOrder" onclick="setPlayMode(\'order\')" style="cursor:pointer;color:var(--accent);" title="顺序播放">≡</span>' +
+            '<span id="btnModeRandom" onclick="setPlayMode(\'random\')" style="cursor:pointer;color:var(--text-system);" title="随机播放">⇄</span>' +
             '</div>' +
             '<div style="max-height:140px;overflow-y:auto;text-align:left;margin-top:4px;" id="musicPlaylistEl"></div>' +
             '<button class="btn-close" onclick="closeMusicPlayer()" style="margin-top:8px;">收起</button>' +
@@ -270,9 +297,9 @@ function updatePlayPauseButton() {
     var btn = document.getElementById('btnPlayPause');
     if (!btn) return;
     if (musicAudio && !musicAudio.paused) {
-        btn.innerHTML = '||';
+        btn.innerHTML = '▌▌';
     } else {
-        btn.innerHTML = '&gt;';
+        btn.innerHTML = '▶';
     }
 }
 
@@ -321,7 +348,7 @@ function playSong(index) {
                 if (!musicAudio._manualPause && musicAudio.currentTime > 0 && !musicAudio.ended && document.getElementById('musicOverlay').classList.contains('show')) {
                     setTimeout(function() {
                         if (musicAudio && musicAudio.paused && !musicAudio._manualPause) {
-                musicAudio.play().catch(function() {});
+                            musicAudio.play().catch(function() {});
                         }
                     }, 500);
                 }
@@ -409,7 +436,7 @@ function renderPlaylist() {
         html += '<div class="music-song-item' + (isPlaying ? ' playing' : '') + '" onclick="playSong(' + i + ')">' +
             '<span class="song-index">' + (i + 1) + '</span>' +
             '<span class="song-info"><span class="song-title">' + escapeHTML(song.title) + '</span><br><span class="song-artist">' + escapeHTML(artist) + '</span></span>' +
-            '<span class="song-del" onclick="event.stopPropagation();deleteSong(' + i + ')">&times;</span>' +
+            '<span class="song-del" onclick="event.stopPropagation();deleteSong(' + i + ')">×</span>' +
             '</div>';
     });
     el.innerHTML = html;
@@ -525,3 +552,23 @@ function importMusicJSON() {
         '#musicProgress { cursor:pointer; }';
     document.head.appendChild(css);
 })();
+
+// ========== 导出到全局 ==========
+window.showFloatingBall = showFloatingBall;
+window.hideFloatingBall = hideFloatingBall;
+window.createFloatingBall = createFloatingBall;
+window.changeFloatingBallImage = changeFloatingBallImage;
+window.openMusicPlayer = openMusicPlayer;
+window.closeMusicPlayer = closeMusicPlayer;
+window.togglePlayPause = togglePlayPause;
+window.playSong = playSong;
+window.nextSong = nextSong;
+window.prevSong = prevSong;
+window.setPlayMode = setPlayMode;
+window.addSongPrompt = addSongPrompt;
+window.deleteSong = deleteSong;
+window.exportMusicJSON = exportMusicJSON;
+window.importMusicJSON = importMusicJSON;
+window.seekMusic = seekMusic;
+
+console.log('音乐模块已加载（修复版：浮球只在聊天Tab显示）');
