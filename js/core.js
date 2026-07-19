@@ -221,7 +221,7 @@ var DEFAULT_DATA = {
     doll: 'bear',
     pillow: 'round',
     pillowColor: '#ffb7c5',
-    warmth: 100,  // 初始温暖值
+    warmth: 100,
     purchased: {
         weather: ['sunny'],
         window: ['arch'],
@@ -356,13 +356,12 @@ function loadData() {
                 if (typeof p.lastStatusTime === 'number') appData.lastStatusTime = p.lastStatusTime;
                 if (typeof p.currentStatus === 'string') appData.currentStatus = p.currentStatus;
                 if (typeof p.cozyRoom === 'object' && p.cozyRoom !== null) {
-    appData.cozyRoom = p.cozyRoom;
-    // 确保子字段存在
-    if (!appData.cozyRoom.purchased) appData.cozyRoom.purchased = {};
-    if (!appData.cozyRoom.messages) appData.cozyRoom.messages = [];
-    if (!appData.cozyRoom.daily) appData.cozyRoom.daily = { lastDate: '', claimed: false, pool: [], todayReward: '' };
-    if (!appData.cozyRoom.focus) appData.cozyRoom.focus = { danmaku: [] };
-    if (!appData.cozyRoom.otherPurchases) appData.cozyRoom.otherPurchases = [];
+                    appData.cozyRoom = p.cozyRoom;
+                    if (!appData.cozyRoom.purchased) appData.cozyRoom.purchased = {};
+                    if (!appData.cozyRoom.messages) appData.cozyRoom.messages = [];
+                    if (!appData.cozyRoom.daily) appData.cozyRoom.daily = { lastDate: '', claimed: false, pool: [], todayReward: '' };
+                    if (!appData.cozyRoom.focus) appData.cozyRoom.focus = { danmaku: [] };
+                    if (!appData.cozyRoom.otherPurchases) appData.cozyRoom.otherPurchases = [];
                 }
             }
         } else {
@@ -408,7 +407,7 @@ function formatTime(ts) { if (!ts) return ''; var d = new Date(ts); return d.get
 function formatTimeShort(ts) { if (!ts) return ''; var d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
 function escapeHTML(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-// ========== 低饱和颜色主题 ==========
+// ========== 颜色主题（新增全黑/全白） ==========
 var colorThemes = {
     'default': {
         name: '杏色',
@@ -685,13 +684,61 @@ var colorThemes = {
         panelBg: '#ffffff',
         toastBg: 'rgba(58,58,58,0.92)',
         toastText: '#ffffff'
+    },
+    // ===== 新增：全黑 =====
+    'black': {
+        name: '全黑',
+        accent: '#4a4a4a',
+        accentDark: '#3a3a3a',
+        bg: '#0d0d0d',
+        headerBg: '#1a1a1a',
+        bubbleMe: '#2a2a2a',
+        bubbleOther: '#1a1a1a',
+        border: '#333333',
+        inputBg: '#1a1a1a',
+        inputBox: '#2a2a2a',
+        text: '#e8e8e8',
+        itemBg: '#1a1a1a',
+        textSecondary: '#aaaaaa',
+        textSystem: '#777777',
+        textTime: '#777777',
+        danger: '#cc6666',
+        dangerDark: '#aa5555',
+        success: '#66aa66',
+        panelBg: '#1a1a1a',
+        toastBg: 'rgba(20,20,20,0.95)',
+        toastText: '#e8e8e8'
+    },
+    // ===== 新增：全白 =====
+    'white': {
+        name: '全白',
+        accent: '#d4d4d4',
+        accentDark: '#c8c8c8',
+        bg: '#f8f8f8',
+        headerBg: '#ffffff',
+        bubbleMe: '#f0f0f0',
+        bubbleOther: '#ffffff',
+        border: '#e0e0e0',
+        inputBg: '#ffffff',
+        inputBox: '#f8f8f8',
+        text: '#222222',
+        itemBg: '#f8f8f8',
+        textSecondary: '#666666',
+        textSystem: '#999999',
+        textTime: '#999999',
+        danger: '#cc8888',
+        dangerDark: '#bb7777',
+        success: '#77aa77',
+        panelBg: '#ffffff',
+        toastBg: 'rgba(200,200,200,0.95)',
+        toastText: '#222222'
     }
 };
 
 function openColorThemeModal() {
     closeModal('settingsOverlay');
     var currentTheme = localStorage.getItem('color_theme') || 'default';
-    var html = '<h4>主题颜色</h4><div class="subtitle">选择你喜欢的低饱和颜色</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;">';
+    var html = '<h4>主题颜色</h4><div class="subtitle">选择你喜欢的颜色</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0;">';
     for (var key in colorThemes) {
         var theme = colorThemes[key];
         var isActive = (currentTheme === key);
@@ -706,7 +753,6 @@ function applyColorTheme(themeKey) {
     if (!theme) return;
     localStorage.setItem('color_theme', themeKey);
     
-    // 设置所有 CSS 变量（与 style.css 中的 :root 对应）
     document.documentElement.style.setProperty('--accent', theme.accent);
     document.documentElement.style.setProperty('--accent-dark', theme.accentDark);
     document.documentElement.style.setProperty('--bg', theme.bg);
@@ -738,7 +784,7 @@ function loadColorTheme() {
     if (savedTheme && colorThemes[savedTheme]) { applyColorTheme(savedTheme); }
 }
 
-// ========== 回复开关（包含：自动回复 + 主动发消息） ==========
+// ========== 回复开关 ==========
 var replyEnabled = true;
 var activeMsgEnabled = true;
 var activeMsgInterval = null;
@@ -846,52 +892,37 @@ function updateHeader() {
     if (typeof renderStatus === 'function') renderStatus();
 }
 
-// ========== 主题 ==========
+// ========== 主题模式 ==========
 function applyTheme() {
     if (appData.theme === 'dark') document.body.classList.add('dark-mode');
     else document.body.classList.remove('dark-mode');
 }
-function setThemeLight() { appData.theme = 'light'; applyTheme(); saveData(); closeModal('subOverlay'); showToast('已切换为浅色模式'); }
-function setThemeDark() { appData.theme = 'dark'; applyTheme(); saveData(); closeModal('subOverlay'); showToast('已切换为深色模式'); }
-function openThemeModal() {
-    closeModal('settingsOverlay');
-    var html = '<h4>主题模式</h4><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;"><button class="btn-sm ' + (appData.theme === 'light' ? '' : 'outline') + '" onclick="setThemeLight()">浅色</button><button class="btn-sm ' + (appData.theme === 'dark' ? '' : 'outline') + '" onclick="setThemeDark()">深色</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
-    openSubModal(html);
-}
-function openColorThemeModal() {
-    // 创建全屏容器
-    var overlay = document.createElement('div');
-    overlay.className = 'fullscreen-overlay active';
-    overlay.id = 'themeFullscreen';
-    
-    var currentTheme = localStorage.getItem('color_theme') || 'default';
-    var html = '<div class="fullscreen-header">' +
-        '<button class="fullscreen-back" onclick="closeThemeFullscreen()">' +
-        '<span class="back-arrow"></span> 返回</button>' +
-        '<span class="fullscreen-title">主题颜色</span>' +
-        '<span style="width:50px;"></span>' +
-        '</div>' +
-        '<div class="fullscreen-body">' +
-        '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">选择你喜欢的低饱和颜色</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">';
-    
-    for (var key in colorThemes) {
-        var theme = colorThemes[key];
-        var isActive = (currentTheme === key);
-        html += '<div onclick="applyColorTheme(\'' + key + '\')" style="background:' + theme.accent + ';padding:16px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid ' + (isActive ? '#fff' : 'transparent') + ';box-shadow:0 1px 3px rgba(0,0,0,0.1);">' +
-            '<span style="color:var(--text);font-size:14px;">' + theme.name + '</span>' +
-            '</div>';
-    }
-    html += '</div></div>';
-    
-    overlay.innerHTML = html;
-    document.body.appendChild(overlay);
+
+function setThemeLight() { 
+    appData.theme = 'light'; 
+    applyTheme(); 
+    saveData(); 
+    closeModal('subOverlay'); 
+    showToast('已切换为浅色模式'); 
 }
 
-function closeThemeFullscreen() {
-    var el = document.getElementById('themeFullscreen');
-    if (el) el.remove();
+function setThemeDark() { 
+    appData.theme = 'dark'; 
+    applyTheme(); 
+    saveData(); 
+    closeModal('subOverlay'); 
+    showToast('已切换为深色模式'); 
 }
+
+function openThemeModal() {
+    closeModal('settingsOverlay');
+    var html = '<h4>主题模式</h4><div class="subtitle">切换浅色/深色模式</div><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">' +
+        '<button class="btn-sm ' + (appData.theme === 'light' ? '' : 'outline') + '" onclick="setThemeLight()">浅色</button>' +
+        '<button class="btn-sm ' + (appData.theme === 'dark' ? '' : 'outline') + '" onclick="setThemeDark()">深色</button>' +
+        '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
+    openSubModal(html);
+}
+
 // ========== 信件 ==========
 function updateLetterBadge() {
     var badge = document.getElementById('letterBadge'), pending = 0;
@@ -901,6 +932,7 @@ function updateLetterBadge() {
     });
     if (badge) { badge.style.display = pending > 0 ? 'inline-block' : 'none'; badge.textContent = pending + ' 封回信'; }
 }
+
 function checkPendingLetters() {
     var hasNew = false;
     (appData.letters || []).forEach(function(l) {
@@ -911,6 +943,7 @@ function checkPendingLetters() {
     });
     if (hasNew) { saveData(); updateLetterBadge(); }
 }
+
 function checkAndShowLetterReply() {
     var shown = false;
     (appData.letters || []).forEach(function(l) {
@@ -924,6 +957,7 @@ function checkAndShowLetterReply() {
     if (shown) { saveData(); updateLetterBadge(); showToast('回信已送达聊天中~'); }
     else showToast('暂无新回信');
 }
+
 function generateLetterReply() {
     var all = getAllReplies();
     if (all.length === 0) return '（暂无可用的回复内容）';
@@ -932,6 +966,7 @@ function generateLetterReply() {
     for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
     return '亲爱的' + appData.myName + '：\n\n' + arr.slice(0, count).join('\n\n') + '\n\n-- ' + appData.otherName;
 }
+
 function sendLetter() {
     var content = document.getElementById('letterContent').value.trim();
     if (!content) return showToast('请写下信件内容');
@@ -943,8 +978,8 @@ function sendLetter() {
     updateLetterBadge();
     addSystemMsg('你给 ' + appData.otherName + ' 寄出了一封信，预计 ' + formatTime(expectedTime) + ' 收到回信');
 }
+
 function openLetterModal() {
-    // 创建全屏容器
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'letterFullscreen';
@@ -993,6 +1028,7 @@ function sendLetterFullscreen() {
     updateLetterBadge();
     addSystemMsg('你给 ' + appData.otherName + ' 寄出了一封信，预计 ' + formatTime(expectedTime) + ' 收到回信');
 }
+
 function openLetterManageModal() {
     closeModal('settingsOverlay');
     var lettersHtml = '';
@@ -1008,6 +1044,7 @@ function openLetterManageModal() {
     var html = '<h4>往来信件</h4><div class="subtitle">共 ' + appData.letters.length + ' 封</div><div style="max-height:350px;overflow-y:auto;">' + lettersHtml + '</div><div class="btn-row"><button class="btn-sm outline" onclick="checkAndShowLetterReply()">收取回信</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>';
     openSubModal(html);
 }
+
 function viewLetterDetail(id) {
     var letter = appData.letters.find(function(l) { return l.id === id; });
     if (!letter) return;
@@ -1027,11 +1064,13 @@ function getAvatarHTMLSync(isMe) {
     if (appData.otherAvatar) return '<img class="avatar" src="' + appData.otherAvatar + '" onerror="this.style.display=\'none\';">';
     return '<div class="avatar-placeholder">' + (appData.otherName ? appData.otherName.charAt(0) : 'TA') + '</div>';
 }
+
 function showAvatarChanger(target) {
     var title = target === 'me' ? '更换我的头像' : '更换对方头像';
     var html = '<h4>' + title + '</h4><div class="subtitle">选择一种方式</div><div class="photo-menu-btns"><button onclick="startAvatarCapture(\'' + target + '\', true)">拍照</button><button onclick="startAvatarCapture(\'' + target + '\', false)">从相册选择</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')">取消</button>';
     openSubModal(html);
 }
+
 function startAvatarCapture(target, useCamera) {
     closeModal('subOverlay');
     var input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
@@ -1054,32 +1093,33 @@ function startAvatarCapture(target, useCamera) {
     };
     input.click();
 }
+
 function onOtherAvatarClick() { showAvatarChanger('other'); }
 function onMyAvatarClick() { showAvatarChanger('me'); }
+
 function openNicknameModal() {
     var html = '<h4>昵称 头像</h4><div class="subtitle">修改后会自动保存</div><div class="form-row"><label>我的昵称</label><input type="text" id="editMyName" value="' + appData.myName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveMyNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'me\')">换我的头像</button></div><div class="form-row" style="margin-top:12px;"><label>对方昵称</label><input type="text" id="editOtherName" value="' + appData.otherName.replace(/"/g,'&quot;') + '"></div><div class="btn-row"><button class="btn-sm" onclick="saveOtherNameFromModal()">保存昵称</button><button class="btn-sm outline" onclick="showAvatarChanger(\'other\')">换对方头像</button></div><div class="btn-row" style="justify-content:center;margin-top:12px;"><button class="btn-sm outline" onclick="closeNicknameModal()">返回设置</button></div>';
     openSubModal(html);
 }
+
 function closeNicknameModal() {
-    // 关闭当前子弹窗，然后重新打开小窝设置
     closeModal('subOverlay');
-    // 延迟一点点再打开设置，让弹窗动画自然
     setTimeout(function() {
         openSettings();
     }, 150);
 }
+
 function saveMyNameFromModal() {
     var v = document.getElementById('editMyName').value.trim();
     if (!v) return showToast('请输入昵称');
     appData.myName = v; saveData(); renderChatHistory(); showToast('昵称已更新');
-    // 只刷新当前弹窗内容，不关闭
     openNicknameModal();
 }
+
 function saveOtherNameFromModal() {
     var v = document.getElementById('editOtherName').value.trim();
     if (!v) return showToast('请输入昵称');
     appData.otherName = v; saveData(); updateHeader(); renderChatHistory(); showToast('昵称已更新');
-    // 只刷新当前弹窗内容，不关闭
     openNicknameModal();
 }
 
@@ -1093,6 +1133,7 @@ function pickFile(useCamera) {
     input.onchange = function() { handlePhotoFile(input.files[0]); };
     input.click();
 }
+
 function handlePhotoFile(file) {
     if (!file) return;
     compressImage(file, 800, 800, 0.6).then(function(url) {
@@ -1107,6 +1148,7 @@ function handlePhotoFile(file) {
         });
     }).catch(function() { showToast('图片处理失败，请重试'); });
 }
+
 function checkStorageAfterUpload() {
     getStorageStats().then(function(stats) {
         if (stats.usagePercent > 85) { showToastLong('存储已使用 ' + stats.usagePercent + '%\n建议到数据管理清理聊天记录', 5000); }
@@ -1145,6 +1187,7 @@ function triggerAutoReply() {
     }
     sendNext(0);
 }
+
 function sendRandomReply() {
     var allReplies = getAllReplies();
     var hasEmoji = appData.emojiIds.length > 0;
@@ -1200,6 +1243,7 @@ function sendRandomReply() {
     }
     return Promise.resolve(false);
 }
+
 function getRandomHistoryMessage() {
     var history = appData.chatHistory || [];
     var textMessages = history.filter(function(msg) {
@@ -1210,6 +1254,7 @@ function getRandomHistoryMessage() {
     var msg = textMessages[randomIndex];
     return { content: msg.content, type: msg.type, time: msg.time, isImage: false };
 }
+
 function sendMsg() {
     var input = document.getElementById('msgInput'); 
     var msg = input.value.trim();
@@ -1232,6 +1277,7 @@ function sendMsg() {
     }
     setTimeout(function() { if (typeof triggerAutoReply === 'function') triggerAutoReply(); }, 400 + Math.random() * 1000);
 }
+
 function addMessage(content, type, isImage, isSticker) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg ' + type + (isSticker ? ' is-sticker' : '');
@@ -1249,6 +1295,7 @@ function addMessage(content, type, isImage, isSticker) {
         sendNotification(appData.otherName, msgText, window.location.href);
     }
 }
+
 function addMessageWithQuote(content, type, quote) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg ' + type;
@@ -1264,6 +1311,7 @@ function addMessageWithQuote(content, type, quote) {
     if (typeof bindQuoteEvent === 'function') bindQuoteEvent(div, { content: content, type: type, time: Date.now() });
     chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
 }
+
 function addMessageWithRole(content, role, roleClass) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'msg other';
@@ -1274,6 +1322,7 @@ function addMessageWithRole(content, role, roleClass) {
     appData.chatHistory.push({ type: 'other', content: '[' + role + '] ' + content, time: Date.now() });
     saveData();
 }
+
 function addSystemMsg(text) {
     var chat = document.getElementById('chat'); var div = document.createElement('div');
     div.className = 'system-msg'; div.textContent = text;
@@ -1295,6 +1344,7 @@ function bindQuoteEvent(div, msgData) {
     bubble.style.cursor = 'pointer';
     bubble.title = '点击引用此消息';
 }
+
 function updateQuoteBar() {
     var existingBar = document.getElementById('quoteBar');
     if (existingBar) existingBar.remove();
@@ -1309,10 +1359,12 @@ function updateQuoteBar() {
     bar.innerHTML = '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">引用：' + escapeHTML(preview) + '</span><span onclick="cancelQuote()" style="cursor:pointer;color:var(--danger);font-size:16px;padding:0 4px;">x</span>';
     inputArea.insertBefore(bar, inputArea.firstChild);
 }
+
 function cancelQuote() {
     quotedMessage = null;
     updateQuoteBar();
 }
+
 function renderChatHistory() {
     var chat = document.getElementById('chat'); chat.innerHTML = '';
     if (!appData.chatHistory || appData.chatHistory.length === 0) {
@@ -1385,7 +1437,9 @@ function toggleMorePanel() {
     if (p.style.display === 'block') p.style.display = 'none';
     else { p.style.display = 'block'; renderMoreImages(); document.getElementById('morePanelHint').textContent = '当前：表情包'; }
 }
+
 function openEmojiTabInMore() { renderMoreImages(); document.getElementById('morePanelHint').textContent = '当前：表情包'; }
+
 function renderMoreImages() {
     var grid = document.getElementById('morePanelImages'); if (!grid) return;
     var ids = appData.emojiIds;
@@ -1401,6 +1455,7 @@ function renderMoreImages() {
         });
     });
 }
+
 function uploadToMorePanel() {
     var file = document.getElementById('moreFileInput').files[0]; if (!file) return;
     compressImage(file, 400, 400, 0.5).then(function(url) {
@@ -1413,6 +1468,7 @@ function uploadToMorePanel() {
     }).catch(function() { showToast('上传失败，请重试'); });
     document.getElementById('moreFileInput').value = '';
 }
+
 function sendFromMorePanel(index) {
     if (!Array.isArray(appData.emojiIds) || index >= appData.emojiIds.length) return;
     getImageFromDB('images', appData.emojiIds[index]).then(function(url) {
@@ -1430,6 +1486,7 @@ function openEmojiManageModal() {
     openSubModal('<h4>表情包管理</h4><div class="subtitle">共 ' + appData.emojiIds.length + ' 个</div><div class="btn-row" style="gap:8px;"><button class="btn-sm" onclick="document.getElementById(\'emojiManageUpload\').click()">上传表情包</button><button class="btn-sm outline" onclick="clearAllEmojis()" style="color:var(--danger);">清空</button></div><input type="file" id="emojiManageUpload" accept="image/*" multiple style="display:none" onchange="uploadEmojiManage()"><div style="max-height:380px;overflow-y:auto;margin-top:12px;" id="emojiManageGridContainer"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:4px;" id="emojiManageGrid">加载中...</div></div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>');
     renderEmojiManageGrid();
 }
+
 function renderEmojiManageGrid() {
     var grid = document.getElementById('emojiManageGrid'); if (!grid) return;
     grid.style.display = 'grid'; grid.style.gridTemplateColumns = 'repeat(3, 1fr)'; grid.style.gap = '12px'; grid.style.padding = '8px';
@@ -1460,6 +1517,7 @@ function renderEmojiManageGrid() {
         });
     });
 }
+
 function uploadEmojiManage() {
     var input = document.getElementById('emojiManageUpload'); var files = input.files;
     if (!files.length) return; var total = files.length;
@@ -1475,10 +1533,12 @@ function uploadEmojiManage() {
     }
     processOne(0);
 }
+
 function delEmojiManage(i) {
     deleteImageFromDB('images', appData.emojiIds[i]).catch(function(){});
     appData.emojiIds.splice(i,1); saveData(); renderMoreImages(); renderEmojiManageGrid(); showToast('已删除');
 }
+
 function clearAllEmojis() {
     if (!confirm('清空所有表情包？')) return;
     var ps = appData.emojiIds.map(function(id) { return deleteImageFromDB('images', id).catch(function(){}); });
@@ -1491,6 +1551,7 @@ function showToast(msg) {
     t.textContent = msg; t.style.display = 'block'; t.style.whiteSpace = 'normal';
     clearTimeout(t._timeout); t._timeout = setTimeout(function() { t.style.display = 'none'; }, 2400);
 }
+
 function showToastLong(msg, duration) {
     var t = document.getElementById('toast'); if (!t) return;
     t.textContent = msg; t.style.display = 'block'; t.style.whiteSpace = 'pre-line';
@@ -1530,6 +1591,7 @@ function sendWheelInvite() {
     appData.chatHistory.push({ type: 'other', content: inviteHtml, time: Date.now(), isWheelInvite: true, inviteId: inviteId, inviteStatus: 'pending' });
     saveData();
 }
+
 function acceptWheelInvite(element) {
     var inviteDiv = element;
     while (inviteDiv && !inviteDiv.classList.contains('wheel-invite')) { inviteDiv = inviteDiv.parentElement; }
@@ -1563,6 +1625,7 @@ function acceptWheelInvite(element) {
         showToast('转到了：' + result);
     }, 800);
 }
+
 function sendWheelInviteManually() { sendWheelInvite(); }
 
 // ========== 打开设置 ==========
@@ -1593,10 +1656,34 @@ initApp().then(function() {
     if (appData.playlist && appData.playlist.length > 0) {
         setTimeout(function() { if (typeof showFloatingBall === 'function') { showFloatingBall(); } }, 1000);
     }
-}).catch(function(e) { console.error('启动失败:', e); });// ==================== Tab 切换 ====================
+}).catch(function(e) { console.error('启动失败:', e); });
+
+// ==================== 新增函数 ====================
+
+// 清空聊天记录
+function clearChatHistory() {
+    if (!confirm('确定清除所有聊天记录吗？')) return;
+    appData.chatHistory = [];
+    saveData(true);
+    renderChatHistory();
+    showToast('聊天记录已清除');
+}
+
+// 关闭所有全屏
+function closeAllFullscreens() {
+    var ids = ['shopFullscreen', 'forumFullscreen', 'letterFullscreen', 'scratchFullscreen', 
+               'sudokuFullscreen', 'gomokuFullscreen', 'murderFullscreen', 'wheelFullscreen',
+               'bookFullscreen', 'notebookFullscreen', 'themeFullscreen'];
+    ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.remove();
+    });
+    closeModal('subOverlay');
+}
+
+// ==================== Tab 切换 ====================
 
 function switchTab(tab) {
-    // 更新 Tab 高亮
     document.querySelectorAll('.tab-item').forEach(function(el) {
         el.classList.remove('active');
         if (el.dataset.tab === tab) {
@@ -1608,14 +1695,13 @@ function switchTab(tab) {
     var chatView = document.getElementById('chatView');
     var settingsFullscreen = document.getElementById('settingsFullscreen');
     
-    // 关闭聊天 + 号面板
     closeChatMorePanel();
+    closeAllFullscreens();
     
     if (tab === 'desktop') {
         if (desktopView) desktopView.classList.remove('hidden');
         if (chatView) chatView.classList.remove('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
-        // 关闭更多面板
         var morePanel = document.getElementById('morePanel');
         if (morePanel) morePanel.style.display = 'none';
         
@@ -1623,7 +1709,6 @@ function switchTab(tab) {
         if (typeof startVoiceCall === 'function') {
             startVoiceCall();
         }
-        // 切回 desktop Tab（通话是浮窗）
         setTimeout(function() {
             document.querySelectorAll('.tab-item').forEach(function(el) {
                 el.classList.remove('active');
@@ -1636,7 +1721,6 @@ function switchTab(tab) {
         }, 100);
         
     } else if (tab === 'settings') {
-        // 打开设置全屏
         if (desktopView) desktopView.classList.add('hidden');
         if (chatView) chatView.classList.remove('active');
         if (settingsFullscreen) {
@@ -1690,7 +1774,18 @@ function renderSettingsContent() {
         </div>
         
         <div class="settings-group">
-            <div class="settings-group-title">隐私</div>
+            <div class="settings-group-title">音乐</div>
+            <div class="settings-item" onclick="openMusicPlayer()">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-music"></div>
+                    <span class="settings-item-name">音乐播放器</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <div class="settings-group-title">隐私与数据</div>
             <div class="settings-item" onclick="if(confirm('确定清除所有聊天记录？')){clearChatHistory();}">
                 <div class="settings-item-left">
                     <div class="settings-item-icon s-icon-privacy"></div>
@@ -1698,25 +1793,10 @@ function renderSettingsContent() {
                 </div>
                 <span class="settings-item-arrow">›</span>
             </div>
-        </div>
-        
-        <div class="settings-group">
-            <div class="settings-group-title">数据</div>
             <div class="settings-item" onclick="openBackupModal()">
                 <div class="settings-item-left">
                     <div class="settings-item-icon s-icon-data"></div>
                     <span class="settings-item-name">数据管理</span>
-                </div>
-                <span class="settings-item-arrow">›</span>
-            </div>
-        </div>
-        
-        <div class="settings-group">
-            <div class="settings-group-title">音乐</div>
-            <div class="settings-item" onclick="openMusicPlayer()">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-music"></div>
-                    <span class="settings-item-name">音乐播放器</span>
                 </div>
                 <span class="settings-item-arrow">›</span>
             </div>
@@ -1749,7 +1829,6 @@ function closeSettingsFullscreen() {
     if (el) el.style.display = 'none';
     var desktopView = document.getElementById('desktopView');
     if (desktopView) desktopView.classList.remove('hidden');
-    // 更新Tab高亮
     document.querySelectorAll('.tab-item').forEach(function(el2) {
         el2.classList.remove('active');
         if (el2.dataset.tab === 'desktop') {
@@ -1784,4 +1863,5 @@ window.openLetterModal = openLetterModal;
 window.closeLetterFullscreen = closeLetterFullscreen;
 window.sendLetterFullscreen = sendLetterFullscreen;
 window.openColorThemeModal = openColorThemeModal;
-window.closeThemeFullscreen = closeThemeFullscreen;
+window.clearChatHistory = clearChatHistory;
+window.closeAllFullscreens = closeAllFullscreens;
