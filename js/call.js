@@ -1,4 +1,4 @@
-// ==================== 微信风格语音通话功能（纯图形图标） ====================
+// ==================== 语音通话功能（纯 SVG 图形图标） ====================
 var callTimeout = null;
 var isInCall = false;
 var isRinging = false;
@@ -62,9 +62,10 @@ function minimizeIcon() {
     </svg>`;
 }
 
-// ---------- 微信风格通话界面（深色背景 + 3个按钮） ----------
+// ---------- 微信风格通话界面 ----------
 
 function getWeChatCallingHTML() {
+    var initial = appData.otherName ? appData.otherName.charAt(0) : '祁';
     return `
     <div id="wechat-call-ui" style="
         position:fixed;top:0;left:0;right:0;bottom:0;
@@ -78,7 +79,6 @@ function getWeChatCallingHTML() {
         color:white;
         font-family:-apple-system,BlinkMacSystemFont,sans-serif;
     ">
-        <!-- 顶部：最小化按钮 -->
         <div style="width:100%;display:flex;justify-content:flex-end;">
             <button onclick="minimizeCall()" style="
                 background:rgba(255,255,255,0.06);
@@ -94,7 +94,6 @@ function getWeChatCallingHTML() {
             ">${minimizeIcon()}</button>
         </div>
 
-        <!-- 中间：头像 + 名字 + 状态 + 计时 -->
         <div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;margin-top:-20px;">
             <div style="
                 width:110px;height:110px;
@@ -108,7 +107,7 @@ function getWeChatCallingHTML() {
                 color:white;
                 margin-bottom:18px;
                 box-shadow:0 8px 40px rgba(102,126,234,0.25);
-            ">${appData.otherName ? appData.otherName.charAt(0) : '祁'}</div>
+            ">${initial}</div>
             <div style="font-size:26px;font-weight:500;margin-bottom:4px;">${appData.otherName || '祁煜'}</div>
             <div style="font-size:14px;color:rgba(255,255,255,0.35);" id="wechatCallStatus">通话中</div>
             <div style="
@@ -121,7 +120,6 @@ function getWeChatCallingHTML() {
             " id="wechatCallTimer">00:00</div>
         </div>
 
-        <!-- 底部：3个操作按钮（统一大小） -->
         <div style="
             width:100%;
             max-width:340px;
@@ -130,7 +128,6 @@ function getWeChatCallingHTML() {
             align-items:center;
             padding:10px 0;
         ">
-            <!-- 扬声器 -->
             <div class="call-btn" onclick="toggleSpeaker()" style="
                 display:flex;
                 flex-direction:column;
@@ -152,7 +149,6 @@ function getWeChatCallingHTML() {
                 <span style="font-size:11px;color:rgba(255,255,255,0.3);">扬声器</span>
             </div>
 
-            <!-- 挂断 -->
             <div class="call-btn" onclick="hangupCall()" style="
                 display:flex;
                 flex-direction:column;
@@ -174,7 +170,6 @@ function getWeChatCallingHTML() {
                 <span style="font-size:11px;color:rgba(255,255,255,0.3);">挂断</span>
             </div>
 
-            <!-- 静音 -->
             <div class="call-btn" onclick="toggleMute()" style="
                 display:flex;
                 flex-direction:column;
@@ -234,6 +229,7 @@ function startVoiceCall() {
 }
 
 function showCallingModal() {
+    var initial = appData.otherName ? appData.otherName.charAt(0) : '祁';
     var html = `
     <div style="text-align:center;">
         <div style="
@@ -247,7 +243,7 @@ function showCallingModal() {
             font-weight:bold;
             color:white;
             margin:0 auto 16px;
-        ">${appData.otherName ? appData.otherName.charAt(0) : '祁'}</div>
+        ">${initial}</div>
         <h3 style="margin:0 0 4px;">${appData.otherName || '祁煜'}</h3>
         <div class="subtitle" style="margin:8px 0 16px;color:rgba(255,255,255,0.4);">等待对方接听...</div>
         <button class="btn-sm outline" onclick="cancelCall()" style="
@@ -367,7 +363,6 @@ function createCallFloatingBall() {
     document.body.appendChild(ball);
     makeDraggable(ball);
     
-    // 点击直接恢复 - 使用 click 事件确保触发
     ball.addEventListener('click', function(e) {
         e.stopPropagation();
         e.preventDefault();
@@ -460,11 +455,9 @@ function minimizeCall() {
 }
 
 function restoreCallWindow() {
-    console.log('restoreCallWindow 被调用');
     var ball = document.getElementById('callFloatingBall');
     if (ball) {
         ball.remove();
-        console.log('小球已移除');
     }
     isCallMinimized = false;
     
@@ -577,6 +570,7 @@ function checkRandomIncomingCall() {
 }
 
 function showIncomingCallModal() {
+    var initial = appData.otherName ? appData.otherName.charAt(0) : '祁';
     var html = `
     <div style="text-align:center;">
         <div style="
@@ -590,7 +584,7 @@ function showIncomingCallModal() {
             font-weight:bold;
             color:white;
             margin:0 auto 16px;
-        ">${appData.otherName ? appData.otherName.charAt(0) : '祁'}</div>
+        ">${initial}</div>
         <h3 style="margin:0 0 4px;">${appData.otherName || '祁煜'}</h3>
         <div class="subtitle" style="margin:8px 0 20px;color:rgba(255,255,255,0.4);">对方正在呼叫你...</div>
         <div style="display:flex;justify-content:center;gap:24px;">
@@ -654,7 +648,21 @@ function ignoreIncomingCall() {
     endCallSession();
 }
 
+// ---------- 导出到全局 ----------
+window.startVoiceCall = startVoiceCall;
+window.cancelCall = cancelCall;
+window.hangupCall = hangupCall;
+window.minimizeCall = minimizeCall;
+window.restoreCallWindow = restoreCallWindow;
+window.toggleSpeaker = toggleSpeaker;
+window.toggleMute = toggleMute;
+window.answerIncomingCall = answerIncomingCall;
+window.rejectIncomingCall = rejectIncomingCall;
+window.ignoreIncomingCall = ignoreIncomingCall;
+
 // ---------- 定时检查来电 ----------
 setInterval(function() {
     checkRandomIncomingCall();
 }, 40000);
+
+console.log('语音通话模块已加载（纯 SVG 图形图标）');
