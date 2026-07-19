@@ -976,9 +976,12 @@ function sendLetter() {
 }
 
 function openLetterModal() {
+    closeAllFullscreens();
+    
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'letterFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     overlay.innerHTML = `
         <div class="fullscreen-header">
             <button class="fullscreen-back" onclick="closeLetterFullscreen()">
@@ -987,7 +990,7 @@ function openLetterModal() {
             <span class="fullscreen-title">写一封信</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" style="display:flex;flex-direction:column;gap:12px;padding:20px;">
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;gap:12px;padding:20px;flex:1;overflow-y:auto;">
             <div style="font-size:14px;color:var(--text-secondary);">写给 <span id="letterRecipient" style="font-weight:bold;color:var(--text);">${appData.otherName}</span></div>
             <textarea id="letterContent" placeholder="写下你想说的话...&#10;信件不会直接发送到聊天，对方会在半天到一天半内回信哦~" style="flex:1;min-height:200px;padding:14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-main);font-size:14px;background:var(--input-box);color:var(--text);resize:none;outline:none;"></textarea>
             <button class="btn-sm" onclick="sendLetterFullscreen()" style="padding:12px;font-size:15px;">寄出信件</button>
