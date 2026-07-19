@@ -67,7 +67,7 @@ function saveNotebookData() {
 
 function openNotebookModal() {
     loadNotebookData();
-    closeAllFullscreens();
+    //closeAllFullscreens();
     
     // 移除已存在的 overlay
     var existing = document.getElementById('notebookFullscreen');
