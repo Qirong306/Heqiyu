@@ -1688,30 +1688,43 @@ function switchTab(tab) {
     var desktopView = document.getElementById('desktopView');
     var chatView = document.getElementById('chatView');
     var settingsFullscreen = document.getElementById('settingsFullscreen');
+    var allAppsFullscreen = document.getElementById('allAppsFullscreen');
     
     closeChatMorePanel();
     closeAllFullscreens();
+    closeAllAppsFullscreen();
     
-    if (tab === 'desktop') {
+    // 聊天Tab - 直接进入聊天
+    if (tab === 'chat') {
+        if (desktopView) desktopView.classList.add('hidden');
+        if (chatView) chatView.classList.add('active');
+        if (settingsFullscreen) settingsFullscreen.style.display = 'none';
+        
+        // 更新状态栏标题
+        document.getElementById('statusTitle').textContent = appData.otherName || '甜心助手';
+        
+    } else if (tab === 'desktop') {
+        // 保留桌面模式兼容
         if (desktopView) desktopView.classList.remove('hidden');
         if (chatView) chatView.classList.remove('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
-        var morePanel = document.getElementById('morePanel');
-        if (morePanel) morePanel.style.display = 'none';
+        document.getElementById('statusTitle').textContent = '甜心助手';
         
     } else if (tab === 'call') {
         if (typeof startVoiceCall === 'function') {
             startVoiceCall();
         }
+        // 通话后回到聊天
         setTimeout(function() {
+            if (desktopView) desktopView.classList.add('hidden');
+            if (chatView) chatView.classList.add('active');
             document.querySelectorAll('.tab-item').forEach(function(el) {
                 el.classList.remove('active');
-                if (el.dataset.tab === 'desktop') {
+                if (el.dataset.tab === 'chat') {
                     el.classList.add('active');
                 }
             });
-            if (desktopView) desktopView.classList.remove('hidden');
-            if (chatView) chatView.classList.remove('active');
+            document.getElementById('statusTitle').textContent = appData.otherName || '甜心助手';
         }, 100);
         
     } else if (tab === 'settings') {
@@ -1721,6 +1734,7 @@ function switchTab(tab) {
             settingsFullscreen.style.display = 'flex';
             renderSettingsContent();
         }
+        document.getElementById('statusTitle').textContent = '设置';
     }
 }
 
