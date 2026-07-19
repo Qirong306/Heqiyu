@@ -118,7 +118,6 @@
             </button>
             <span class="chat-header-title" id="chatHeaderTitle">祁煜</span>
             <span class="chat-header-status" id="chatHeaderStatus">晒太阳</span>
-            <span class="chat-header-note" onclick="openNotebookModal()">
                 <span class="mini-icon mini-notebook"></span>
             </span>
         </div>
@@ -242,27 +241,27 @@
         <button onclick="closeChatMorePanel()">✕</button>
     </div>
     <div class="chat-more-grid">
-        <div class="chat-more-item" onclick="closeChatMorePanel();openReplySwitchModal();">
+        <div class="chat-more-item" onclick="closeChatMorePanel();setTimeout(function(){openReplySwitchModal();},150);">
             <span class="chat-more-icon icon-switch"></span>
             <span>回复开关</span>
         </div>
-        <div class="chat-more-item" onclick="closeChatMorePanel();openEmojiManageModal();">
+        <div class="chat-more-item" onclick="closeChatMorePanel();setTimeout(function(){openEmojiManageModal();},150);">
             <span class="chat-more-icon icon-emoji"></span>
             <span>表情包</span>
         </div>
-        <div class="chat-more-item" onclick="closeChatMorePanel();openNicknameModal();">
+        <div class="chat-more-item" onclick="closeChatMorePanel();setTimeout(function(){openNicknameModal();},150);">
             <span class="chat-more-icon icon-user"></span>
             <span>昵称头像</span>
         </div>
-        <div class="chat-more-item" onclick="closeChatMorePanel();openReplyModal();">
+        <div class="chat-more-item" onclick="closeChatMorePanel();setTimeout(function(){openReplyModal();},150);">
             <span class="chat-more-icon icon-reply"></span>
             <span>自定义回复</span>
         </div>
-        <div class="chat-more-item" onclick="closeChatMorePanel();openBackupModal();">
+        <div class="chat-more-item" onclick="closeChatMorePanel();setTimeout(function(){openBackupModal();},150);">
             <span class="chat-more-icon icon-data"></span>
             <span>数据管理</span>
         </div>
-        <div class="chat-more-item" onclick="closeChatMorePanel();openStatusManageModal();">
+        <div class="chat-more-item" onclick="closeChatMorePanel();setTimeout(function(){openStatusManageModal();},150);">
             <span class="chat-more-icon icon-status"></span>
             <span>状态词库</span>
         </div>
