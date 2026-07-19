@@ -18,11 +18,7 @@ function openCozySpace() {
     checkOtherPurchases();
     renderCozySpace();
     
-    var overlay = document.getElementById('cozyOverlay');
-    if (overlay) {
-        overlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
-    }
+    document.body.style.overflow = 'hidden';
     
     renderCozyRoom();
     renderCozyDanmakuHistory();
@@ -33,9 +29,9 @@ function openCozySpace() {
 function closeCozySpace() {
     var overlay = document.getElementById('cozyOverlay');
     if (overlay) {
-        overlay.classList.remove('show');
-        document.body.style.overflow = '';
+        overlay.remove();
     }
+    document.body.style.overflow = '';
     stopCozyDanmakuLoop();
     closeCozyFocusBar();
 }
@@ -68,7 +64,7 @@ function ensureCozyDefaultSetup() {
     }
 }
 
-// ==================== 渲染主界面 ====================
+// ==================== 渲染主界面（全屏） ====================
 
 function renderCozySpace() {
     var existing = document.getElementById('cozyOverlay');
@@ -76,22 +72,23 @@ function renderCozySpace() {
     
     var overlay = document.createElement('div');
     overlay.id = 'cozyOverlay';
-    overlay.className = 'cozy-overlay';
+    overlay.className = 'fullscreen-overlay active';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     
-    // ---- 顶部栏（包含返回按钮和温暖值） ----
+    // ---- 顶部栏 ----
     var header = document.createElement('div');
-    header.className = 'cozy-header';
+    header.className = 'fullscreen-header';
     header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--header-bg);border-bottom:1.5px solid var(--border);flex-shrink:0;min-height:48px;';
     header.innerHTML = 
         '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<button onclick="closeCozySpace()" style="background:none;border:none;cursor:pointer;color:var(--text);padding:4px 6px;display:flex;align-items:center;font-family:var(--font-main);font-size:14px;">' +
-                '<span style="display:inline-block;width:20px;height:20px;position:relative;">' +
+            '<button onclick="closeCozySpace()" class="fullscreen-back" style="background:none;border:none;cursor:pointer;color:var(--text);padding:4px 6px;display:flex;align-items:center;font-family:var(--font-main);font-size:14px;">' +
+                '<span class="back-arrow" style="display:inline-block;width:20px;height:20px;position:relative;">' +
                     '<span style="position:absolute;top:50%;left:2px;transform:translateY(-50%);width:10px;height:2px;background:var(--text);border-radius:1px;"></span>' +
                     '<span style="position:absolute;top:50%;left:2px;transform:translateY(-50%) rotate(-45deg);width:6px;height:6px;border-left:2px solid var(--text);border-bottom:2px solid var(--text);border-radius:0 0 0 2px;"></span>' +
                 '</span>' +
                 ' 返回' +
             '</button>' +
-            '<span style="font-size:17px;font-weight:400;color:var(--text);letter-spacing:1px;">暖屋</span>' +
+            '<span class="fullscreen-title" style="font-size:17px;font-weight:400;color:var(--text);letter-spacing:1px;">暖屋</span>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:10px;">' +
             '<span style="font-size:13px;color:var(--text-secondary);" id="cozyWarmthDisplay">温暖值: ' + (appData.cozyRoom.warmth || 100) + '</span>' +
@@ -99,13 +96,13 @@ function renderCozySpace() {
         '</div>';
     overlay.appendChild(header);
     
-    // ---- 暖屋主体 ----
+    // ---- 暖屋主体（Canvas 区域） ----
     var body = document.createElement('div');
-    body.className = 'cozy-body';
+    body.className = 'fullscreen-body';
     body.id = 'cozyBody';
-    body.style.cssText = 'flex:1;position:relative;overflow:hidden;background:var(--bg);';
+    body.style.cssText = 'flex:1;position:relative;overflow:hidden;padding:0;';
     
-    // Canvas 暖屋容器
+    // Canvas 容器 - 铺满整个 body
     var canvasContainer = document.createElement('div');
     canvasContainer.id = 'cozyCanvasContainer';
     canvasContainer.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:0;';
@@ -122,7 +119,7 @@ function renderCozySpace() {
     var focusBar = document.createElement('div');
     focusBar.className = 'cozy-focus-bar';
     focusBar.id = 'cozyFocusBar';
-    focusBar.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:2;display:none;align-items:center;gap:6px;background:var(--panel-bg);padding:8px 12px;border-radius:20px;border:2px solid var(--border);width:80%;max-width:320px;';
+    focusBar.style.cssText = 'position:absolute;bottom:70px;left:50%;transform:translateX(-50%);z-index:2;display:none;align-items:center;gap:6px;background:var(--panel-bg);padding:8px 12px;border-radius:20px;border:2px solid var(--border);width:80%;max-width:320px;';
     focusBar.innerHTML = 
         '<span class="cozy-focus-timer" id="cozyFocusTimerDisplay" style="font-size:14px;font-weight:bold;color:var(--text);min-width:40px;"></span>' +
         '<input type="text" id="cozyFocusInput" placeholder="说点什么..." maxlength="50" style="flex:1;border:none;background:transparent;font-family:var(--font-main);font-size:14px;color:var(--text);outline:none;padding:4px 0;" onkeydown="if(event.key===\'Enter\')sendCozyDanmaku()">' +
@@ -482,6 +479,30 @@ function sendCozyMessage() {
     }
 }
 
+// ==================== 暖屋弹幕数据 ====================
+
+function addCozyDanmaku(text, from) {
+    if (!appData.cozyRoom.focus) {
+        appData.cozyRoom.focus = { danmaku: [] };
+    }
+    appData.cozyRoom.focus.danmaku.push({ text: text, from: from, time: Date.now() });
+    if (appData.cozyRoom.focus.danmaku.length > 100) {
+        appData.cozyRoom.focus.danmaku.splice(0, 20);
+    }
+    saveData();
+}
+
+function addCozyMessage(text, from) {
+    if (!appData.cozyRoom.messages) {
+        appData.cozyRoom.messages = [];
+    }
+    appData.cozyRoom.messages.push({ content: text, from: from, time: Date.now() });
+    if (appData.cozyRoom.messages.length > 50) {
+        appData.cozyRoom.messages.splice(0, 10);
+    }
+    saveData();
+}
+
 // ==================== 迷你音乐播放器 ====================
 
 function toggleCozyMusic() {
@@ -545,28 +566,16 @@ function cozyMusicPrev() {
     }
 }
 
-// ==================== 暖屋弹幕数据 ====================
+// ==================== 暖屋商城（占位） ====================
 
-function addCozyDanmaku(text, from) {
-    if (!appData.cozyRoom.focus) {
-        appData.cozyRoom.focus = { danmaku: [] };
-    }
-    appData.cozyRoom.focus.danmaku.push({ text: text, from: from, time: Date.now() });
-    if (appData.cozyRoom.focus.danmaku.length > 100) {
-        appData.cozyRoom.focus.danmaku.splice(0, 20);
-    }
-    saveData();
+function openCozyShop() {
+    showToast('暖屋商城开发中...');
 }
 
-function addCozyMessage(text, from) {
-    if (!appData.cozyRoom.messages) {
-        appData.cozyRoom.messages = [];
-    }
-    appData.cozyRoom.messages.push({ content: text, from: from, time: Date.now() });
-    if (appData.cozyRoom.messages.length > 50) {
-        appData.cozyRoom.messages.splice(0, 10);
-    }
-    saveData();
+// ==================== 暖屋每日奖励（占位） ====================
+
+function openCozyDaily() {
+    showToast('暖屋每日奖励开发中...');
 }
 
 // ==================== 导出到全局 ====================
@@ -587,5 +596,7 @@ window.updateCozyMusicDisplay = updateCozyMusicDisplay;
 window.ensureCozyDefaultSetup = ensureCozyDefaultSetup;
 window.renderCozyRoom = renderCozyRoom;
 window.updateWarmthDisplay = updateWarmthDisplay;
+window.openCozyShop = openCozyShop;
+window.openCozyDaily = openCozyDaily;
 
-console.log('暖屋主界面已加载（修复顶部栏）');
+console.log('暖屋主界面已加载（全屏修复版）');
