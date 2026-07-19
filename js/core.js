@@ -912,7 +912,7 @@ function setThemeDark() {
 
 function openThemeModal() {
     closeModal('settingsOverlay');
-    var html = '<h4>主题模式</h4><div class="subtitle">切换浅色/深色模式</div><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">' +
+    var html = '<h4>深色模式</h4><div class="subtitle">切换浅色/深色模式</div><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">' +
         '<button class="btn-sm ' + (appData.theme === 'light' ? '' : 'outline') + '" onclick="setThemeLight()">浅色</button>' +
         '<button class="btn-sm ' + (appData.theme === 'dark' ? '' : 'outline') + '" onclick="setThemeDark()">深色</button>' +
         '</div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
@@ -1671,7 +1671,7 @@ function clearChatHistory() {
 function closeAllFullscreens() {
     var ids = ['shopFullscreen', 'forumFullscreen', 'letterFullscreen', 'scratchFullscreen', 
                'sudokuFullscreen', 'gomokuFullscreen', 'murderFullscreen', 'wheelFullscreen',
-               'bookFullscreen', 'notebookFullscreen', 'themeFullscreen'];
+               'bookFullscreen', 'notebookFullscreen', 'themeFullscreen', 'musicPlayerFullscreen'];
     ids.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.remove();
@@ -1681,7 +1681,6 @@ function closeAllFullscreens() {
 
 // ==================== Tab 切换 ====================
 
-// ==================== Tab 切换 ====================
 function switchTab(tab) {
     var desktopView = document.getElementById('desktopView');
     var chatView = document.getElementById('chatView');
@@ -1778,26 +1777,8 @@ function renderSettingsContent() {
         </div>
         
         <div class="settings-group">
-            <div class="settings-group-title">通知</div>
-            <div class="settings-item" onclick="showToast('推送通知已切换')">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-notification"></div>
-                    <span class="settings-item-name">推送通知</span>
-                </div>
-                <span class="settings-item-arrow">›</span>
-            </div>
-            <div class="settings-item" onclick="showToast('声音已切换')">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-notification"></div>
-                    <span class="settings-item-name">声音</span>
-                </div>
-                <span class="settings-item-arrow">›</span>
-            </div>
-        </div>
-        
-        <div class="settings-group">
             <div class="settings-group-title">音乐</div>
-            <div class="settings-item" onclick="openMusicPlayerInSettings()">
+            <div class="settings-item" onclick="openMusicPlayerFullscreen()">
                 <div class="settings-item-left">
                     <div class="settings-item-icon s-icon-music"></div>
                     <span class="settings-item-name">音乐播放器</span>
@@ -1807,14 +1788,7 @@ function renderSettingsContent() {
         </div>
         
         <div class="settings-group">
-            <div class="settings-group-title">隐私与数据</div>
-            <div class="settings-item" onclick="if(confirm('确定清除所有聊天记录吗？')){clearChatHistory();}">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-privacy"></div>
-                    <span class="settings-item-name">清空聊天记录</span>
-                </div>
-                <span class="settings-item-arrow">›</span>
-            </div>
+            <div class="settings-group-title">数据</div>
             <div class="settings-item" onclick="openBackupModal()">
                 <div class="settings-item-left">
                     <div class="settings-item-icon s-icon-data"></div>
@@ -1822,21 +1796,10 @@ function renderSettingsContent() {
                 </div>
                 <span class="settings-item-arrow">›</span>
             </div>
-        </div>
-        
-        <div class="settings-group">
-            <div class="settings-group-title">关于</div>
-            <div class="settings-item" onclick="showToast('甜心助手 v2.0')">
+            <div class="settings-item" onclick="if(confirm('确定清除所有聊天记录吗？')){clearChatHistory();}">
                 <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-about"></div>
-                    <span class="settings-item-name">版本信息</span>
-                </div>
-                <span class="settings-item-arrow">›</span>
-            </div>
-            <div class="settings-item" onclick="showToast('使用帮助：点击功能图标即可使用')">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-about"></div>
-                    <span class="settings-item-name">使用帮助</span>
+                    <div class="settings-item-icon s-icon-privacy"></div>
+                    <span class="settings-item-name">清空聊天记录</span>
                 </div>
                 <span class="settings-item-arrow">›</span>
             </div>
@@ -1844,12 +1807,19 @@ function renderSettingsContent() {
     `;
 }
 
-// 设置里的音乐播放器
-function openMusicPlayerInSettings() {
+// ==================== 音乐播放器全屏 ====================
+
+function openMusicPlayerFullscreen() {
+    // 先关闭设置
+    var settingsEl = document.getElementById('settingsFullscreen');
+    if (settingsEl) settingsEl.style.display = 'none';
+    
+    // 创建全屏
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'musicPlayerFullscreen';
-    overlay.style.zIndex = '600';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:550;display:flex;flex-direction:column;';
+    
     overlay.innerHTML = `
         <div class="fullscreen-header">
             <button class="fullscreen-back" onclick="closeMusicPlayerFullscreen()">
@@ -1858,50 +1828,276 @@ function openMusicPlayerInSettings() {
             <span class="fullscreen-title">音乐播放器</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" style="display:flex;flex-direction:column;justify-content:center;padding:20px;">
-            <div id="musicPlayerContainerSettings" style="width:100%;min-height:200px;"></div>
+        <div class="fullscreen-body" id="musicPlayerFullscreenBody" style="display:flex;flex-direction:column;justify-content:center;padding:20px;flex:1;overflow-y:auto;">
+            <div id="musicPlayerContainerFullscreen" style="width:100%;"></div>
+            <div id="musicNowPlayingFullscreen" style="text-align:center;font-size:16px;color:var(--text);margin:12px 0;font-weight:bold;min-height:24px;">未在播放</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:0 4px;margin:4px 0;">
+                <span id="musicCurTimeFullscreen" style="font-size:11px;color:var(--text-system);width:34px;">00:00</span>
+                <input type="range" id="musicProgressFullscreen" min="0" max="100" value="0" oninput="seekMusicFullscreen(this.value)" style="flex:1;height:4px;accent-color:var(--accent);cursor:pointer;">
+                <span id="musicDurTimeFullscreen" style="font-size:11px;color:var(--text-system);width:34px;">00:00</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:24px;margin:10px 0;">
+                <span onclick="prevSongFullscreen()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="上一曲">|◀</span>
+                <span id="btnPlayPauseFullscreen" onclick="togglePlayPauseFullscreen()" style="display:flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:var(--accent);color:var(--text);font-size:20px;cursor:pointer;transition:all 0.2s;" title="播放/暂停">▶</span>
+                <span onclick="nextSongFullscreen()" style="font-size:22px;cursor:pointer;color:var(--text);padding:4px;" title="下一曲">▶|</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:6px 0;font-size:18px;">
+                <span id="btnModeLoopFullscreen" onclick="setPlayModeFullscreen('loop')" style="cursor:pointer;color:var(--text-system);" title="单曲循环">⟳</span>
+                <span id="btnModeOrderFullscreen" onclick="setPlayModeFullscreen('order')" style="cursor:pointer;color:var(--accent);" title="顺序播放">≡</span>
+                <span id="btnModeRandomFullscreen" onclick="setPlayModeFullscreen('random')" style="cursor:pointer;color:var(--text-system);" title="随机播放">⇄</span>
+            </div>
+            <div style="max-height:200px;overflow-y:auto;text-align:left;margin-top:8px;" id="musicPlaylistFullscreen"></div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+                <button class="btn-sm outline" onclick="addSongPromptFullscreen()">添加歌曲</button>
+                <button class="btn-sm outline" onclick="importMusicJSONFullscreen()">导入歌单</button>
+                <button class="btn-sm outline" onclick="exportMusicJSONFullscreen()">导出歌单</button>
+            </div>
+            <button class="btn-close" onclick="closeMusicPlayerFullscreen()" style="margin-top:12px;">关闭</button>
         </div>
     `;
+    
     document.body.appendChild(overlay);
     
-    var musicOverlay = document.getElementById('musicOverlay');
-    if (musicOverlay) {
-        var modal = musicOverlay.querySelector('.modal');
-        if (modal) {
-            var clone = modal.cloneNode(true);
-            var container = document.getElementById('musicPlayerContainerSettings');
-            if (container) {
-                container.innerHTML = '';
-                container.appendChild(clone);
-            }
-        }
-    } else {
-        if (typeof openMusicPlayer === 'function') {
-            openMusicPlayer();
-            setTimeout(function() {
-                var musicOverlay2 = document.getElementById('musicOverlay');
-                if (musicOverlay2) {
-                    var modal2 = musicOverlay2.querySelector('.modal');
-                    if (modal2) {
-                        var clone2 = modal2.cloneNode(true);
-                        var container2 = document.getElementById('musicPlayerContainerSettings');
-                        if (container2) {
-                            container2.innerHTML = '';
-                            container2.appendChild(clone2);
-                        }
-                        musicOverlay2.style.display = 'none';
-                    }
-                }
-            }, 300);
-        }
-    }
+    // 渲染播放列表
+    renderPlaylistFullscreen();
+    updateModeIconsFullscreen();
+    updatePlayPauseButtonFullscreen();
+    
+    // 同步现有音乐状态
+    syncMusicToFullscreen();
 }
 
 function closeMusicPlayerFullscreen() {
     var el = document.getElementById('musicPlayerFullscreen');
     if (el) el.remove();
-    var musicOverlay = document.getElementById('musicOverlay');
-    if (musicOverlay) musicOverlay.style.display = '';
+    // 恢复设置页面
+    var settingsEl = document.getElementById('settingsFullscreen');
+    if (settingsEl) settingsEl.style.display = 'flex';
+}
+
+function syncMusicToFullscreen() {
+    var nowPlaying = document.getElementById('musicNowPlayingFullscreen');
+    var playlist = appData.playlist || [];
+    var currentIndex = typeof musicCurrentIndex !== 'undefined' ? musicCurrentIndex : -1;
+    
+    if (currentIndex >= 0 && currentIndex < playlist.length) {
+        var song = playlist[currentIndex];
+        var artist = song.artist || song.sub || '';
+        if (nowPlaying) nowPlaying.textContent = song.title + (artist ? ' - ' + artist : '');
+    }
+    
+    // 同步进度
+    if (musicAudio) {
+        setTimeout(function() {
+            var curEl = document.getElementById('musicCurTimeFullscreen');
+            var durEl = document.getElementById('musicDurTimeFullscreen');
+            var progEl = document.getElementById('musicProgressFullscreen');
+            if (curEl) curEl.textContent = formatSeconds(musicAudio.currentTime);
+            if (durEl) durEl.textContent = formatSeconds(musicAudio.duration || 0);
+            if (progEl && musicAudio.duration) {
+                progEl.value = (musicAudio.currentTime / musicAudio.duration) * 100;
+            }
+            updatePlayPauseButtonFullscreen();
+        }, 200);
+    }
+}
+
+function renderPlaylistFullscreen() {
+    var el = document.getElementById('musicPlaylistFullscreen');
+    if (!el) return;
+    var playlist = appData.playlist || [];
+    if (playlist.length === 0) {
+        el.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:12px;font-size:13px;">歌单空空</div>';
+        return;
+    }
+    var html = '';
+    var currentIndex = typeof musicCurrentIndex !== 'undefined' ? musicCurrentIndex : -1;
+    playlist.forEach(function(song, i) {
+        var isPlaying = i === currentIndex;
+        var artist = song.artist || song.sub || '';
+        html += '<div class="music-song-item' + (isPlaying ? ' playing' : '') + '" onclick="playSongFullscreen(' + i + ')">' +
+            '<span class="song-index">' + (i + 1) + '</span>' +
+            '<span class="song-info"><span class="song-title">' + escapeHTML(song.title) + '</span><br><span class="song-artist">' + escapeHTML(artist) + '</span></span>' +
+            '<span class="song-del" onclick="event.stopPropagation();deleteSongFullscreen(' + i + ')">×</span>' +
+            '</div>';
+    });
+    el.innerHTML = html;
+}
+
+function playSongFullscreen(index) {
+    if (typeof playSong === 'function') {
+        playSong(index);
+        setTimeout(function() {
+            renderPlaylistFullscreen();
+            syncMusicToFullscreen();
+        }, 200);
+    }
+}
+
+function deleteSongFullscreen(index) {
+    if (typeof deleteSong === 'function') {
+        deleteSong(index);
+        setTimeout(function() {
+            renderPlaylistFullscreen();
+            syncMusicToFullscreen();
+        }, 200);
+    }
+}
+
+function togglePlayPauseFullscreen() {
+    if (typeof togglePlayPause === 'function') {
+        togglePlayPause();
+        setTimeout(updatePlayPauseButtonFullscreen, 200);
+    }
+}
+
+function updatePlayPauseButtonFullscreen() {
+    var btn = document.getElementById('btnPlayPauseFullscreen');
+    if (!btn) return;
+    if (musicAudio && !musicAudio.paused) {
+        btn.innerHTML = '▌▌';
+    } else {
+        btn.innerHTML = '▶';
+    }
+}
+
+function prevSongFullscreen() {
+    if (typeof prevSong === 'function') {
+        prevSong();
+        setTimeout(function() {
+            renderPlaylistFullscreen();
+            syncMusicToFullscreen();
+        }, 300);
+    }
+}
+
+function nextSongFullscreen() {
+    if (typeof nextSong === 'function') {
+        nextSong();
+        setTimeout(function() {
+            renderPlaylistFullscreen();
+            syncMusicToFullscreen();
+        }, 300);
+    }
+}
+
+function setPlayModeFullscreen(mode) {
+    if (typeof setPlayMode === 'function') {
+        setPlayMode(mode);
+        updateModeIconsFullscreen();
+    }
+}
+
+function updateModeIconsFullscreen() {
+    var loop = document.getElementById('btnModeLoopFullscreen');
+    var order = document.getElementById('btnModeOrderFullscreen');
+    var random = document.getElementById('btnModeRandomFullscreen');
+    var mode = musicPlayMode || 'order';
+    if (loop) loop.style.color = mode === 'loop' ? 'var(--accent)' : 'var(--text-system)';
+    if (order) order.style.color = mode === 'order' ? 'var(--accent)' : 'var(--text-system)';
+    if (random) random.style.color = mode === 'random' ? 'var(--accent)' : 'var(--text-system)';
+}
+
+function seekMusicFullscreen(value) {
+    if (musicAudio && musicAudio.duration) {
+        musicAudio.currentTime = (value / 100) * musicAudio.duration;
+    }
+}
+
+function addSongPromptFullscreen() {
+    var id = prompt('输入网易云歌曲 ID：');
+    if (!id) return;
+    var title = prompt('输入歌曲名：');
+    if (!title) return;
+    var artist = prompt('输入歌手名（可选）：') || '';
+    appData.playlist.push({ id: id, title: title, artist: artist });
+    if (typeof saveData === 'function') saveData();
+    renderPlaylistFullscreen();
+    if (appData.playlist.length === 1 && typeof playSong === 'function') {
+        playSong(0);
+        setTimeout(syncMusicToFullscreen, 300);
+    }
+    showToast('已添加：' + title);
+}
+
+function importMusicJSONFullscreen() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function() {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var raw = JSON.parse(e.target.result);
+                var data = Array.isArray(raw) ? raw : (raw.songs || []);
+                if (!data.length) throw new Error();
+                appData.playlist.length = 0;
+                data.forEach(function(s) {
+                    appData.playlist.push({
+                        title: s.title || '',
+                        artist: s.sub || s.artist || '',
+                        sub: s.sub || s.artist || '',
+                        url: s.url || '',
+                        id: s.id || '',
+                        isCustom: s.isCustom !== undefined ? s.isCustom : true
+                    });
+                });
+                if (typeof saveData === 'function') saveData();
+                renderPlaylistFullscreen();
+                showToast('已导入 ' + appData.playlist.length + ' 首歌');
+            } catch(err) {
+                showToast('歌单格式错误');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function exportMusicJSONFullscreen() {
+    if (appData.playlist.length === 0) { showToast('歌单为空'); return; }
+    var data = appData.playlist.map(function(s) {
+        return {
+            title: s.title,
+            sub: s.artist || s.sub || '',
+            url: s.url || '',
+            id: s.id || '',
+            isCustom: true
+        };
+    });
+    var text = JSON.stringify(data, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            showToast('歌单已复制到剪贴板');
+        }).catch(function() { fallbackCopyMusic(text); });
+    } else {
+        fallbackCopyMusic(text);
+    }
+}
+
+function fallbackCopyMusic(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+        document.execCommand('copy');
+        showToast('歌单已复制到剪贴板');
+    } catch(e) {
+        showToast('复制失败');
+    }
+    document.body.removeChild(ta);
+}
+
+function formatSeconds(sec) {
+    if (isNaN(sec) || sec < 0) return '00:00';
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
 
 // ==================== 关闭设置 ====================
@@ -1948,7 +2144,23 @@ window.openLetterModal = openLetterModal;
 window.closeLetterFullscreen = closeLetterFullscreen;
 window.sendLetterFullscreen = sendLetterFullscreen;
 window.openColorThemeModal = openColorThemeModal;
+window.openThemeModal = openThemeModal;
 window.clearChatHistory = clearChatHistory;
 window.closeAllFullscreens = closeAllFullscreens;
-window.openMusicPlayerInSettings = openMusicPlayerInSettings;
+window.openMusicPlayerFullscreen = openMusicPlayerFullscreen;
 window.closeMusicPlayerFullscreen = closeMusicPlayerFullscreen;
+window.renderPlaylistFullscreen = renderPlaylistFullscreen;
+window.playSongFullscreen = playSongFullscreen;
+window.deleteSongFullscreen = deleteSongFullscreen;
+window.togglePlayPauseFullscreen = togglePlayPauseFullscreen;
+window.updatePlayPauseButtonFullscreen = updatePlayPauseButtonFullscreen;
+window.prevSongFullscreen = prevSongFullscreen;
+window.nextSongFullscreen = nextSongFullscreen;
+window.setPlayModeFullscreen = setPlayModeFullscreen;
+window.updateModeIconsFullscreen = updateModeIconsFullscreen;
+window.seekMusicFullscreen = seekMusicFullscreen;
+window.addSongPromptFullscreen = addSongPromptFullscreen;
+window.importMusicJSONFullscreen = importMusicJSONFullscreen;
+window.exportMusicJSONFullscreen = exportMusicJSONFullscreen;
+window.syncMusicToFullscreen = syncMusicToFullscreen;
+window.formatSeconds = formatSeconds;
