@@ -54,98 +54,56 @@ function openWheel() {
         return;
     }
 
-    var html = '<div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">';
-    html += '<h4 style="margin:0;">幸福转盘</h4>';
-    html += '<div style="position:absolute;right:0;">';
-    html += '<span onclick="event.stopPropagation();toggleWheelMenu()" style="font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px;">&#9776;</span>';
-    html += '<div id="wheelMenu" style="display:none;position:absolute;top:30px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">';
-    html += '<div onclick="openWheelManage();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">管理词库</div>';
-    html += '<div onclick="importWheelJSON();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入词库</div>';
-    html += '<div onclick="exportWheelJSON();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">导出词库</div>';
-    html += '</div></div></div>';
-
-    html += '<div style="text-align:center;margin-bottom:8px;font-size:11px;color:var(--text-system);">共 ' + items.length + ' 件幸福小事</div>';
-
-    // 转盘画布
-    html += '<div style="position:relative;width:280px;height:280px;margin:0 auto;">';
-    html += '<canvas id="wheelCanvas" width="560" height="560" style="width:280px;height:280px;"></canvas>';
-    html += '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid var(--danger);z-index:2;"></div>';
-    html += '</div>';
-
-    html += '<div style="text-align:center;margin:12px 0;">';
-    html += '<button class="btn-sm" onclick="spinWheel()" id="wheelSpinBtn">开始转动</button>';
-    html += '</div>';
-
-    html += '<div id="wheelResult" style="text-align:center;font-size:14px;color:var(--accent);min-height:24px;font-weight:bold;"></div>';
-
-    html += '<button class="btn-close" onclick="closeWheel()" style="margin-top:8px;">关闭</button>';
-
-    openWheelSubModal(html);
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'wheelFullscreen';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeWheelFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">幸福转盘</span>
+            <span onclick="toggleWheelMenu()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</span>
+        </div>
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;">
+            <div style="font-size:13px;color:var(--text-secondary);">共 ${items.length} 件幸福小事</div>
+            <div style="position:relative;width:280px;height:280px;">
+                <canvas id="wheelCanvas" width="560" height="560" style="width:280px;height:280px;"></canvas>
+                <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid var(--danger);z-index:2;"></div>
+            </div>
+            <button class="btn-sm" onclick="spinWheel()" id="wheelSpinBtn">开始转动</button>
+            <div id="wheelResult" style="text-align:center;font-size:16px;color:var(--accent);min-height:28px;font-weight:bold;"></div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // 菜单
+    var menu = document.getElementById('wheelMenu');
+    if (!menu) {
+        var menuDiv = document.createElement('div');
+        menuDiv.id = 'wheelMenu';
+        menuDiv.style.cssText = 'display:none;position:absolute;top:50px;right:16px;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
+        menuDiv.innerHTML = `
+            <div onclick="openWheelManage();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">管理词库</div>
+            <div onclick="importWheelJSON();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入词库</div>
+            <div onclick="exportWheelJSON();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">导出词库</div>
+        `;
+        var header = overlay.querySelector('.fullscreen-header');
+        header.appendChild(menuDiv);
+    }
+    
     setTimeout(function() { drawWheel(); }, 300);
 }
 
-// ==================== 绘制转盘 ====================
-function drawWheel() {
-    var canvas = document.getElementById('wheelCanvas');
-    if (!canvas) return;
-    wheelCanvas = canvas;
-    wheelCtx = canvas.getContext('2d');
-
-    var items = appData.wheelItems || [];
-    var count = items.length;
-    var cx = canvas.width / 2;
-    var cy = canvas.height / 2;
-    var radius = canvas.width / 2 - 10;
-    var sliceAngle = (2 * Math.PI) / count;
-
-    var colors = [
-        '#FFD6A5', '#FFABAB', '#FFC3A0', '#FFE0B2', '#FFB7B2',
-        '#F0C78E', '#E8B87A', '#FFD1DC', '#C9E4DE', '#FCE4EC',
-        '#FFE5B4', '#FFCAD4', '#B5EAD7', '#FFDAC1', '#E2F0CB'
-    ];
-
-    wheelCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (var i = 0; i < count; i++) {
-        var startAngle = wheelAngle + i * sliceAngle;
-        var endAngle = startAngle + sliceAngle;
-
-        // 扇形
-        wheelCtx.beginPath();
-        wheelCtx.moveTo(cx, cy);
-        wheelCtx.arc(cx, cy, radius, startAngle, endAngle);
-        wheelCtx.closePath();
-        wheelCtx.fillStyle = colors[i % colors.length];
-        wheelCtx.fill();
-        wheelCtx.strokeStyle = '#fff';
-        wheelCtx.lineWidth = 2;
-        wheelCtx.stroke();
-
-        // 文字
-        var midAngle = startAngle + sliceAngle / 2;
-        var textRadius = radius * 0.65;
-        var tx = cx + Math.cos(midAngle) * textRadius;
-        var ty = cy + Math.sin(midAngle) * textRadius;
-
-        wheelCtx.save();
-        wheelCtx.translate(tx, ty);
-        wheelCtx.rotate(midAngle + Math.PI / 2);
-        wheelCtx.fillStyle = '#4a3728';
-        wheelCtx.font = 'bold 12px "Ma Shan Zheng", "STKaiti", "KaiTi", sans-serif';
-        wheelCtx.textAlign = 'center';
-        var label = items[i].length > 8 ? items[i].substring(0, 7) + '..' : items[i];
-        wheelCtx.fillText(label, 0, 0);
-        wheelCtx.restore();
-    }
-
-    // 中心圆
-    wheelCtx.beginPath();
-    wheelCtx.arc(cx, cy, 30, 0, 2 * Math.PI);
-    wheelCtx.fillStyle = '#fff';
-    wheelCtx.fill();
-    wheelCtx.strokeStyle = 'var(--accent)';
-    wheelCtx.lineWidth = 3;
-    wheelCtx.stroke();
+function closeWheelFullscreen() {
+    var el = document.getElementById('wheelFullscreen');
+    if (el) el.remove();
+    clearTimeout(wheelTimer);
+    wheelSpinning = false;
+    var menu = document.getElementById('wheelMenu');
+    if (menu) menu.remove();
 }
 
 // ==================== 转动 ====================
@@ -361,3 +319,5 @@ if (document.readyState === 'loading') {
 }
 
 console.log('幸福转盘模块已加载');
+window.openWheel = openWheel;
+window.closeWheelFullscreen = closeWheelFullscreen;
