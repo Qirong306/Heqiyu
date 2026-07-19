@@ -108,30 +108,67 @@ function saveShopItems() {
 
 function openShopModal() {
     loadShopItems();
-    closeModal('settingsOverlay');
+    
+    // 创建全屏容器
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'shopFullscreen';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeShopFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">购物商城</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" id="shopFullscreenBody">
+            <div style="text-align:center;padding:20px;color:var(--text-system);">加载中...</div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    renderShopFullscreen();
+}
+
+function closeShopFullscreen() {
+    var el = document.getElementById('shopFullscreen');
+    if (el) el.remove();
+}
+
+function renderShopFullscreen() {
+    var container = document.getElementById('shopFullscreenBody');
+    if (!container) return;
     
     var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
     
-    var html = '<div style="text-align:center;">' +
-        '<h3>购物商城</h3>' +
-        '<div class="subtitle">购买商品会发送到聊天记录</div>' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:8px 12px;border-radius:10px;margin-bottom:12px;">' +
+    var html = '';
+    html += '<div style="text-align:center;padding:8px 0;margin-bottom:12px;background:var(--item-bg);border-radius:12px;border:2px solid var(--border);font-size:14px;">' +
+        '温暖值：<span style="font-weight:bold;color:#e8a87c;">' + (appData.cozyRoom?.warmth || 100) + '</span>' +
+        '</div>';
+    
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--item-bg);padding:8px 12px;border-radius:10px;margin-bottom:12px;">' +
         '<span style="font-size:13px;">允许对方随机购买</span>' +
         '<button id="randomBuySwitchBtn" onclick="toggleOtherRandomBuySwitch()" style="width:50px;height:26px;border-radius:26px;border:none;cursor:pointer;background:' + (isEnabled ? 'var(--accent)' : '#ccc') + ';transition:0.2s;position:relative;">' +
         '<span style="position:absolute;top:2px;left:' + (isEnabled ? '26px' : '2px') + ';width:22px;height:22px;border-radius:50%;background:white;transition:0.2s;"></span>' +
         '</button>' +
-        '</div>' +
-        '<div class="btn-row" style="gap:8px;justify-content:center;margin-bottom:12px;">' +
+        '</div>';
+    
+    html += '<div class="btn-row" style="gap:8px;justify-content:center;margin-bottom:12px;">' +
         '<button class="btn-sm" onclick="showAddItemModal()">添加商品</button>' +
         '<button class="btn-sm outline" onclick="exportShopItems()">导出商品库</button>' +
         '<button class="btn-sm outline" onclick="importShopItems()">导入商品库</button>' +
-        '</div>' +
-        '<div style="max-height:350px;overflow-y:auto;" id="shopItemsList">加载中...</div>' +
-        '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>' +
         '</div>';
-    openSubModal(html);
+    
+    html += '<div style="max-height:50vh;overflow-y:auto;" id="shopItemsList">加载中...</div>';
+    
+    container.innerHTML = html;
     renderShopItemsList();
 }
+
+// 修改原有的 renderShopItemsList 函数，查找 #shopItemsList
+// 如果找不到，使用 document.getElementById('shopItemsList') 会返回 null
+// 在 openShopModal 中我们用了 id="shopItemsList"，所以没问题
 
 function toggleOtherRandomBuySwitch() {
     var isEnabled = localStorage.getItem('other_random_buy_enabled') !== 'false';
@@ -170,6 +207,70 @@ function renderShopItemsList() {
     }
     html += '</div>';
     container.innerHTML = html;
+}
+
+// 修改 showAddItemModal，让它能在全屏内打开
+function showAddItemModal() {
+    var html = '<div style="text-align:center;">' +
+        '<h4>添加商品</h4>' +
+        '<div class="form-row">' +
+        '<label>商品名称</label>' +
+        '<input type="text" id="newItemName" placeholder="例如：玫瑰花">' +
+        '</div>' +
+        '<div class="form-row">' +
+        '<label>价格（元）</label>' +
+        '<input type="number" id="newItemPrice" step="0.01" placeholder="例如：5.20">' +
+        '</div>' +
+        '<div class="btn-row" style="justify-content:center;gap:8px;margin-top:12px;">' +
+        '<button class="btn-sm" onclick="addShopItem()">确认添加</button>' +
+        '<button class="btn-sm outline" onclick="closeSubModal()">取消</button>' +
+        '</div>' +
+        '</div>';
+    openSubModal(html);
+}
+
+function closeSubModal() {
+    closeModal('subOverlay');
+}
+
+function addShopItem() {
+    var name = document.getElementById('newItemName').value.trim();
+    var price = parseFloat(document.getElementById('newItemPrice').value);
+    if (!name) {
+        showToast('请输入商品名称');
+        return;
+    }
+    if (isNaN(price) || price <= 0) {
+        showToast('请输入有效价格');
+        return;
+    }
+    var newId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    shopItems.push({ id: newId, name: name, price: price });
+    saveShopItems();
+    closeModal('subOverlay');
+    renderShopFullscreen();
+    showToast('商品已添加');
+}
+
+// 修改 exportShopItems 和 importShopItems 弹窗
+function exportShopItems() {
+    if (!shopItems.length) {
+        showToast('商品库为空，无法导出');
+        return;
+    }
+    var exportData = { type: 'shopItems', version: '1.0', data: shopItems, count: shopItems.length };
+    var jsonStr = JSON.stringify(exportData, null, 2);
+    var html = '<div style="text-align:center;">' +
+        '<h4>导出商品库</h4>' +
+        '<div class="subtitle">共 ' + shopItems.length + ' 个商品</div>' +
+        '<div class="btn-row" style="gap:8px;margin:12px 0;">' +
+        '<button class="btn-sm" onclick="copyShopItemsToClipboard()">复制到剪贴板</button>' +
+        '<button class="btn-sm outline" onclick="downloadShopItemsFile()">下载为文件</button>' +
+        '</div>' +
+        '<textarea readonly style="width:100%;height:120px;font-size:11px;margin:8px 0;padding:8px;border-radius:6px;background:var(--item-bg);border:1px solid var(--border);">' + escapeHTML(jsonStr) + '</textarea>' +
+        '<button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>' +
+        '</div>';
+    openSubModal(html);
 }
 
 function showAddItemModal() {
@@ -406,3 +507,5 @@ function otherRandomBuy() {
 setInterval(function() {
     otherRandomBuy();
 }, 30000);
+window.openShopModal = openShopModal;
+window.closeShopFullscreen = closeShopFullscreen;
