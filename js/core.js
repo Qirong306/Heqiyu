@@ -2164,7 +2164,57 @@ function closeChatMorePanel() {
     var panel = document.getElementById('chatMorePanel');
     if (panel) panel.style.display = 'none';
 }
+// ==================== 加号面板功能（确保直接打开弹窗） ====================
 
+// 回复开关 - 已在 core.js 中存在
+// 表情包 - 已在 core.js 中存在
+// 昵称头像 - 已在 core.js 中存在
+
+// 自定义回复 - 优先调用 reply.js 中的函数
+function openReplyModal() {
+    console.log('openReplyModal 被调用');
+    if (typeof window._openReplyModal === 'function') {
+        window._openReplyModal();
+        return;
+    }
+    // 如果 reply.js 还没加载，直接打开一个简单版本
+    var html = '<h4>自定义回复</h4><div class="subtitle">管理回复词库</div><div style="text-align:center;padding:20px;color:var(--text-system);">加载中...</div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>';
+    openSubModal(html);
+}
+
+// 数据管理 - 优先调用 backup.js 中的函数
+function openBackupModal() {
+    console.log('openBackupModal 被调用');
+    if (typeof window._openBackupModal === 'function') {
+        window._openBackupModal();
+        return;
+    }
+    var html = '<h4>数据管理</h4><div class="subtitle">备份和恢复数据</div><div style="text-align:center;padding:20px;color:var(--text-system);">加载中...</div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>';
+    openSubModal(html);
+}
+
+// 状态词库 - 优先调用 status.js 中的函数
+function openStatusManageModal() {
+    console.log('openStatusManageModal 被调用');
+    if (typeof window._openStatusManageModal === 'function') {
+        window._openStatusManageModal();
+        return;
+    }
+    var html = '<h4>状态词库</h4><div class="subtitle">管理对方状态词</div><div style="text-align:center;padding:20px;color:var(--text-system);">加载中...</div><button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>';
+    openSubModal(html);
+}
+
+// 确保导出到全局（覆盖之前的声明）
+window.openReplyModal = openReplyModal;
+window.openBackupModal = openBackupModal;
+window.openStatusManageModal = openStatusManageModal;
+window.openReplySwitchModal = openReplySwitchModal;
+window.openEmojiManageModal = openEmojiManageModal;
+window.openNicknameModal = openNicknameModal;
+window.openSubModal = openSubModal;
+window.closeModal = closeModal;
+
+console.log('加号面板功能已修复');
 // ==================== 导出到全局 ====================
 window.switchTab = switchTab;
 window.closeSettingsFullscreen = closeSettingsFullscreen;
