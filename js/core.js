@@ -1650,6 +1650,10 @@ initApp().then(function() {
     if (appData.playlist && appData.playlist.length > 0) {
         setTimeout(function() { if (typeof showFloatingBall === 'function') { showFloatingBall(); } }, 1000);
     }
+    // 默认进入聊天
+    setTimeout(function() {
+        switchTab('chat');
+    }, 200);
 }).catch(function(e) { console.error('启动失败:', e); });
 
 // ==================== 新增函数 ====================
@@ -1677,8 +1681,6 @@ function closeAllFullscreens() {
 
 // ==================== Tab 切换 ====================
 
-// ==================== Tab 切换 ====================
-
 function switchTab(tab) {
     var desktopView = document.getElementById('desktopView');
     var chatView = document.getElementById('chatView');
@@ -1697,8 +1699,8 @@ function switchTab(tab) {
     
     // 聊天Tab - 只显示聊天
     if (tab === 'chat') {
-        if (desktopView) desktopView.classList.add('hidden');
-        if (chatView) chatView.classList.add('active');
+        desktopView.classList.add('hidden');
+        chatView.classList.add('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
         document.getElementById('statusTitle').textContent = appData.otherName || '甜心助手';
         return;
@@ -1706,8 +1708,8 @@ function switchTab(tab) {
     
     // 主界面Tab - 显示功能图标
     if (tab === 'desktop') {
-        if (desktopView) desktopView.classList.remove('hidden');
-        if (chatView) chatView.classList.remove('active');
+        desktopView.classList.remove('hidden');
+        chatView.classList.remove('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
         document.getElementById('statusTitle').textContent = '甜心助手';
         return;
@@ -1719,8 +1721,8 @@ function switchTab(tab) {
             startVoiceCall();
         }
         setTimeout(function() {
-            if (desktopView) desktopView.classList.add('hidden');
-            if (chatView) chatView.classList.add('active');
+            desktopView.classList.add('hidden');
+            chatView.classList.add('active');
             document.querySelectorAll('.tab-item').forEach(function(el) {
                 el.classList.remove('active');
                 if (el.dataset.tab === 'chat') {
@@ -1734,8 +1736,8 @@ function switchTab(tab) {
     
     // 设置Tab
     if (tab === 'settings') {
-        if (desktopView) desktopView.classList.add('hidden');
-        if (chatView) chatView.classList.remove('active');
+        desktopView.classList.add('hidden');
+        chatView.classList.remove('active');
         if (settingsFullscreen) {
             settingsFullscreen.style.display = 'flex';
             renderSettingsContent();
@@ -1837,7 +1839,7 @@ function renderSettingsContent() {
     `;
 }
 
-// 设置里的音乐播放器 - 在当前全屏内打开
+// 设置里的音乐播放器
 function openMusicPlayerInSettings() {
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
@@ -1857,7 +1859,6 @@ function openMusicPlayerInSettings() {
     `;
     document.body.appendChild(overlay);
     
-    // 复制音乐播放器内容到设置内
     var musicOverlay = document.getElementById('musicOverlay');
     if (musicOverlay) {
         var modal = musicOverlay.querySelector('.modal');
@@ -1870,7 +1871,6 @@ function openMusicPlayerInSettings() {
             }
         }
     } else {
-        // 如果音乐播放器还没初始化，直接调用 openMusicPlayer 然后复制
         if (typeof openMusicPlayer === 'function') {
             openMusicPlayer();
             setTimeout(function() {
@@ -1895,7 +1895,6 @@ function openMusicPlayerInSettings() {
 function closeMusicPlayerFullscreen() {
     var el = document.getElementById('musicPlayerFullscreen');
     if (el) el.remove();
-    // 恢复音乐播放器
     var musicOverlay = document.getElementById('musicOverlay');
     if (musicOverlay) musicOverlay.style.display = '';
 }
@@ -1906,13 +1905,16 @@ function closeSettingsFullscreen() {
     var el = document.getElementById('settingsFullscreen');
     if (el) el.style.display = 'none';
     var desktopView = document.getElementById('desktopView');
-    if (desktopView) desktopView.classList.remove('hidden');
+    if (desktopView) desktopView.classList.add('hidden');
+    var chatView = document.getElementById('chatView');
+    if (chatView) chatView.classList.add('active');
     document.querySelectorAll('.tab-item').forEach(function(el2) {
         el2.classList.remove('active');
-        if (el2.dataset.tab === 'desktop') {
+        if (el2.dataset.tab === 'chat') {
             el2.classList.add('active');
         }
     });
+    document.getElementById('statusTitle').textContent = appData.otherName || '甜心助手';
 }
 
 // ==================== 聊天 + 号面板 ====================
