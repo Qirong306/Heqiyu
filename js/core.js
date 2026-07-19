@@ -2181,3 +2181,12 @@ window.importMusicJSONFullscreen = importMusicJSONFullscreen;
 window.exportMusicJSONFullscreen = exportMusicJSONFullscreen;
 window.syncMusicToFullscreen = syncMusicToFullscreen;
 window.formatSeconds = formatSeconds;
+// 确保加号面板的所有功能导出到全局
+window.openReplySwitchModal = openReplySwitchModal;
+window.openEmojiManageModal = openEmojiManageModal;
+window.openNicknameModal = openNicknameModal;
+window.openReplyModal = openReplyModal;
+window.openBackupModal = openBackupModal;
+window.openStatusManageModal = openStatusManageModal;
+window.openSubModal = openSubModal;
+window.closeModal = closeModal;
