@@ -6,7 +6,6 @@ var notebookData = {
 };
 var NOTEBOOK_STORAGE_KEY = 'notebook_data_v1';
 
-// 加载记事本数据
 function loadNotebookData() {
     var saved = localStorage.getItem(NOTEBOOK_STORAGE_KEY);
     if (saved) {
@@ -18,9 +17,7 @@ function loadNotebookData() {
         } catch(e) { console.error('加载记事本失败:', e); }
     }
     if (notebookData.myTemplates.length === 0) {
-        // 原有80个词条 + 新增40条情侣互动词
         notebookData.myTemplates = [
-            // 原有词条（保留）
             "今天心情很好", "今天有点累", "今天很开心", "今天有点难过", "今天很充实",
             "今天很无聊", "今天很兴奋", "今天很平静", "今天很感动", "今天很期待",
             "今天工作效率很高", "今天加班了", "今天学到了新东西", "今天完成了任务", "今天被表扬了",
@@ -37,25 +34,18 @@ function loadNotebookData() {
             "今天刮风了", "今天下雪了", "今天阴天", "今天彩虹出现了", "今天晚霞很美",
             "今天摸鱼了", "今天发呆了", "今天打游戏赢了", "今天追剧了", "今天睡懒觉了",
             "今天犯困了", "今天笑了很久", "今天很可爱", "今天被夸了", "今天运气很好",
-            // ========== 新增：情侣互动词库（40条）==========
-            // 一起做的事
             "我们一起吃了火锅", "我们一起看了电影", "我们一起散了步", "我们一起喝了奶茶", 
             "我们一起做了饭", "我们一起逛了超市", "我们一起晒太阳", "我们一起听了歌", 
             "我们一起打了游戏", "我们一起发了呆",
-            // 甜言蜜语
             "你刚才那句话好甜", "你笑起来真好看", "我喜欢听你说话", "你让我今天很开心", 
             "你抱一下就好了", "你摸摸我的头好不好", "你今天特别可爱", "我又想你了", 
             "你在身边真好", "你是我今天的动力",
-            // 早晚安
             "早安，今天也要开心", "晚安，梦里见", "早点睡，不许熬夜", "醒来第一个想到你", 
             "今天也梦到你了", "睡醒记得想我",
-            // 撒娇/情绪
             "我今天有一点点不开心", "想被你夸一下", "你理理我嘛", "我刚刚笑出声了", 
             "我今天有一点累", "我好无聊，你在干嘛", "今天有没有想我", "我想粘着你",
-            // 关心/互动邀请
             "记得喝水", "别太累了", "按时吃饭了吗", "今天也要好好休息", 
             "你开心我就开心", "来陪我聊聊天",
-            // ========== 长句子·安慰/情绪照顾 ==========
             "不用硬撑，累了就靠着我，我扛得住你",
             "你不需要永远积极，偶尔丧气也没关系，我照样喜欢你",
             "今天要是受了委屈，回来我帮你骂回去",
@@ -63,82 +53,7 @@ function loadNotebookData() {
             "不需要强颜欢笑，在我这里你可以做真实的自己",
             "不开心就不开心，我陪你一起不开心，然后再一起开心起来",
             "你哭也好闹也好，我都在旁边陪着，不会走",
-            "别把自己绷太紧，你已经做得很好了，够够的",
-
-            // ========== 长句子·日常关怀 ==========
-            "今天降温了，外套穿厚一点，别着凉",
-            "出门前记得带伞，我看天气预报说要下雨",
-            "冰箱里有水果，记得吃，再不吃就坏了",
-            "你昨晚是不是又熬夜了，黑眼圈都出来了",
-            "我给你点了外卖，大概半小时到，趁热吃",
-            "枕头底下给你塞了暖宝宝，手冷的时候捂一下",
-            "你今天走路步数还没达标，快起来溜达两圈",
-
-            // ========== 长句子·睡前晚安 ==========
-            "晚安，不许偷偷看手机了，我看着你呢",
-            "关灯了，被子盖好，梦里记得想我",
-            "今天辛苦了，好好睡一觉，明天又是新的一天",
-            "你先睡，我再看你一会儿就去睡",
-            "睡吧，所有的烦恼今晚都归我管，明天再还给你",
-            "闭上眼睛，我数三下，你就睡着了，一、二、三，晚安",
-
-            // ========== 长句子·恋爱表白 ==========
-            "你是我一天中最期待的那条消息",
-            "跟你在一起，连发发呆都觉得有意思",
-            "别人再好都没用，你在我这里就是满分",
-            "我好像比昨天更喜欢你了，这不科学",
-            "你不在的时候，我连手机都不想看，就等你出现",
-            "你不用做什么特别的事，站在那里我就心动了",
-            "你大概不知道，你随便一句关心我能开心一整天",
-
-            // ========== 长句子·鼓励打气 ==========
-            "慢慢来，不着急，我会一直等你",
-            "你比你自己想象的要厉害得多，相信我",
-            "做不好也没关系，下次再来，我陪你练",
-            "不用跟别人比，你今天的自己比昨天进步了就行",
-            "你只管往前冲，剩下的交给我来兜底",
-
-            // ========== 长句子·撒娇粘人 ==========
-            "我在你手机里装了监控，发现你今天没怎么想我",
-            "你不理我的时候，我就假装你很忙，其实我在偷偷委屈",
-            "今天我有一点点想你，不对，是很大一点点",
-            "你能不能主动找我一下，每次都我先找你，我不要面子吗",
-
-            // ========== 长句子·随性浪漫 ==========
-            "今天天气很好，适合想你，也适合被你想起",
-            "不用说话，就这样待着，我就觉得很舒服",
-            "你听，外面下雨了，刚好有借口不出门，陪你聊天",
-            // ========== 长句子·关心/陪伴（30条）==========
-            "下班路上车多，慢慢开，不用赶时间",
-            "要是工作压力大了，随时跟我吐槽，我一直听着",
-            "中午别光啃外卖，记得多吃点有营养的",
-            "文件处理不完就留到明天，身体熬坏了得不偿失",
-            "等你忙完这周，咱们挑个周末好好出去放松一下",
-            "在公司受了气不用憋着，回家尽管冲我撒脾气",
-            "记得多起身走动走动，别一整天钉在工位上",
-            "不管今天业绩如何，你在我这里永远值得被偏爱",
-            "就算工作再繁琐，也别忘了照顾好自己的情绪",
-            "我已经提前备好夜宵，就等我的太太回家了",
-            "不用事事追求完美，在我这里，你怎样都很好",
-            "职场上该争取的大胆争取，我做你最硬的底气",
-            "要是觉得累了，就给自己放个小假，我全力支持",
-            "哪怕每天只有一小会儿空闲，我也等着跟你聊聊天，嗯，望妻石是这样的",
-            "今天辛苦了，给你留了一盏灯，热汤在锅里",
-            "不用急着回复我，你先忙，忙完记得想我就行",
-            "你认真工作的样子很帅，但累倒的样子我会心疼",
-            "不管多晚，我都等你回家了再睡",
-            "你不需要总是那么坚强，在我面前可以随便哭随便笑",
-            "今天有没有被人欺负？有的话我去找他理论",
-            "你开心的时候我陪你笑，你难过的时候我肩膀借你",
-            "不用把所有压力都扛在自己身上，分我一半",
-            "你值得被温柔对待，尤其是被你自己",
-            "累了就停下来，我陪你一起摆烂也行",
-            "你不用成为谁的超人，做我的小朋友就够了",
-            "今天也很喜欢你，明天也是，后天也是",
-            "你的碎碎念我全部都爱听，一句都不会觉得烦",
-            "你不需要完美，你只需要是你自己",
-            "不管世界多大，你回头我就在",
-            "你不是一个人，我一直在你身后"      
+            "别把自己绷太紧，你已经做得很好了，够够的"
         ];
         saveNotebookData();
     }
@@ -148,7 +63,6 @@ function saveNotebookData() {
     localStorage.setItem(NOTEBOOK_STORAGE_KEY, JSON.stringify(notebookData));
 }
 
-// 打开记事本主界面
 function openNotebookModal() {
     loadNotebookData();
     closeModal('settingsOverlay');
@@ -192,7 +106,6 @@ function openNotebookModal() {
             <div style="max-height:50vh;overflow-y:auto;" id="notebookPreviewListFullscreen"></div>
         </div>
     `;
-    
     document.body.appendChild(overlay);
     renderNotebookPreviewFullscreen();
 }
@@ -205,7 +118,6 @@ function closeNotebookFullscreen() {
 function renderNotebookPreviewFullscreen() {
     var container = document.getElementById('notebookPreviewListFullscreen');
     if (!container) return;
-    
     var allEntries = [];
     for (var i = 0; i < notebookData.myEntries.length; i++) {
         allEntries.push({ type: 'my', entry: notebookData.myEntries[i] });
@@ -215,12 +127,10 @@ function renderNotebookPreviewFullscreen() {
     }
     allEntries.sort(function(a, b) { return b.entry.time - a.entry.time; });
     allEntries = allEntries.slice(0, 10);
-    
     if (allEntries.length === 0) {
         container.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:20px;">暂无记录，点击写我的日常</div>';
         return;
     }
-    
     var html = '';
     for (var i = 0; i < allEntries.length; i++) {
         var item = allEntries[i];
@@ -229,7 +139,6 @@ function renderNotebookPreviewFullscreen() {
         var label = isMy ? '我' : appData.otherName;
         var timeStr = formatTimeShort(entry.time);
         var commentCount = entry.comments ? entry.comments.length : 0;
-        
         html += '<div style="background:var(--item-bg);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid var(--border);">' +
             '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
             '<span style="font-size:12px;font-weight:bold;color:var(--accent);">' + escapeHTML(label) + '</span>' +
@@ -255,11 +164,9 @@ function renderNotebookPreview() {
     }
     allEntries.sort(function(a, b) { return b.entry.time - a.entry.time; });
     allEntries = allEntries.slice(0, 10);
-    
     if (allEntries.length === 0) {
         return '<div style="text-align:center;color:var(--text-system);padding:20px;">暂无记录，点击写我的日常</div>';
     }
-    
     var html = '';
     for (var i = 0; i < allEntries.length; i++) {
         var item = allEntries[i];
@@ -268,7 +175,6 @@ function renderNotebookPreview() {
         var label = isMy ? '我' : appData.otherName;
         var timeStr = formatTimeShort(entry.time);
         var commentCount = entry.comments ? entry.comments.length : 0;
-        
         html += '<div style="background:var(--item-bg);border-radius:10px;padding:10px;margin-bottom:8px;">' +
             '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
             '<span style="font-size:12px;font-weight:bold;color:var(--accent);">' + escapeHTML(label) + '</span>' +
@@ -284,7 +190,6 @@ function renderNotebookPreview() {
     return html;
 }
 
-// ========== 新版：多选词条发布日常 ==========
 var selectedTemplates = [];
 
 function showAddMyEntryModal() {
@@ -296,16 +201,13 @@ function showAddMyEntryModal() {
 function renderMultiSelectTemplateModal() {
     var templatesHtml = '';
     var allTemplates = notebookData.myTemplates;
-    
     for (var i = 0; i < allTemplates.length; i++) {
         var t = allTemplates[i];
         var isSelected = selectedTemplates.indexOf(i) !== -1;
         templatesHtml += '<button class="template-tag ' + (isSelected ? 'selected' : '') + '" data-idx="' + i + '" onclick="toggleTemplateSelect(' + i + ')">' + escapeHTML(t) + '</button>';
     }
-    
     var previewContent = selectedTemplates.map(function(idx) { return allTemplates[idx]; }).join('。');
     if (previewContent) previewContent += '。';
-    
     var html = '<div style="text-align:center;">' +
         '<h4>写我的日常</h4>' +
         '<div class="subtitle">点击词条多选，自动组合成日常（可手动修改）</div>' +
@@ -326,24 +228,12 @@ function renderMultiSelectTemplateModal() {
         '</div>' +
         '</div>';
     openSubModal(html);
-    
-    // 监听 textarea 变化，允许用户手动编辑
-    var textarea = document.getElementById('newEntryContent');
-    if (textarea) {
-        textarea.addEventListener('input', function() {
-            // 用户手动编辑时，不清空 selectedTemplates，只是内容不同步回选中的词条
-            // 保持选中状态不变，最终以 textarea 内容为准
-        });
-    }
 }
 
 function toggleTemplateSelect(idx) {
     var pos = selectedTemplates.indexOf(idx);
     if (pos === -1) {
-        if (selectedTemplates.length >= 10) {
-            showToast('最多选择10条词句');
-            return;
-        }
+        if (selectedTemplates.length >= 10) { showToast('最多选择10条词句'); return; }
         selectedTemplates.push(idx);
     } else {
         selectedTemplates.splice(pos, 1);
@@ -358,13 +248,9 @@ function clearSelectedTemplates() {
 
 function randomSelectTemplates() {
     var allCount = notebookData.myTemplates.length;
-    if (allCount === 0) {
-        showToast('词条库为空');
-        return;
-    }
-    var randomCount = Math.floor(Math.random() * 10) + 1; // 1-10条
+    if (allCount === 0) { showToast('词条库为空'); return; }
+    var randomCount = Math.floor(Math.random() * 10) + 1;
     randomCount = Math.min(randomCount, allCount);
-    
     var shuffled = [];
     for (var i = 0; i < allCount; i++) shuffled.push(i);
     for (var i = shuffled.length - 1; i > 0; i--) {
@@ -380,33 +266,25 @@ function randomSelectTemplates() {
 
 function addMyEntryFromMultiSelect() {
     var content = document.getElementById('newEntryContent').value.trim();
-    if (!content) {
-        showToast('请填写日常内容');
-        return;
-    }
-    
+    if (!content) { showToast('请填写日常内容'); return; }
     var entry = {
         id: 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         content: content,
         time: Date.now(),
         comments: [],
-        templateIds: selectedTemplates.slice() // 记录选了哪些词条（可选）
+        templateIds: selectedTemplates.slice()
     };
     notebookData.myEntries.unshift(entry);
     if (notebookData.myEntries.length > 100) notebookData.myEntries.pop();
     saveNotebookData();
-    
     sendNotebookToChat('我', content);
-    
     closeModal('subOverlay');
     showToast('日常已发布');
     openNotebookModal();
 }
 
-// 显示对方的日常列表
 function showOtherEntriesModal() {
     loadNotebookData();
-    
     if (notebookData.otherEntries.length === 0) {
         var html = '<div style="text-align:center;">' +
             '<h4>对方的日常</h4>' +
@@ -416,13 +294,11 @@ function showOtherEntriesModal() {
         openSubModal(html);
         return;
     }
-    
     var entriesHtml = '';
     for (var i = 0; i < notebookData.otherEntries.length; i++) {
         var entry = notebookData.otherEntries[i];
         var timeStr = formatTimeShort(entry.time);
         var commentCount = entry.comments ? entry.comments.length : 0;
-        
         entriesHtml += '<div style="background:var(--item-bg);border-radius:10px;padding:10px;margin-bottom:8px;">' +
             '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
             '<span style="font-size:12px;font-weight:bold;color:var(--accent);">' + escapeHTML(appData.otherName) + '</span>' +
@@ -435,7 +311,6 @@ function showOtherEntriesModal() {
             '</div>' +
             '</div>';
     }
-    
     var html = '<div style="text-align:center;">' +
         '<h4>对方的日常</h4>' +
         '<div class="subtitle">共 ' + notebookData.otherEntries.length + ' 条记录</div>' +
@@ -445,7 +320,6 @@ function showOtherEntriesModal() {
     openSubModal(html);
 }
 
-// 查看条目详情和评论
 function viewEntryDetail(entryId, type) {
     var entry = null;
     if (type === 'my') {
@@ -454,7 +328,6 @@ function viewEntryDetail(entryId, type) {
         entry = notebookData.otherEntries.find(function(e) { return e.id === entryId; });
     }
     if (!entry) return;
-    
     var commentsHtml = '';
     if (entry.comments && entry.comments.length > 0) {
         for (var i = 0; i < entry.comments.length; i++) {
@@ -469,7 +342,6 @@ function viewEntryDetail(entryId, type) {
     } else {
         commentsHtml = '<div style="text-align:center;color:var(--text-system);padding:16px;">暂无评论</div>';
     }
-    
     var html = '<div style="text-align:center;">' +
         '<h4>日常详情</h4>' +
         '<div style="background:var(--item-bg);border-radius:10px;padding:12px;margin:12px 0;text-align:left;">' +
@@ -489,20 +361,10 @@ function viewEntryDetail(entryId, type) {
     openSubModal(html);
 }
 
-// 添加评论
 function addComment(entryId, type) {
     var content = document.getElementById('commentContent').value.trim();
-    if (!content) {
-        showToast('请填写评论');
-        return;
-    }
-    
-    var comment = {
-        content: content,
-        time: Date.now(),
-        by: 'me'
-    };
-    
+    if (!content) { showToast('请填写评论'); return; }
+    var comment = { content: content, time: Date.now(), by: 'me' };
     if (type === 'my') {
         var myEntry = notebookData.myEntries.find(function(e) { return e.id === entryId; });
         if (myEntry) {
@@ -517,16 +379,13 @@ function addComment(entryId, type) {
         }
     }
     saveNotebookData();
-    
     closeModal('subOverlay');
     showToast('评论已发送');
     viewEntryDetail(entryId, type);
 }
 
-// 显示词条库管理（保留原有功能，同时支持新增）
 function showMyTemplatesModal() {
     loadNotebookData();
-    
     var templatesHtml = '';
     for (var i = 0; i < notebookData.myTemplates.length; i++) {
         templatesHtml += '<div class="list-item">' +
@@ -534,7 +393,6 @@ function showMyTemplatesModal() {
             '<button class="del-sm" onclick="deleteTemplate(' + i + ')">删除</button>' +
             '</div>';
     }
-    
     var html = '<div style="text-align:center;">' +
         '<h4>我的词条库</h4>' +
         '<div class="subtitle">可多选组合成日常，支持随机1-10条</div>' +
@@ -555,10 +413,7 @@ function showMyTemplatesModal() {
 function addTemplate() {
     var input = document.getElementById('newTemplateInput');
     var text = input.value.trim();
-    if (!text) {
-        showToast('请输入词条');
-        return;
-    }
+    if (!text) { showToast('请输入词条'); return; }
     notebookData.myTemplates.push(text);
     saveNotebookData();
     input.value = '';
@@ -573,13 +428,11 @@ function deleteTemplate(index) {
     showToast('已删除');
 }
 
-// 发送到聊天界面
 function sendNotebookToChat(name, content) {
     var msg = name + ' 的日常：' + content;
     addSystemMsg(msg);
 }
 
-// 对方添加日常（支持多选组合）
 function showOtherAddEntryModal() {
     loadNotebookData();
     selectedTemplates = [];
@@ -589,16 +442,13 @@ function showOtherAddEntryModal() {
 function renderOtherMultiSelectModal() {
     var templatesHtml = '';
     var allTemplates = notebookData.myTemplates;
-    
     for (var i = 0; i < allTemplates.length; i++) {
         var t = allTemplates[i];
         var isSelected = selectedTemplates.indexOf(i) !== -1;
         templatesHtml += '<button class="template-tag ' + (isSelected ? 'selected' : '') + '" data-idx="' + i + '" onclick="toggleOtherTemplateSelect(' + i + ')">' + escapeHTML(t) + '</button>';
     }
-    
     var previewContent = selectedTemplates.map(function(idx) { return allTemplates[idx]; }).join('。');
     if (previewContent) previewContent += '。';
-    
     var html = '<div style="text-align:center;">' +
         '<h4>写日常</h4>' +
         '<div class="subtitle">点击词条多选，自动组合（可手动修改）</div>' +
@@ -624,10 +474,7 @@ function renderOtherMultiSelectModal() {
 function toggleOtherTemplateSelect(idx) {
     var pos = selectedTemplates.indexOf(idx);
     if (pos === -1) {
-        if (selectedTemplates.length >= 10) {
-            showToast('最多选择10条词句');
-            return;
-        }
+        if (selectedTemplates.length >= 10) { showToast('最多选择10条词句'); return; }
         selectedTemplates.push(idx);
     } else {
         selectedTemplates.splice(pos, 1);
@@ -642,13 +489,9 @@ function clearOtherSelectedTemplates() {
 
 function randomSelectOtherTemplates() {
     var allCount = notebookData.myTemplates.length;
-    if (allCount === 0) {
-        showToast('词条库为空');
-        return;
-    }
+    if (allCount === 0) { showToast('词条库为空'); return; }
     var randomCount = Math.floor(Math.random() * 10) + 1;
     randomCount = Math.min(randomCount, allCount);
-    
     var shuffled = [];
     for (var i = 0; i < allCount; i++) shuffled.push(i);
     for (var i = shuffled.length - 1; i > 0; i--) {
@@ -664,11 +507,7 @@ function randomSelectOtherTemplates() {
 
 function addOtherEntryFromMultiSelect() {
     var content = document.getElementById('otherEntryContent').value.trim();
-    if (!content) {
-        showToast('请填写日常内容');
-        return;
-    }
-    
+    if (!content) { showToast('请填写日常内容'); return; }
     var entry = {
         id: 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         content: content,
@@ -679,23 +518,14 @@ function addOtherEntryFromMultiSelect() {
     notebookData.otherEntries.unshift(entry);
     if (notebookData.otherEntries.length > 100) notebookData.otherEntries.pop();
     saveNotebookData();
-    
     sendNotebookToChat(appData.otherName, content);
-    
     closeModal('subOverlay');
     showToast('日常已发布');
 }
 
-// 导出记事本
 function exportNotebook() {
-    var exportData = {
-        type: 'notebook',
-        version: '1.0',
-        data: notebookData,
-        exportTime: new Date().toISOString()
-    };
+    var exportData = { type: 'notebook', version: '1.0', data: notebookData, exportTime: new Date().toISOString() };
     var jsonStr = JSON.stringify(exportData, null, 2);
-    
     var html = '<div style="text-align:center;">' +
         '<h4>导出记事本</h4>' +
         '<div class="subtitle">共 ' + notebookData.myEntries.length + ' 条我的记录，' + notebookData.otherEntries.length + ' 条对方记录</div>' +
@@ -710,22 +540,13 @@ function exportNotebook() {
 }
 
 function copyNotebookToClipboard() {
-    var exportData = {
-        type: 'notebook',
-        version: '1.0',
-        data: notebookData
-    };
+    var exportData = { type: 'notebook', version: '1.0', data: notebookData };
     copyToClipboard(JSON.stringify(exportData, null, 2), '记事本');
     closeModal('subOverlay');
 }
 
 function downloadNotebookFile() {
-    var exportData = {
-        type: 'notebook',
-        version: '1.0',
-        data: notebookData,
-        exportTime: new Date().toISOString()
-    };
+    var exportData = { type: 'notebook', version: '1.0', data: notebookData, exportTime: new Date().toISOString() };
     var jsonStr = JSON.stringify(exportData, null, 2);
     var blob = new Blob([jsonStr], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -740,7 +561,6 @@ function downloadNotebookFile() {
     showToast('记事本已下载');
 }
 
-// 导入记事本
 function importNotebook() {
     var input = document.createElement('input');
     input.type = 'file';
@@ -753,15 +573,9 @@ function importNotebook() {
             try {
                 var data = JSON.parse(e.target.result);
                 var newData = null;
-                
-                if (data.type === 'notebook' && data.data) {
-                    newData = data.data;
-                } else if (data.myEntries && data.otherEntries) {
-                    newData = data;
-                } else if (data.data && data.data.myEntries) {
-                    newData = data.data;
-                }
-                
+                if (data.type === 'notebook' && data.data) { newData = data.data; }
+                else if (data.myEntries && data.otherEntries) { newData = data; }
+                else if (data.data && data.data.myEntries) { newData = data.data; }
                 if (newData && (newData.myEntries || newData.otherEntries || newData.myTemplates)) {
                     notebookData.myEntries = newData.myEntries || [];
                     notebookData.otherEntries = newData.otherEntries || [];
@@ -769,9 +583,7 @@ function importNotebook() {
                     saveNotebookData();
                     showToast('导入成功');
                     openNotebookModal();
-                } else {
-                    throw new Error('格式错误');
-                }
+                } else { throw new Error('格式错误'); }
             } catch(err) {
                 console.error('导入错误:', err);
                 showToast('导入失败，文件格式错误');
@@ -782,19 +594,13 @@ function importNotebook() {
     input.click();
 }
 
-// 导出词条
 function exportTemplates() {
-    var exportData = {
-        type: 'templates',
-        version: '1.0',
-        data: notebookData.myTemplates
-    };
+    var exportData = { type: 'templates', version: '1.0', data: notebookData.myTemplates };
     copyToClipboard(JSON.stringify(exportData, null, 2), '词条库');
     closeModal('subOverlay');
     showToast('词条库已复制到剪贴板');
 }
 
-// 导入词条
 function importTemplates() {
     var input = document.createElement('input');
     input.type = 'file';
@@ -807,40 +613,27 @@ function importTemplates() {
             try {
                 var data = JSON.parse(e.target.result);
                 var newTemplates = null;
-                
-                if (Array.isArray(data)) {
-                    newTemplates = data;
-                } else if (data.type === 'templates' && Array.isArray(data.data)) {
-                    newTemplates = data.data;
-                } else if (Array.isArray(data.templates)) {
-                    newTemplates = data.templates;
-                }
-                
+                if (Array.isArray(data)) { newTemplates = data; }
+                else if (data.type === 'templates' && Array.isArray(data.data)) { newTemplates = data.data; }
+                else if (Array.isArray(data.templates)) { newTemplates = data.templates; }
                 if (newTemplates && newTemplates.length > 0) {
                     notebookData.myTemplates = newTemplates;
                     saveNotebookData();
                     showToast('导入成功，共 ' + newTemplates.length + ' 个词条');
                     showMyTemplatesModal();
-                } else {
-                    throw new Error('格式错误');
-                }
-            } catch(err) {
-                showToast('导入失败，文件格式错误');
-            }
+                } else { throw new Error('格式错误'); }
+            } catch(err) { showToast('导入失败，文件格式错误'); }
         };
         reader.readAsText(file);
     };
     input.click();
 }
 
-// 对方随机发布日常（支持多词组合）
 function otherRandomAddEntry() {
     if (notebookData.myTemplates.length === 0) return;
     if (Math.random() > 0.3) return;
-    
-    var randomCount = Math.floor(Math.random() * 5) + 1; // 1-5条
+    var randomCount = Math.floor(Math.random() * 5) + 1;
     randomCount = Math.min(randomCount, notebookData.myTemplates.length);
-    
     var shuffled = [];
     for (var i = 0; i < notebookData.myTemplates.length; i++) shuffled.push(i);
     for (var i = shuffled.length - 1; i > 0; i--) {
@@ -851,7 +644,6 @@ function otherRandomAddEntry() {
     }
     var selectedIdx = shuffled.slice(0, randomCount);
     var content = selectedIdx.map(function(idx) { return notebookData.myTemplates[idx]; }).join('。') + '。';
-    
     var entry = {
         id: 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         content: content,
@@ -862,16 +654,13 @@ function otherRandomAddEntry() {
     notebookData.otherEntries.unshift(entry);
     if (notebookData.otherEntries.length > 100) notebookData.otherEntries.pop();
     saveNotebookData();
-    
     sendNotebookToChat(appData.otherName, content);
 }
 
-// 定时检查对方随机发布
 setInterval(function() {
     otherRandomAddEntry();
 }, 120000);
 
-// 添加样式（多选标签样式）
 (function addTemplateTagStyles() {
     if (document.getElementById('notebook-tag-styles')) return;
     var style = document.createElement('style');
@@ -890,23 +679,17 @@ setInterval(function() {
             letter-spacing: 0.5px;
             white-space: nowrap;
         }
-        .template-tag:active {
-            transform: scale(0.95);
-        }
+        .template-tag:active { transform: scale(0.95); }
         .template-tag.selected {
             background: var(--accent);
             border-color: var(--accent);
             color: var(--text);
         }
-        .template-grid {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .template-grid::-webkit-scrollbar {
-            width: 3px;
-        }
+        .template-grid { max-height: 200px; overflow-y: auto; }
+        .template-grid::-webkit-scrollbar { width: 3px; }
     `;
     document.head.appendChild(style);
 })();
+
 window.openNotebookModal = openNotebookModal;
 window.closeNotebookFullscreen = closeNotebookFullscreen;
