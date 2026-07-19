@@ -1672,9 +1672,21 @@ function clearChatHistory() {
 
 // 关闭所有全屏
 function closeAllFullscreens() {
-    var ids = ['shopFullscreen', 'forumFullscreen', 'letterFullscreen', 'scratchFullscreen', 
-               'sudokuFullscreen', 'gomokuFullscreen', 'murderFullscreen', 'wheelFullscreen',
-               'bookFullscreen', 'notebookFullscreen', 'themeFullscreen', 'musicPlayerFullscreen'];
+    var ids = [
+        'shopFullscreen', 
+        'forumFullscreen', 
+        'letterFullscreen', 
+        'scratchFullscreen', 
+        'sudokuFullscreen', 
+        'gomokuFullscreen', 
+        'murderFullscreen', 
+        'wheelFullscreen',
+        'bookFullscreen', 
+        'notebookFullscreen', 
+        'themeFullscreen', 
+        'musicPlayerFullscreen',
+        'cozyOverlay'
+    ];
     ids.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.remove();
