@@ -525,6 +525,7 @@ function openMurderMystery() {
     if (currentGame && currentGame !== 'murder') {
         if (!confirm('当前有进行中的游戏，确定要切换吗？')) return;
     }
+    closeAllFullscreens();
     
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
