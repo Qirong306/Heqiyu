@@ -46,27 +46,45 @@ function openSudoku() {
     if (currentGame && currentGame !== 'sudoku') {
         if (!confirm('当前有进行中的游戏，确定要切换吗？')) return;
     }
-    closeModal('subOverlay');
-    var html = '<h4>数独</h4>';
-    html += '<div class="sudoku-container">';
-    html += '<div class="btn-row" style="justify-content:center;">';
-    html += '<button class="btn-sm ' + (sudokuDifficulty === 'easy' ? '' : 'outline') + '" onclick="setSudokuDifficulty(\'easy\')">简单</button>';
-    html += '<button class="btn-sm ' + (sudokuDifficulty === 'medium' ? '' : 'outline') + '" onclick="setSudokuDifficulty(\'medium\')">中等</button>';
-    html += '<button class="btn-sm ' + (sudokuDifficulty === 'hard' ? '' : 'outline') + '" onclick="setSudokuDifficulty(\'hard\')">困难</button>';
-    html += '</div>';
-    html += '<div class="sudoku-board" id="sudokuBoard"></div>';
-    html += '<div class="sudoku-numpad" id="sudokuNumpad"></div>';
-    html += '<div class="btn-row" style="justify-content:center;margin-top:8px;">';
-    html += '<button class="btn-sm outline" onclick="newSudokuGame()">新游戏</button>';
-    html += '<button class="btn-sm outline" onclick="giveSudokuHint()">提示</button>';
-    html += '</div>';
-    html += '<div class="gomoku-info" id="sudokuInfo">选择单元格，点击数字填充</div>';
-    html += '</div>';
-    html += '<button class="btn-close" onclick="exitSudoku()" style="margin-top:10px;">退出数独</button>';
-    openSubModal(html);
-
+    
+    // 创建全屏容器
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'sudokuFullscreen';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeSudokuFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">数独</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;">
+            <div class="btn-row" style="justify-content:center;">
+                <button class="btn-sm ${sudokuDifficulty === 'easy' ? '' : 'outline'}" onclick="setSudokuDifficulty('easy')">简单</button>
+                <button class="btn-sm ${sudokuDifficulty === 'medium' ? '' : 'outline'}" onclick="setSudokuDifficulty('medium')">中等</button>
+                <button class="btn-sm ${sudokuDifficulty === 'hard' ? '' : 'outline'}" onclick="setSudokuDifficulty('hard')">困难</button>
+            </div>
+            <div class="sudoku-board" id="sudokuBoard"></div>
+            <div class="sudoku-numpad" id="sudokuNumpad"></div>
+            <div class="btn-row" style="justify-content:center;">
+                <button class="btn-sm outline" onclick="newSudokuGame()">新游戏</button>
+                <button class="btn-sm outline" onclick="giveSudokuHint()">提示</button>
+            </div>
+            <div class="gomoku-info" id="sudokuInfo" style="text-align:center;font-size:14px;color:var(--text);">选择单元格，点击数字填充</div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
     setInputMode('game', 'sudoku');
     newSudokuGame();
+}
+
+function closeSudokuFullscreen() {
+    var el = document.getElementById('sudokuFullscreen');
+    if (el) el.remove();
+    setInputMode('normal');
 }
 
 function setSudokuDifficulty(level) {
@@ -285,21 +303,40 @@ function openGomoku() {
     if (currentGame && currentGame !== 'gomoku') {
         if (!confirm('当前有进行中的游戏，确定要切换吗？')) return;
     }
-    closeModal('subOverlay');
-    var html = '<h4>五子棋</h4>';
-    html += '<div class="gomoku-container">';
-    html += '<div class="gomoku-board-wrap"><canvas class="gomoku-board" id="gomokuCanvas" width="340" height="340"></canvas></div>';
-    html += '<div class="gomoku-info" id="gomokuInfo">你执黑先行，点击棋盘落子</div>';
-    html += '<div class="btn-row" style="justify-content:center;margin-top:6px;">';
-    html += '<button class="btn-sm outline" onclick="newGomokuGame()">新游戏</button>';
-    html += '<button class="btn-sm outline" onclick="undoGomoku()">悔棋</button>';
-    html += '</div>';
-    html += '</div>';
-    html += '<button class="btn-close" onclick="exitGomoku()" style="margin-top:10px;">退出五子棋</button>';
-    openSubModal(html);
-
+    
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'gomokuFullscreen';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeGomokuFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">五子棋</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;">
+            <div class="gomoku-board-wrap" style="background:var(--item-bg);padding:10px;border-radius:var(--radius-sm);">
+                <canvas class="gomoku-board" id="gomokuCanvas" width="340" height="340"></canvas>
+            </div>
+            <div class="gomoku-info" id="gomokuInfo" style="text-align:center;font-size:14px;color:var(--text);">你执黑先行，点击棋盘落子</div>
+            <div class="btn-row" style="justify-content:center;">
+                <button class="btn-sm outline" onclick="newGomokuGame()">新游戏</button>
+                <button class="btn-sm outline" onclick="undoGomoku()">悔棋</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
     setInputMode('game', 'gomoku');
     newGomokuGame();
+}
+
+function closeGomokuFullscreen() {
+    var el = document.getElementById('gomokuFullscreen');
+    if (el) el.remove();
+    setInputMode('normal');
 }
 
 function newGomokuGame() {
@@ -507,16 +544,37 @@ function openMurderMystery() {
     if (currentGame && currentGame !== 'murder') {
         if (!confirm('当前有进行中的游戏，确定要切换吗？')) return;
     }
-    closeModal('subOverlay');
-    var html = '<h4>剧本杀</h4>';
-    html += '<div class="subtitle">选择剧本开始推理</div>';
-    html += '<div class="btn-row"><button class="btn-sm" onclick="uploadMurderScript()">上传 JSON 剧本</button></div>';
-    html += '<div style="max-height:300px;overflow-y:auto;margin-top:10px;" id="murderScriptList">';
-    html += '<div style="text-align:center;color:var(--text-system);padding:10px;">点击按钮上传剧本文件</div>';
-    html += '</div>';
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')">关闭</button>';
-    openSubModal(html);
+    
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'murderFullscreen';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeMurderFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">剧本杀</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" id="murderFullscreenBody" style="padding:16px;">
+            <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">选择剧本开始推理</div>
+            <div class="btn-row" style="justify-content:center;margin-bottom:12px;">
+                <button class="btn-sm" onclick="uploadMurderScript()">上传 JSON 剧本</button>
+            </div>
+            <div style="max-height:60vh;overflow-y:auto;" id="murderScriptList">
+                <div style="text-align:center;color:var(--text-system);padding:20px;">点击按钮上传剧本文件</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
     renderMurderScriptList();
+}
+
+function closeMurderFullscreen() {
+    var el = document.getElementById('murderFullscreen');
+    if (el) el.remove();
 }
 
 function renderMurderScriptList() {
@@ -889,3 +947,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 500);
 });
+window.openSudoku = openSudoku;
+window.closeSudokuFullscreen = closeSudokuFullscreen;
+window.openGomoku = openGomoku;
+window.closeGomokuFullscreen = closeGomokuFullscreen;
+window.openMurderMystery = openMurderMystery;
+window.closeMurderFullscreen = closeMurderFullscreen;
