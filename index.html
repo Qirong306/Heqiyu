@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/cozy-style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
     <!-- OneSignal 推送通知 -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
@@ -49,29 +50,207 @@
 </head>
 <body>
 
-<!-- ==================== 头部 ==================== -->
-<div class="header">
-    <span class="header-title" id="headerTitle">甜心助手</span>
-    <div class="header-status" id="otherStatus"></div>
-    <span class="note-badge" id="noteBadge" onclick="openNotebookModal()" style="background:var(--accent);color:var(--text);font-size:11px;padding:4px 10px;border-radius:12px;cursor:pointer;letter-spacing:1px;white-space:nowrap;margin-left:8px;">记事本</span>
-    <span class="letter-badge" id="letterBadge" style="display:none;" onclick="checkAndShowLetterReply()">新回信</span>
-</div>
+<!-- ==================== 桌面主界面 ==================== -->
+<div id="appContainer">
 
-<!-- ==================== 聊天区域 ==================== -->
-<div class="chat" id="chat"></div>
+    <!-- ===== 状态栏 ===== -->
+    <div class="status-bar">
+        <span class="status-time" id="statusTime">12:00</span>
+        <span class="status-weather" id="statusWeather">
+            <span class="weather-icon weather-sunny"></span>
+            晴天
+        </span>
+        <span class="status-battery">
+            <span class="battery-icon"></span>
+            100%
+        </span>
+    </div>
 
-<!-- ==================== 输入区域 ==================== -->
-<div class="input-area" id="inputArea">
-    <div class="input-row">
-        <button class="text-btn" onclick="startVoiceCall()">通话</button>
-        <button class="text-btn" onclick="openPhotoMenu()">照片</button>
-        <input type="text" id="msgInput" placeholder="说点什么吧..." onkeypress="if(event.key==='Enter')sendMsg()">
-        <button class="plus-btn" onclick="toggleMorePanel()">+</button>
-        <button class="send-btn" onclick="sendMsg()">发送</button>
+    <!-- ===== 头部 ===== -->
+    <div class="header">
+        <div class="header-left">
+            <span class="header-title" id="headerTitle">甜心助手</span>
+        </div>
+        <div class="header-right">
+            <span class="header-status" id="otherStatus">发呆</span>
+            <span class="note-badge" id="noteBadge" onclick="openNotebookModal()">
+                <span class="mini-icon mini-notebook"></span>
+            </span>
+            <span class="letter-badge" id="letterBadge" style="display:none;" onclick="checkAndShowLetterReply()">
+                <span class="mini-icon mini-letter"></span>
+            </span>
+        </div>
+    </div>
+
+    <!-- ===== 桌面区域 ===== -->
+    <div class="desktop-area" id="desktopArea">
+        
+        <!-- 迷你音乐播放器 -->
+        <div class="music-mini-player" onclick="openMusicPlayer()">
+            <span class="music-mini-icon">
+                <span class="icon-music-note"></span>
+            </span>
+            <span class="music-mini-name" id="miniMusicName">未播放</span>
+            <span class="music-mini-controls">
+                <span onclick="event.stopPropagation();cozyMusicPrev();" class="ctrl-prev"></span>
+                <span onclick="event.stopPropagation();cozyMusicPlayPause();" class="ctrl-play" id="miniMusicPlayBtn"></span>
+                <span onclick="event.stopPropagation();cozyMusicNext();" class="ctrl-next"></span>
+            </span>
+        </div>
+
+        <!-- 功能图标网格 -->
+        <div class="app-grid">
+            <!-- 第1行 -->
+            <div class="app-item" onclick="openCozySpace()">
+                <div class="app-icon icon-cozy">
+                    <span class="icon-shape icon-house"></span>
+                </div>
+                <span class="app-name">暖屋</span>
+            </div>
+            <div class="app-item" onclick="openShopModal()">
+                <div class="app-icon icon-shop">
+                    <span class="icon-shape icon-bag"></span>
+                </div>
+                <span class="app-name">商城</span>
+            </div>
+            <div class="app-item" onclick="openForum()">
+                <div class="app-icon icon-forum">
+                    <span class="icon-shape icon-bubble"></span>
+                </div>
+                <span class="app-name">论坛</span>
+            </div>
+            <div class="app-item" onclick="openLetterModal()">
+                <div class="app-icon icon-letter">
+                    <span class="icon-shape icon-envelope"></span>
+                </div>
+                <span class="app-name">信件</span>
+            </div>
+
+            <!-- 第2行 -->
+            <div class="app-item" onclick="openScratchCard()">
+                <div class="app-icon icon-scratch">
+                    <span class="icon-shape icon-gift"></span>
+                </div>
+                <span class="app-name">刮刮乐</span>
+            </div>
+            <div class="app-item" onclick="openSudoku()">
+                <div class="app-icon icon-sudoku">
+                    <span class="icon-shape icon-grid"></span>
+                </div>
+                <span class="app-name">数独</span>
+            </div>
+            <div class="app-item" onclick="openGomoku()">
+                <div class="app-icon icon-gomoku">
+                    <span class="icon-shape icon-board"></span>
+                </div>
+                <span class="app-name">五子棋</span>
+            </div>
+            <div class="app-item" onclick="openMurderMystery()">
+                <div class="app-icon icon-murder">
+                    <span class="icon-shape icon-magnifier"></span>
+                </div>
+                <span class="app-name">剧本杀</span>
+            </div>
+
+            <!-- 第3行 -->
+            <div class="app-item" onclick="VideoDanmaku.open()">
+                <div class="app-icon icon-video">
+                    <span class="icon-shape icon-play"></span>
+                </div>
+                <span class="app-name">视频弹幕</span>
+            </div>
+            <div class="app-item" onclick="openWheel()">
+                <div class="app-icon icon-wheel">
+                    <span class="icon-shape icon-wheel-shape"></span>
+                </div>
+                <span class="app-name">幸福转盘</span>
+            </div>
+            <div class="app-item" onclick="openBookManageModal()">
+                <div class="app-icon icon-book">
+                    <span class="icon-shape icon-book-open"></span>
+                </div>
+                <span class="app-name">书籍阅读</span>
+            </div>
+            <div class="app-item" onclick="openNotebookModal()">
+                <div class="app-icon icon-notebook">
+                    <span class="icon-shape icon-notebook-shape"></span>
+                </div>
+                <span class="app-name">情侣记事本</span>
+            </div>
+
+            <!-- 第4行 -->
+            <div class="app-item" onclick="openColorThemeModal()">
+                <div class="app-icon icon-theme">
+                    <span class="icon-shape icon-palette"></span>
+                </div>
+                <span class="app-name">主题</span>
+            </div>
+            <div class="app-item" onclick="openSettings()">
+                <div class="app-icon icon-settings">
+                    <span class="icon-shape icon-gear"></span>
+                </div>
+                <span class="app-name">设置</span>
+            </div>
+            <div class="app-item" style="opacity:0;pointer-events:none;">
+                <div class="app-icon"></div>
+                <span class="app-name"></span>
+            </div>
+            <div class="app-item" style="opacity:0;pointer-events:none;">
+                <div class="app-icon"></div>
+                <span class="app-name"></span>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- ==================== 弹窗系统 ==================== -->
+<!-- ===== 底部 Tab 栏 ===== -->
+<div class="bottom-tab-bar">
+    <div class="tab-item active" data-tab="chat" onclick="switchTab('chat')">
+        <span class="tab-icon">
+            <span class="tab-icon-chat"></span>
+        </span>
+        <span class="tab-label">聊天</span>
+    </div>
+    <div class="tab-item" data-tab="call" onclick="switchTab('call')">
+        <span class="tab-icon">
+            <span class="tab-icon-call"></span>
+        </span>
+        <span class="tab-label">通话</span>
+    </div>
+    <div class="tab-item" data-tab="settings" onclick="switchTab('settings')">
+        <span class="tab-icon">
+            <span class="tab-icon-settings"></span>
+        </span>
+        <span class="tab-label">设置</span>
+    </div>
+</div>
+
+<!-- ==================== 聊天界面（嵌入桌面，点击聊天Tab显示） ==================== -->
+<div class="chat-view" id="chatView">
+    <!-- 聊天头部 -->
+    <div class="chat-header">
+        <span class="chat-header-title" id="chatHeaderTitle">甜心助手</span>
+        <span class="chat-header-status" id="chatHeaderStatus">发呆</span>
+    </div>
+    
+    <!-- 聊天区域 -->
+    <div class="chat" id="chat"></div>
+    
+    <!-- 输入区域 -->
+    <div class="input-area" id="inputArea">
+        <div class="input-row">
+            <button class="text-btn" onclick="startVoiceCall()">通话</button>
+            <button class="text-btn" onclick="openPhotoMenu()">照片</button>
+            <input type="text" id="msgInput" placeholder="说点什么吧..." onkeypress="if(event.key==='Enter')sendMsg()">
+            <button class="plus-btn" onclick="toggleMorePanel()">
+                <span class="plus-icon"></span>
+            </button>
+            <button class="send-btn" onclick="sendMsg()">发送</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 原有弹窗 ==================== -->
 
 <!-- 照片选择 -->
 <div class="modal-overlay" id="photoOverlay">
@@ -90,15 +269,45 @@
 <div class="more-panel" id="morePanel">
     <div class="more-panel-header">
         <span>更多功能</span>
-        <button onclick="toggleMorePanel()">x</button>
+        <button onclick="toggleMorePanel()">✕</button>
     </div>
     <div class="more-panel-grid-top">
-        <div class="more-item-text" onclick="openEmojiTabInMore()">表情包</div>
-        <div class="more-item-text" onclick="openLetterModal()">写信</div>
-        <div class="more-item-text" onclick="toggleMorePanel();openSettings();">设置</div>
-        <div class="more-item-text" onclick="toggleMorePanel();VideoDanmaku.open()">视频弹幕</div>
-        <div class="more-item-text" onclick="toggleMorePanel();openTransferModal();">转账</div>
-        <div class="more-item-text" onclick="toggleMorePanel();openCozySpace();">暖屋</div>
+        <div class="more-app" onclick="toggleMorePanel();openEmojiTabInMore();">
+            <div class="app-icon icon-emoji">
+                <span class="icon-shape icon-smile"></span>
+            </div>
+            <span class="app-name">表情包</span>
+        </div>
+        <div class="more-app" onclick="toggleMorePanel();openLetterModal();">
+            <div class="app-icon icon-letter">
+                <span class="icon-shape icon-envelope"></span>
+            </div>
+            <span class="app-name">写信</span>
+        </div>
+        <div class="more-app" onclick="toggleMorePanel();openTransferModal();">
+            <div class="app-icon icon-transfer">
+                <span class="icon-shape icon-coin"></span>
+            </div>
+            <span class="app-name">转账</span>
+        </div>
+        <div class="more-app" onclick="toggleMorePanel();VideoDanmaku.open();">
+            <div class="app-icon icon-video">
+                <span class="icon-shape icon-play"></span>
+            </div>
+            <span class="app-name">视频弹幕</span>
+        </div>
+        <div class="more-app" onclick="toggleMorePanel();openCozySpace();">
+            <div class="app-icon icon-cozy">
+                <span class="icon-shape icon-house"></span>
+            </div>
+            <span class="app-name">暖屋</span>
+        </div>
+        <div class="more-app" onclick="toggleMorePanel();openSettings();">
+            <div class="app-icon icon-settings">
+                <span class="icon-shape icon-gear"></span>
+            </div>
+            <span class="app-name">设置</span>
+        </div>
     </div>
     <div class="more-panel-upload-row">
         <input type="file" id="moreFileInput" accept="image/*" style="display:none" onchange="uploadToMorePanel()">
@@ -125,6 +334,7 @@
             <div class="card" onclick="openNotebookModal()">情侣记事本</div>
             <div class="card" onclick="openColorThemeModal()">主题颜色</div>
             <div class="card" onclick="openReplySwitchModal()">回复开关</div>
+            <div class="card" onclick="openCozySettings()">暖屋设置</div>
         </div>
         <button class="btn-close" onclick="closeModal('settingsOverlay')">关闭</button>
     </div>
@@ -161,7 +371,7 @@
     <div class="vd-header">
         <span class="vd-title">一起看</span>
         <div class="vd-header-actions">
-            <button class="vd-btn-icon" id="vd-btn-close" title="关闭">x</button>
+            <button class="vd-btn-icon" id="vd-btn-close" title="关闭">✕</button>
         </div>
     </div>
     <div class="vd-main">
@@ -171,7 +381,7 @@
                 <canvas id="vd-canvas" class="vd-canvas"></canvas>
                 <div class="vd-video-placeholder" id="vd-placeholder">
                     <div class="vd-placeholder-content">
-                        <span class="vd-placeholder-icon">播放</span>
+                        <span class="vd-placeholder-icon">▶</span>
                         <p>输入视频链接或上传文件开始播放</p>
                         <p class="vd-placeholder-hint">支持 .mp4 格式 | 可拖拽文件到此处</p>
                     </div>
@@ -202,7 +412,7 @@
         <div style="display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
             <h3 style="margin:0;">论坛</h3>
             <div style="position:absolute;right:0;">
-                <span onclick="event.stopPropagation();toggleForumMenu()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">&#9776;</span>
+                <span onclick="event.stopPropagation();toggleForumMenu()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</span>
                 <div id="forumDropdownMenu" style="display:none;position:absolute;top:32px;right:0;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
                     <div onclick="newForumTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">新建话题</div>
                     <div onclick="importForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入话题</div>
@@ -242,7 +452,7 @@
 <script src="js/scratch.js"></script>
 <script src="js/wheel.js"></script>
 <script src="js/drawing.js"></script>
-<!-- 暖屋模块 --!>
+<!-- 暖屋模块 -->
 <script src="js/cozy/cozy-data.js"></script>
 <script src="js/cozy/cozy-space.js"></script>
 <script src="js/cozy/cozy-furniture.js"></script>
@@ -250,5 +460,6 @@
 <script src="js/cozy/cozy-message.js"></script>
 <script src="js/cozy/cozy-focus.js"></script>
 <script src="js/cozy/cozy-canvas.js"></script>
+
 </body>
 </html>
