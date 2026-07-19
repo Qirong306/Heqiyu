@@ -66,10 +66,16 @@ function saveNotebookData() {
 function openNotebookModal() {
     loadNotebookData();
     closeModal('settingsOverlay');
+    closeAllFullscreens();
+    
+    // 移除已存在的 overlay
+    var existing = document.getElementById('notebookFullscreen');
+    if (existing) existing.remove();
     
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'notebookFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     
     var myCount = notebookData.myEntries.length;
     var otherCount = notebookData.otherEntries.length;
@@ -82,7 +88,7 @@ function openNotebookModal() {
             <span class="fullscreen-title">情侣记事本</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" id="notebookFullscreenBody" style="padding:16px;">
+        <div class="fullscreen-body" id="notebookFullscreenBody" style="padding:16px;flex:1;overflow-y:auto;">
             <div style="text-align:center;margin-bottom:16px;">
                 <div style="font-size:14px;color:var(--text-secondary);">记录日常，分享生活</div>
                 <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
@@ -136,7 +142,7 @@ function renderNotebookPreviewFullscreen() {
         var item = allEntries[i];
         var entry = item.entry;
         var isMy = item.type === 'my';
-        var label = isMy ? '我' : appData.otherName;
+        var label = isMy ? '我' : (appData.otherName || '对方');
         var timeStr = formatTimeShort(entry.time);
         var commentCount = entry.comments ? entry.comments.length : 0;
         html += '<div style="background:var(--item-bg);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid var(--border);">' +
@@ -172,7 +178,7 @@ function renderNotebookPreview() {
         var item = allEntries[i];
         var entry = item.entry;
         var isMy = item.type === 'my';
-        var label = isMy ? '我' : appData.otherName;
+        var label = isMy ? '我' : (appData.otherName || '对方');
         var timeStr = formatTimeShort(entry.time);
         var commentCount = entry.comments ? entry.comments.length : 0;
         html += '<div style="background:var(--item-bg);border-radius:10px;padding:10px;margin-bottom:8px;">' +
@@ -212,7 +218,7 @@ function renderMultiSelectTemplateModal() {
         '<h4>写我的日常</h4>' +
         '<div class="subtitle">点击词条多选，自动组合成日常（可手动修改）</div>' +
         '<div style="margin-bottom:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
-        '<button class="btn-sm outline" onclick="randomSelectTemplates()">🎲 随机选1-10条</button>' +
+        '<button class="btn-sm outline" onclick="randomSelectTemplates()">随机选1-10条</button>' +
         '<button class="btn-sm outline" onclick="clearSelectedTemplates()">清空已选</button>' +
         '</div>' +
         '<div class="template-grid" style="max-height:200px;overflow-y:auto;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:8px;background:var(--item-bg);border-radius:12px;">' +
@@ -301,7 +307,7 @@ function showOtherEntriesModal() {
         var commentCount = entry.comments ? entry.comments.length : 0;
         entriesHtml += '<div style="background:var(--item-bg);border-radius:10px;padding:10px;margin-bottom:8px;">' +
             '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
-            '<span style="font-size:12px;font-weight:bold;color:var(--accent);">' + escapeHTML(appData.otherName) + '</span>' +
+            '<span style="font-size:12px;font-weight:bold;color:var(--accent);">' + escapeHTML(appData.otherName || '对方') + '</span>' +
             '<span style="font-size:10px;color:var(--text-system);">' + timeStr + '</span>' +
             '</div>' +
             '<div style="font-size:13px;margin-bottom:6px;">' + escapeHTML(entry.content) + '</div>' +
@@ -332,7 +338,7 @@ function viewEntryDetail(entryId, type) {
     if (entry.comments && entry.comments.length > 0) {
         for (var i = 0; i < entry.comments.length; i++) {
             var c = entry.comments[i];
-            var commenter = c.by === 'me' ? '我' : appData.otherName;
+            var commenter = c.by === 'me' ? '我' : (appData.otherName || '对方');
             commentsHtml += '<div style="background:var(--item-bg);border-radius:8px;padding:6px 10px;margin-bottom:6px;">' +
                 '<span style="font-size:11px;font-weight:bold;color:var(--accent);">' + escapeHTML(commenter) + '</span> ' +
                 '<span style="font-size:12px;">' + escapeHTML(c.content) + '</span>' +
@@ -345,7 +351,7 @@ function viewEntryDetail(entryId, type) {
     var html = '<div style="text-align:center;">' +
         '<h4>日常详情</h4>' +
         '<div style="background:var(--item-bg);border-radius:10px;padding:12px;margin:12px 0;text-align:left;">' +
-        '<div style="margin-bottom:8px;color:var(--accent);">' + (type === 'my' ? '我的记录' : appData.otherName + '的记录') + '</div>' +
+        '<div style="margin-bottom:8px;color:var(--accent);">' + (type === 'my' ? '我的记录' : (appData.otherName || '对方') + '的记录') + '</div>' +
         '<div style="font-size:14px;margin-bottom:12px;">' + escapeHTML(entry.content) + '</div>' +
         '<div style="font-size:10px;color:var(--text-system);">' + formatTimeShort(entry.time) + '</div>' +
         '</div>' +
@@ -430,7 +436,9 @@ function deleteTemplate(index) {
 
 function sendNotebookToChat(name, content) {
     var msg = name + ' 的日常：' + content;
-    addSystemMsg(msg);
+    if (typeof addSystemMsg === 'function') {
+        addSystemMsg(msg);
+    }
 }
 
 function showOtherAddEntryModal() {
@@ -453,7 +461,7 @@ function renderOtherMultiSelectModal() {
         '<h4>写日常</h4>' +
         '<div class="subtitle">点击词条多选，自动组合（可手动修改）</div>' +
         '<div style="margin-bottom:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
-        '<button class="btn-sm outline" onclick="randomSelectOtherTemplates()">🎲 随机选1-10条</button>' +
+        '<button class="btn-sm outline" onclick="randomSelectOtherTemplates()">随机选1-10条</button>' +
         '<button class="btn-sm outline" onclick="clearOtherSelectedTemplates()">清空已选</button>' +
         '</div>' +
         '<div class="template-grid" style="max-height:200px;overflow-y:auto;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:8px;background:var(--item-bg);border-radius:12px;">' +
@@ -518,7 +526,7 @@ function addOtherEntryFromMultiSelect() {
     notebookData.otherEntries.unshift(entry);
     if (notebookData.otherEntries.length > 100) notebookData.otherEntries.pop();
     saveNotebookData();
-    sendNotebookToChat(appData.otherName, content);
+    sendNotebookToChat(appData.otherName || '对方', content);
     closeModal('subOverlay');
     showToast('日常已发布');
 }
@@ -541,8 +549,37 @@ function exportNotebook() {
 
 function copyNotebookToClipboard() {
     var exportData = { type: 'notebook', version: '1.0', data: notebookData };
-    copyToClipboard(JSON.stringify(exportData, null, 2), '记事本');
+    if (typeof copyToClipboard === 'function') {
+        copyToClipboard(JSON.stringify(exportData, null, 2), '记事本');
+    } else {
+        var text = JSON.stringify(exportData, null, 2);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('记事本已复制到剪贴板');
+            }).catch(function() {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
     closeModal('subOverlay');
+}
+
+function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+        document.execCommand('copy');
+        showToast('记事本已复制到剪贴板');
+    } catch(e) {
+        showToast('复制失败，请重试');
+    }
+    document.body.removeChild(ta);
 }
 
 function downloadNotebookFile() {
@@ -596,7 +633,20 @@ function importNotebook() {
 
 function exportTemplates() {
     var exportData = { type: 'templates', version: '1.0', data: notebookData.myTemplates };
-    copyToClipboard(JSON.stringify(exportData, null, 2), '词条库');
+    if (typeof copyToClipboard === 'function') {
+        copyToClipboard(JSON.stringify(exportData, null, 2), '词条库');
+    } else {
+        var text = JSON.stringify(exportData, null, 2);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('词条库已复制到剪贴板');
+            }).catch(function() {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
     closeModal('subOverlay');
     showToast('词条库已复制到剪贴板');
 }
@@ -654,9 +704,10 @@ function otherRandomAddEntry() {
     notebookData.otherEntries.unshift(entry);
     if (notebookData.otherEntries.length > 100) notebookData.otherEntries.pop();
     saveNotebookData();
-    sendNotebookToChat(appData.otherName, content);
+    sendNotebookToChat(appData.otherName || '对方', content);
 }
 
+// 每2分钟自动添加
 setInterval(function() {
     otherRandomAddEntry();
 }, 120000);
