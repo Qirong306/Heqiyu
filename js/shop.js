@@ -101,31 +101,36 @@ function saveShopItems() {
 }
 
 function openShopModal() {
-    loadShopItems();
+    // 关闭可能打开的其他弹窗
+    closeAllFullscreens();
+    
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'shopFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     
     overlay.innerHTML = `
         <div class="fullscreen-header">
             <button class="fullscreen-back" onclick="closeShopFullscreen()">
                 <span class="back-arrow"></span> 返回
             </button>
-            <span class="fullscreen-title">购物商城</span>
+            <span class="fullscreen-title">商城</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" id="shopFullscreenBody">
-            <div style="text-align:center;padding:20px;color:var(--text-system);">加载中...</div>
+        <div class="fullscreen-body" style="padding:16px;flex:1;overflow-y:auto;">
+            <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">商城开发中...</div>
         </div>
     `;
     document.body.appendChild(overlay);
-    renderShopFullscreen();
 }
 
 function closeShopFullscreen() {
     var el = document.getElementById('shopFullscreen');
     if (el) el.remove();
 }
+
+window.openShopModal = openShopModal;
+window.closeShopFullscreen = closeShopFullscreen;
 
 function renderShopFullscreen() {
     var container = document.getElementById('shopFullscreenBody');
