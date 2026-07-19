@@ -341,3 +341,11 @@ function cleanOrphanImages() {
         openBackupModal();
     });
 }
+// 确保导出到全局
+window.openBackupModal = openBackupModal;
+window.exportFullAsFile = exportFullAsFile;
+window.exportFull = exportFull;
+window.exportChat = exportChat;
+window.exportLibs = exportLibs;
+window.importDataFile = importDataFile;
+window.cleanOrphanImages = cleanOrphanImages;
