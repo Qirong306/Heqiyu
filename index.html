@@ -7,41 +7,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="甜心助手">
     <meta name="theme-color" content="#f0c78e">
-    
     <title>甜心助手</title>
-    
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="manifest" href="site.webmanifest">
-    
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/cozy-style.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(function(OneSignal) {
-            OneSignal.init({
-                appId: "da4c2265-424f-440e-9b2a-4168fca30474",
-            });
-        });
-    
-        function sendNotification(title, message, url) {
-            if (typeof OneSignal !== 'undefined' && OneSignal.Notifications) {
-                OneSignal.Notifications.sendNotification({
-                    title: title,
-                    message: message,
-                    url: url || window.location.href,
-                    icon: '/apple-touch-icon.png'
-                }).catch(function(e) {
-                    console.log('通知发送失败:', e);
-                });
-            }
-        }
-    </script>
 </head>
 <body>
 
@@ -106,7 +74,7 @@
                 <span class="app-name">刮刮乐</span>
             </div>
             <div class="app-item" onclick="openSudoku()">
-                <div class="app-icon icon-sudoku"><span class="icon-shape icon-grid"><span class="gl gl1"></span><span class="gl gl2"></span><span class="gl gl3"></span><span class="gl gl4"></span><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span><span class="dot d5"></span></span></div>
+                <div class="app-icon icon-sudoku"><span class="icon-shape icon-grid"><span class="gl gl1"></span><span class="gl gl2"></span><span class="gl gl3"></span><span class="gl gl4"></span></span></div>
                 <span class="app-name">数独</span>
             </div>
             <div class="app-item" onclick="openGomoku()">
@@ -134,23 +102,15 @@
                 <div class="app-icon icon-notebook"><span class="icon-shape icon-notebook-shape"><span class="line l1"></span><span class="line l2"></span><span class="line l3"></span><span class="line l4"></span><span class="line l5"></span></span></div>
                 <span class="app-name">情侣记事本</span>
             </div>
-            <!-- 第4行 -->
-            <div class="app-item" onclick="openColorThemeModal()">
-                <div class="app-icon icon-theme"><span class="icon-shape icon-palette"><span class="color c1"></span><span class="color c2"></span><span class="color c3"></span><span class="color c4"></span></span></div>
-                <span class="app-name">主题</span>
+            <!-- 第4行 - 新增"全部应用"图标，里面包含所有功能 -->
+            <div class="app-item" onclick="openAllAppsModal()">
+                <div class="app-icon icon-allapp"><span class="icon-shape icon-allapp-shape"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span><span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span><span class="dot d9"></span></span></div>
+                <span class="app-name">全部应用</span>
             </div>
-            <div class="app-item" style="opacity:0;pointer-events:none;">
-                <div class="app-icon"></div>
-                <span class="app-name"></span>
-            </div>
-            <div class="app-item" style="opacity:0;pointer-events:none;">
-                <div class="app-icon"></div>
-                <span class="app-name"></span>
-            </div>
-            <div class="app-item" style="opacity:0;pointer-events:none;">
-                <div class="app-icon"></div>
-                <span class="app-name"></span>
-            </div>
+            <!-- 占位 -->
+            <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
+            <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
+            <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
         </div>
     </div>
 
@@ -182,7 +142,8 @@
 
     <!-- ===== 底部 Tab 栏 ===== -->
     <div class="bottom-tab-bar">
-        <div class="tab-item active" data-tab="desktop" onclick="switchTab('desktop')">
+        <!-- 聊天Tab - 点击直接进入聊天 -->
+        <div class="tab-item active" data-tab="chat" onclick="switchTab('chat')">
             <span class="tab-icon"><span class="tab-icon-chat"></span></span>
             <span class="tab-label">聊天</span>
         </div>
@@ -207,12 +168,22 @@
         <span class="fullscreen-title">设置</span>
         <span style="width:50px;"></span>
     </div>
-    <div class="fullscreen-body settings-body" id="settingsBody">
-        <!-- 由 JS 动态渲染 -->
-    </div>
+    <div class="fullscreen-body settings-body" id="settingsBody"></div>
 </div>
 
-<!-- ===== 原有弹窗保留 ===== -->
+<!-- ===== 全部应用全屏 ===== -->
+<div class="fullscreen-overlay" id="allAppsFullscreen" style="display:none;">
+    <div class="fullscreen-header">
+        <button class="fullscreen-back" onclick="closeAllAppsFullscreen()">
+            <span class="back-arrow"></span> 返回
+        </button>
+        <span class="fullscreen-title">全部应用</span>
+        <span style="width:50px;"></span>
+    </div>
+    <div class="fullscreen-body" id="allAppsBody" style="padding:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px 10px;align-content:start;"></div>
+</div>
+
+<!-- ===== 弹窗 ===== -->
 <div class="modal-overlay" id="photoOverlay">
     <div class="modal" style="text-align:center;">
         <h3>选择照片</h3>
@@ -243,8 +214,6 @@
     </div>
 </div>
 
-<div class="clue-notebook-overlay" id="clueNotebookOverlay"></div>
-
 <div class="toast" id="toast"></div>
 
 <!-- ===== 论坛 ===== -->
@@ -270,9 +239,7 @@
 </div>
 
 <div class="modal-overlay" id="forumDetailOverlay">
-    <div class="modal" style="text-align:left;max-width:420px;padding:16px;" 
-        id="forumDetailContent"
-        onclick="event.stopPropagation()"></div>
+    <div class="modal" style="text-align:left;max-width:420px;padding:16px;" id="forumDetailContent" onclick="event.stopPropagation()"></div>
 </div>
 
 <!-- ===== 聊天 + 号面板 ===== -->
@@ -310,29 +277,29 @@
 </div>
 
 <!-- ===== JS ===== -->
-<script src="js/core.js"></script>
-<script src="js/reply.js"></script>
-<script src="js/status.js"></script>
-<script src="js/transfer.js"></script>
-<script src="js/backup.js"></script>
-<script src="js/shop.js"></script>
-<script src="js/call.js"></script>
-<script src="js/notebook.js"></script>
-<script src="js/modules.js"></script>
-<script src="js/games.js"></script>
-<script src="js/video-danmaku.js"></script>
-<script src="js/music.js"></script>
-<script src="js/forum.js"></script>
-<script src="js/scratch.js"></script>
-<script src="js/wheel.js"></script>
-<script src="js/drawing.js"></script>
-<script src="js/cozy/cozy-data.js"></script>
-<script src="js/cozy/cozy-space.js"></script>
-<script src="js/cozy/cozy-furniture.js"></script>
-<script src="js/cozy/cozy-daily.js"></script>
-<script src="js/cozy/cozy-message.js"></script>
-<script src="js/cozy/cozy-focus.js"></script>
-<script src="js/cozy/cozy-canvas.js"></script>
+<script src="core.js"></script>
+<script src="reply.js"></script>
+<script src="status.js"></script>
+<script src="transfer.js"></script>
+<script src="backup.js"></script>
+<script src="shop.js"></script>
+<script src="call.js"></script>
+<script src="notebook.js"></script>
+<script src="modules.js"></script>
+<script src="games.js"></script>
+<script src="video-danmaku.js"></script>
+<script src="music.js"></script>
+<script src="forum.js"></script>
+<script src="scratch.js"></script>
+<script src="wheel.js"></script>
+<script src="drawing.js"></script>
+<script src="cozy/cozy-data.js"></script>
+<script src="cozy/cozy-space.js"></script>
+<script src="cozy/cozy-furniture.js"></script>
+<script src="cozy/cozy-daily.js"></script>
+<script src="cozy/cozy-message.js"></script>
+<script src="cozy/cozy-focus.js"></script>
+<script src="cozy/cozy-canvas.js"></script>
 
 </body>
 </html>
