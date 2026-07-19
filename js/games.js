@@ -1,11 +1,7 @@
 // ==================== 游戏模块 ====================
-// 数独、五子棋、剧本杀
-
-// ==================== 全局游戏状态 ====================
 var currentGame = null;
 var gameInProgress = false;
 
-// ========== 输入框模式切换 ==========
 function setInputMode(mode, gameType) {
     var msgInput = document.getElementById('msgInput');
     var sendBtn = document.querySelector('.send-btn');
@@ -47,7 +43,6 @@ function openSudoku() {
         if (!confirm('当前有进行中的游戏，确定要切换吗？')) return;
     }
     
-    // 创建全屏容器
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'sudokuFullscreen';
@@ -75,7 +70,6 @@ function openSudoku() {
             <div class="gomoku-info" id="sudokuInfo" style="text-align:center;font-size:14px;color:var(--text);">选择单元格，点击数字填充</div>
         </div>
     `;
-    
     document.body.appendChild(overlay);
     setInputMode('game', 'sudoku');
     newSudokuGame();
@@ -162,14 +156,12 @@ function renderSudokuBoard() {
     var boardEl = document.getElementById('sudokuBoard');
     if (!boardEl) return;
     
-    // 清空
     boardEl.innerHTML = '';
-    
-    // 设置 9x9 网格样式
     boardEl.style.display = 'grid';
     boardEl.style.gridTemplateColumns = 'repeat(9, 1fr)';
     boardEl.style.gap = '1px';
-    boardEl.style.maxWidth = '340px';
+    boardEl.style.maxWidth = '360px';
+    boardEl.style.width = '100%';
     boardEl.style.margin = '0 auto';
     boardEl.style.aspectRatio = '1';
     
@@ -178,7 +170,6 @@ function renderSudokuBoard() {
             var cell = document.createElement('div');
             cell.className = 'sudoku-cell';
             
-            // 3x3 宫格边框
             if (i % 3 === 0 && i > 0) {
                 cell.style.borderTop = '2px solid var(--text)';
             }
@@ -209,14 +200,14 @@ function renderSudokuBoard() {
         }
     }
     
-    // 数字键盘
     var numpad = document.getElementById('sudokuNumpad');
     if (!numpad) return;
     numpad.innerHTML = '';
     numpad.style.display = 'grid';
     numpad.style.gridTemplateColumns = 'repeat(5, 1fr)';
     numpad.style.gap = '6px';
-    numpad.style.maxWidth = '340px';
+    numpad.style.maxWidth = '360px';
+    numpad.style.width = '100%';
     numpad.style.margin = '10px auto';
     
     for (var n = 1; n <= 9; n++) {
@@ -283,8 +274,7 @@ function checkSudokuCompletion() {
     var infoEl = document.getElementById('sudokuInfo');
     if (infoEl) infoEl.textContent = '恭喜！完成数独，用时 ' + timeStr;
     showToast('数独完成！用时 ' + timeStr);
-    var diffLabel = sudokuDifficulty === 'easy' ? '简单' : (sudokuDifficulty === 'hard' ? '困难' : '中等');
-    addSystemMsg('我完成了一局' + diffLabel + '数独，用时 ' + timeStr + '。');
+    // 移除 addSystemMsg 调用
 }
 
 function exitSudoku() {
@@ -327,7 +317,6 @@ function openGomoku() {
             </div>
         </div>
     `;
-    
     document.body.appendChild(overlay);
     setInputMode('game', 'gomoku');
     newGomokuGame();
@@ -377,11 +366,9 @@ function placeGomokuPiece(row, col, player) {
         if (player === 'black') {
             if (infoEl) infoEl.textContent = '你赢了！';
             showToast('五子棋：你赢了！');
-            addSystemMsg('我在五子棋中获胜了！');
         } else {
             if (infoEl) infoEl.textContent = '对手赢了！';
             showToast('五子棋：对手赢了');
-            addSystemMsg('我在五子棋中输给了对方...');
         }
         return;
     }
@@ -567,7 +554,6 @@ function openMurderMystery() {
             </div>
         </div>
     `;
-    
     document.body.appendChild(overlay);
     renderMurderScriptList();
 }
@@ -666,17 +652,11 @@ function proceedMurderScene() {
         return;
     }
     var chapter = script.chapters[ch];
-    
-    // 兼容无 scenes 数组的 JSON（你的咖啡店疑案格式）
     var scene = chapter.scenes ? chapter.scenes[sc] : chapter;
     
     if (!chapter.scenes) {
-        if (scene.scene) {
-            addSystemMsg(scene.scene);
-        }
-        if (scene.narration) {
-            addSystemMsg(scene.narration);
-        }
+        if (scene.scene) addSystemMsg(scene.scene);
+        if (scene.narration) addSystemMsg(scene.narration);
         if (scene.dialogue || scene.dialogues) {
             var dialogues = scene.dialogues || scene.dialogue;
             dialogues.forEach(function(line) {
@@ -710,10 +690,7 @@ function proceedMurderScene() {
         } else if (scene.nextChapter) {
             var nextCh = script.chapters.findIndex(function(c) { return c.id === scene.nextChapter; });
             if (nextCh !== -1) {
-                showMurderChoices([{
-                    text: '继续调查',
-                    nextSceneId: '__nextChapter__'
-                }]);
+                showMurderChoices([{ text: '继续调查', nextSceneId: '__nextChapter__' }]);
                 murderGameState._pendingNextChapter = nextCh;
             } else {
                 endMurderGame();
@@ -725,7 +702,6 @@ function proceedMurderScene() {
         return;
     }
     
-    // 下面是原本 scenes 数组的逻辑（兼容老格式）
     if (sc >= chapter.scenes.length) {
         murderGameState.currentChapter++;
         murderGameState.currentScene = 0;
@@ -739,10 +715,7 @@ function proceedMurderScene() {
     }
     scene = chapter.scenes[sc];
 
-    if (scene.narration || scene.scene) {
-        addSystemMsg(scene.narration || scene.scene);
-    }
-
+    if (scene.narration || scene.scene) addSystemMsg(scene.narration || scene.scene);
     if (scene.dialogues || scene.dialogue) {
         var dialogues2 = scene.dialogues || scene.dialogue;
         dialogues2.forEach(function(line) {
@@ -751,7 +724,6 @@ function proceedMurderScene() {
             addMessageWithRole(line.text, role, cls);
         });
     }
-
     if (scene.clues) {
         scene.clues.forEach(function(clue) {
             if (clue.id && murderGameState.collectedClues.indexOf(clue.id) === -1) {
@@ -761,7 +733,6 @@ function proceedMurderScene() {
         var clueText2 = scene.clues.map(function(c) { return c.text || c.description || ''; }).join('  ');
         if (clueText2) addSystemMsg('[线索] ' + clueText2);
     }
-
     if (scene.choices && scene.choices.length > 0) {
         showMurderChoices(scene.choices);
     } else if (scene.nextSceneId) {
@@ -777,10 +748,7 @@ function proceedMurderScene() {
     } else if (scene.nextChapter) {
         var nextCh2 = script.chapters.findIndex(function(c) { return c.id === scene.nextChapter; });
         if (nextCh2 !== -1) {
-            showMurderChoices([{
-                text: '继续调查',
-                nextSceneId: '__nextChapter__'
-            }]);
+            showMurderChoices([{ text: '继续调查', nextSceneId: '__nextChapter__' }]);
             murderGameState._pendingNextChapter = nextCh2;
         } else {
             endMurderGame();
@@ -820,7 +788,6 @@ function showMurderChoices(choices) {
 function selectMurderChoice(nextSceneId) {
     var btns = document.querySelectorAll('#murderChoices .script-choice-btn');
     btns.forEach(function(b) { b.disabled = true; });
-    
     if (nextSceneId === '__nextChapter__') {
         if (murderGameState._pendingNextChapter !== undefined) {
             murderGameState.currentChapter = murderGameState._pendingNextChapter;
@@ -830,7 +797,6 @@ function selectMurderChoice(nextSceneId) {
         }
         return;
     }
-    
     var next = findSceneById(murderGameState.script, nextSceneId);
     if (next) {
         murderGameState.currentChapter = next.chapter;
@@ -846,7 +812,6 @@ function endMurderGame() {
     setInputMode('normal');
     addSystemMsg('【剧本杀】游戏结束。回顾你收集的线索，看看真相是否如你所想。');
     if (murderGameState && murderGameState.script) {
-        // 查找最终线索中的真相
         var script = murderGameState.script;
         script.chapters.forEach(function(ch) {
             var scene = ch.scenes ? ch.scenes[0] : ch;
@@ -857,20 +822,14 @@ function endMurderGame() {
                 }
             });
         });
-        if (script.truth) {
-            addSystemMsg('真相：' + script.truth);
-        }
+        if (script.truth) addSystemMsg('真相：' + script.truth);
     }
     murderGameState = null;
     gameInProgress = false;
 }
 
-// 线索笔记本
 function openClueNotebook() {
-    if (!murderGameState) {
-        showToast('当前没有进行中的剧本');
-        return;
-    }
+    if (!murderGameState) { showToast('当前没有进行中的剧本'); return; }
     var overlay = document.getElementById('clueNotebookOverlay');
     if (!overlay) {
         overlay = document.createElement('div');
@@ -907,11 +866,8 @@ function openClueNotebook() {
 
 function toggleClueMark(clueId) {
     var idx = murderGameState.markedClues.indexOf(clueId);
-    if (idx === -1) {
-        murderGameState.markedClues.push(clueId);
-    } else {
-        murderGameState.markedClues.splice(idx, 1);
-    }
+    if (idx === -1) murderGameState.markedClues.push(clueId);
+    else murderGameState.markedClues.splice(idx, 1);
     openClueNotebook();
 }
 
@@ -920,7 +876,7 @@ function closeClueNotebook() {
     if (overlay) overlay.classList.remove('show');
 }
 
-// ==================== 初始化游戏入口到"+"面板 ====================
+// ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         var grid = document.querySelector('.more-panel-grid-top');
@@ -931,13 +887,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 sudokuBtn.textContent = '数独';
                 sudokuBtn.onclick = function() { toggleMorePanel(); openSudoku(); };
                 grid.appendChild(sudokuBtn);
-
                 var gomokuBtn = document.createElement('div');
                 gomokuBtn.className = 'more-item-text game-gomoku';
                 gomokuBtn.textContent = '五子棋';
                 gomokuBtn.onclick = function() { toggleMorePanel(); openGomoku(); };
                 grid.appendChild(gomokuBtn);
-
                 var murderBtn = document.createElement('div');
                 murderBtn.className = 'more-item-text game-murder';
                 murderBtn.textContent = '剧本杀';
@@ -947,9 +901,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 500);
 });
+
 window.openSudoku = openSudoku;
 window.closeSudokuFullscreen = closeSudokuFullscreen;
 window.openGomoku = openGomoku;
+window.closeGomokuFullscreen = closeGomokuFullscreen;
+window.openMurderMystery = openMurderMystery;
+window.closeMurderFullscreen = closeMurderFullscreen;
 window.closeGomokuFullscreen = closeGomokuFullscreen;
 window.openMurderMystery = openMurderMystery;
 window.closeMurderFullscreen = closeMurderFullscreen;
