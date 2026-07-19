@@ -143,11 +143,31 @@ function newSudokuGame() {
 function renderSudokuBoard() {
     var boardEl = document.getElementById('sudokuBoard');
     if (!boardEl) return;
+    
+    // 清空
     boardEl.innerHTML = '';
+    
+    // 设置 9x9 网格样式
+    boardEl.style.display = 'grid';
+    boardEl.style.gridTemplateColumns = 'repeat(9, 1fr)';
+    boardEl.style.gap = '1px';
+    boardEl.style.maxWidth = '340px';
+    boardEl.style.margin = '0 auto';
+    boardEl.style.aspectRatio = '1';
+    
     for (var i = 0; i < 9; i++) {
         for (var j = 0; j < 9; j++) {
             var cell = document.createElement('div');
             cell.className = 'sudoku-cell';
+            
+            // 3x3 宫格边框
+            if (i % 3 === 0 && i > 0) {
+                cell.style.borderTop = '2px solid var(--text)';
+            }
+            if (j % 3 === 0 && j > 0) {
+                cell.style.borderLeft = '2px solid var(--text)';
+            }
+            
             if (sudokuBoard[i][j] !== 0) {
                 cell.textContent = sudokuBoard[i][j];
             }
@@ -160,18 +180,27 @@ function renderSudokuBoard() {
             if (sudokuBoard[i][j] !== 0 && sudokuBoard[i][j] !== sudokuSolution[i][j]) {
                 cell.classList.add('error');
             }
+            
             (function(row, col) {
                 cell.onclick = function() {
                     selectSudokuCell(row, col);
                 };
             })(i, j);
+            
             boardEl.appendChild(cell);
         }
     }
-
+    
+    // 数字键盘
     var numpad = document.getElementById('sudokuNumpad');
     if (!numpad) return;
     numpad.innerHTML = '';
+    numpad.style.display = 'grid';
+    numpad.style.gridTemplateColumns = 'repeat(5, 1fr)';
+    numpad.style.gap = '6px';
+    numpad.style.maxWidth = '340px';
+    numpad.style.margin = '10px auto';
+    
     for (var n = 1; n <= 9; n++) {
         var btn = document.createElement('div');
         btn.className = 'sudoku-num-btn';
