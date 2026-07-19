@@ -1516,8 +1516,7 @@ initApp().then(function() {
     if (appData.playlist && appData.playlist.length > 0) {
         setTimeout(function() { if (typeof showFloatingBall === 'function') { showFloatingBall(); } }, 1000);
     }
-}).catch(function(e) { console.error('启动失败:', e); });
-// ==================== Tab 切换 ====================
+}).catch(function(e) { console.error('启动失败:', e); });// ==================== Tab 切换 ====================
 
 function switchTab(tab) {
     // 更新 Tab 高亮
@@ -1530,56 +1529,177 @@ function switchTab(tab) {
     
     var desktopView = document.getElementById('desktopView');
     var chatView = document.getElementById('chatView');
-    var settingsOverlay = document.getElementById('settingsOverlay');
+    var settingsFullscreen = document.getElementById('settingsFullscreen');
     
-    if (tab === 'chat') {
-        if (desktopView) desktopView.style.display = 'flex';
+    // 关闭聊天 + 号面板
+    closeChatMorePanel();
+    
+    if (tab === 'desktop') {
+        if (desktopView) desktopView.classList.remove('hidden');
         if (chatView) chatView.classList.remove('active');
-        if (settingsOverlay) settingsOverlay.classList.remove('show');
+        if (settingsFullscreen) settingsFullscreen.style.display = 'none';
         // 关闭更多面板
         var morePanel = document.getElementById('morePanel');
         if (morePanel) morePanel.style.display = 'none';
+        
     } else if (tab === 'call') {
         if (typeof startVoiceCall === 'function') {
             startVoiceCall();
         }
-        // 切回聊天Tab（因为通话是浮窗，不占界面）
+        // 切回 desktop Tab（通话是浮窗）
         setTimeout(function() {
             document.querySelectorAll('.tab-item').forEach(function(el) {
                 el.classList.remove('active');
-                if (el.dataset.tab === 'chat') {
+                if (el.dataset.tab === 'desktop') {
                     el.classList.add('active');
                 }
             });
+            if (desktopView) desktopView.classList.remove('hidden');
+            if (chatView) chatView.classList.remove('active');
         }, 100);
+        
     } else if (tab === 'settings') {
-        if (typeof openSettings === 'function') {
-            openSettings();
+        // 打开设置全屏
+        if (desktopView) desktopView.classList.add('hidden');
+        if (chatView) chatView.classList.remove('active');
+        if (settingsFullscreen) {
+            settingsFullscreen.style.display = 'flex';
+            renderSettingsContent();
         }
-        // 切回聊天Tab（因为设置是弹窗）
-        setTimeout(function() {
-            document.querySelectorAll('.tab-item').forEach(function(el) {
-                el.classList.remove('active');
-                if (el.dataset.tab === 'chat') {
-                    el.classList.add('active');
-                }
-            });
-        }, 100);
     }
 }
 
-// 更新时间
-function updateStatusTime() {
-    var el = document.getElementById('statusTime');
-    if (el) {
-        var now = new Date();
-        var h = String(now.getHours()).padStart(2, '0');
-        var m = String(now.getMinutes()).padStart(2, '0');
-        el.textContent = h + ':' + m;
+// ==================== 设置内容渲染 ====================
+
+function renderSettingsContent() {
+    var body = document.getElementById('settingsBody');
+    if (!body) return;
+    
+    body.innerHTML = `
+        <div class="settings-group">
+            <div class="settings-group-title">外观</div>
+            <div class="settings-item" onclick="openColorThemeModal()">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-theme"></div>
+                    <span class="settings-item-name">主题颜色</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" onclick="openThemeModal()">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-theme"></div>
+                    <span class="settings-item-name">深色模式</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <div class="settings-group-title">通知</div>
+            <div class="settings-item" onclick="showToast('推送通知已切换')">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-notification"></div>
+                    <span class="settings-item-name">推送通知</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" onclick="showToast('声音已切换')">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-notification"></div>
+                    <span class="settings-item-name">声音</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <div class="settings-group-title">隐私</div>
+            <div class="settings-item" onclick="if(confirm('确定清除所有聊天记录？')){clearChatHistory();}">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-privacy"></div>
+                    <span class="settings-item-name">清空聊天记录</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <div class="settings-group-title">数据</div>
+            <div class="settings-item" onclick="openBackupModal()">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-data"></div>
+                    <span class="settings-item-name">数据管理</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <div class="settings-group-title">音乐</div>
+            <div class="settings-item" onclick="openMusicPlayer()">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-music"></div>
+                    <span class="settings-item-name">音乐播放器</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <div class="settings-group-title">关于</div>
+            <div class="settings-item" onclick="showToast('甜心助手 v2.0')">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-about"></div>
+                    <span class="settings-item-name">版本信息</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" onclick="showToast('使用帮助：点击功能图标即可使用')">
+                <div class="settings-item-left">
+                    <div class="settings-item-icon s-icon-about"></div>
+                    <span class="settings-item-name">使用帮助</span>
+                </div>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+    `;
+}
+
+// ==================== 关闭设置 ====================
+
+function closeSettingsFullscreen() {
+    var el = document.getElementById('settingsFullscreen');
+    if (el) el.style.display = 'none';
+    var desktopView = document.getElementById('desktopView');
+    if (desktopView) desktopView.classList.remove('hidden');
+    // 更新Tab高亮
+    document.querySelectorAll('.tab-item').forEach(function(el2) {
+        el2.classList.remove('active');
+        if (el2.dataset.tab === 'desktop') {
+            el2.classList.add('active');
+        }
+    });
+}
+
+// ==================== 聊天 + 号面板 ====================
+
+function toggleChatMorePanel() {
+    var panel = document.getElementById('chatMorePanel');
+    if (!panel) return;
+    if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+    } else {
+        panel.style.display = 'block';
     }
 }
-setInterval(updateStatusTime, 10000);
-updateStatusTime();
 
-// 导出到全局
+function closeChatMorePanel() {
+    var panel = document.getElementById('chatMorePanel');
+    if (panel) panel.style.display = 'none';
+}
+
+// ==================== 导出到全局 ====================
 window.switchTab = switchTab;
+window.closeSettingsFullscreen = closeSettingsFullscreen;
+window.toggleChatMorePanel = toggleChatMorePanel;
+window.closeChatMorePanel = closeChatMorePanel;
