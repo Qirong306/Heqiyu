@@ -43,35 +43,56 @@ var newTopicSelectMode = 'multi'; // 'single' 或 'multi'
 
 // ==================== 论坛面板管理 ====================
 function openForum() {
-    if (typeof closeAllModals === 'function') {
-        closeAllModals();
-    }
+    // 创建全屏容器
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'forumFullscreen';
     
-    var overlay = document.getElementById('forumOverlay');
-    if (!overlay) {
-        console.error('forumOverlay 元素未找到');
-        showToast('论坛模块加载失败');
-        return;
-    }
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeForumFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">论坛</span>
+            <span onclick="toggleForumMenu()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</span>
+        </div>
+        <div class="fullscreen-body" id="forumFullscreenBody">
+            <div id="forumTopicList" style="text-align:left;"></div>
+        </div>
+    `;
     
-    overlay.classList.add('show');
+    document.body.appendChild(overlay);
     
-    var h3 = overlay.querySelector('h3');
-    if (h3) h3.textContent = '论坛';
-    
+    // 论坛菜单
     var menu = document.getElementById('forumDropdownMenu');
-    if (menu) menu.style.display = 'none';
+    if (!menu) {
+        var menuDiv = document.createElement('div');
+        menuDiv.id = 'forumDropdownMenu';
+        menuDiv.style.cssText = 'display:none;position:absolute;top:50px;right:16px;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
+        menuDiv.innerHTML = `
+            <div onclick="newForumTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">新建话题</div>
+            <div onclick="importForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入话题</div>
+            <div onclick="exportForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出话题</div>
+            <div onclick="openForumReplyLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">回复词库</div>
+            <div onclick="openForumTemplateLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">模板词库</div>
+            <div onclick="autoGenerateTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">自动生成</div>
+        `;
+        var header = overlay.querySelector('.fullscreen-header');
+        header.appendChild(menuDiv);
+    }
     
     currentViewingTopicId = null;
     renderForumTopics();
+    
+    // 覆盖原有的 closeForum
+    window._closeForumOriginal = window.closeForum;
 }
 
-function closeForum() {
-    var overlay = document.getElementById('forumOverlay');
-    if (overlay) overlay.classList.remove('show');
-    
+function closeForumFullscreen() {
+    var el = document.getElementById('forumFullscreen');
+    if (el) el.remove();
     var menu = document.getElementById('forumDropdownMenu');
-    if (menu) menu.style.display = 'none';
+    if (menu) menu.remove();
 }
 
 function toggleForumMenu() {
@@ -930,3 +951,5 @@ document.addEventListener('click', function(e) {
 });
 
 console.log('论坛模块已加载');
+window.openForum = openForum;
+window.closeForumFullscreen = closeForumFullscreen;
