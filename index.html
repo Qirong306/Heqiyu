@@ -25,7 +25,7 @@
         </span>
     </div>
 
-    <!-- ===== 桌面视图 ===== -->
+    <!-- ===== 桌面视图（主界面，显示功能图标） ===== -->
     <div id="desktopView">
         
         <!-- 音乐播放器 -->
@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- 功能图标网格 -->
+        <!-- 功能图标网格（16个功能） -->
         <div class="app-grid" id="appGrid">
             <!-- 第1行 -->
             <div class="app-item" onclick="openCozySpace()">
@@ -102,12 +102,11 @@
                 <div class="app-icon icon-notebook"><span class="icon-shape icon-notebook-shape"><span class="line l1"></span><span class="line l2"></span><span class="line l3"></span><span class="line l4"></span><span class="line l5"></span></span></div>
                 <span class="app-name">情侣记事本</span>
             </div>
-            <!-- 第4行 - 新增"全部应用"图标，里面包含所有功能 -->
-            <div class="app-item" onclick="openAllAppsModal()">
-                <div class="app-icon icon-allapp"><span class="icon-shape icon-allapp-shape"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span><span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span><span class="dot d9"></span></span></div>
-                <span class="app-name">全部应用</span>
+            <!-- 第4行 -->
+            <div class="app-item" onclick="openColorThemeModal()">
+                <div class="app-icon icon-theme"><span class="icon-shape icon-palette"><span class="color c1"></span><span class="color c2"></span><span class="color c3"></span><span class="color c4"></span></span></div>
+                <span class="app-name">主题</span>
             </div>
-            <!-- 占位 -->
             <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
             <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
             <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
@@ -142,15 +141,22 @@
 
     <!-- ===== 底部 Tab 栏 ===== -->
     <div class="bottom-tab-bar">
-        <!-- 聊天Tab - 点击直接进入聊天 -->
+        <!-- 聊天 - 点击进入聊天 -->
         <div class="tab-item active" data-tab="chat" onclick="switchTab('chat')">
             <span class="tab-icon"><span class="tab-icon-chat"></span></span>
             <span class="tab-label">聊天</span>
         </div>
+        <!-- 主界面 - 显示功能图标 -->
+        <div class="tab-item" data-tab="desktop" onclick="switchTab('desktop')">
+            <span class="tab-icon"><span class="tab-icon-desktop"><span class="door"></span></span></span>
+            <span class="tab-label">主界面</span>
+        </div>
+        <!-- 通话 - 不变 -->
         <div class="tab-item" data-tab="call" onclick="switchTab('call')">
             <span class="tab-icon"><span class="tab-icon-call"></span></span>
             <span class="tab-label">通话</span>
         </div>
+        <!-- 设置 - 不变 -->
         <div class="tab-item" data-tab="settings" onclick="switchTab('settings')">
             <span class="tab-icon"><span class="tab-icon-settings"><span class="tooth t1"></span><span class="tooth t2"></span><span class="tooth t3"></span><span class="tooth t4"></span></span></span>
             <span class="tab-label">设置</span>
@@ -169,18 +175,6 @@
         <span style="width:50px;"></span>
     </div>
     <div class="fullscreen-body settings-body" id="settingsBody"></div>
-</div>
-
-<!-- ===== 全部应用全屏 ===== -->
-<div class="fullscreen-overlay" id="allAppsFullscreen" style="display:none;">
-    <div class="fullscreen-header">
-        <button class="fullscreen-back" onclick="closeAllAppsFullscreen()">
-            <span class="back-arrow"></span> 返回
-        </button>
-        <span class="fullscreen-title">全部应用</span>
-        <span style="width:50px;"></span>
-    </div>
-    <div class="fullscreen-body" id="allAppsBody" style="padding:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px 10px;align-content:start;"></div>
 </div>
 
 <!-- ===== 弹窗 ===== -->
