@@ -1,7 +1,6 @@
 /**
  * video-danmaku.js
  * 视频弹幕聊天模块
- * 功能：视频播放 + Canvas弹幕 + 聊天消息同步 + 自动评论 + 词库管理
  */
 const VideoDanmaku = (function() {
     'use strict';
@@ -76,18 +75,16 @@ const VideoDanmaku = (function() {
         if (!list) return;
         const lines = getWordBank();
         if (lines.length === 0) {
-            list.innerHTML = '<div class="vd-wb-empty">还没有词条</div>';
+            list.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:10px;">还没有词条</div>';
             return;
         }
         let html = '';
         lines.forEach(function(line, i) {
-            html += '<div class="vd-wb-item"><span>' + line + '</span><button class="vd-wb-del" data-idx="' + i + '">x</button></div>';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--item-bg);border-radius:6px;margin-bottom:4px;"><span>' + line + '</span><button class="vd-wb-del" data-idx="' + i + '" style="background:var(--danger);color:#fff;border:none;border-radius:10px;padding:2px 10px;cursor:pointer;font-size:11px;">删除</button></div>';
         });
         list.innerHTML = html;
-        // 更新标题计数
         const header = document.querySelector('.vd-wb-header span');
         if (header) header.textContent = '弹幕词库 (' + lines.length + '条)';
-        // 重新绑定删除按钮
         list.querySelectorAll('.vd-wb-del').forEach(function(btn) {
             btn.onclick = function() {
                 const idx = parseInt(this.getAttribute('data-idx'));
@@ -102,30 +99,29 @@ const VideoDanmaku = (function() {
     }
 
     function openWordBankModal() {
-        // 先移除已有的
         closeWordBankModal();
 
         const lines = getWordBank();
         let listHtml = '';
         lines.forEach(function(line, i) {
-            listHtml += '<div class="vd-wb-item"><span>' + line + '</span><button class="vd-wb-del" data-idx="' + i + '">x</button></div>';
+            listHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--item-bg);border-radius:6px;margin-bottom:4px;"><span>' + line + '</span><button class="vd-wb-del" data-idx="' + i + '" style="background:var(--danger);color:#fff;border:none;border-radius:10px;padding:2px 10px;cursor:pointer;font-size:11px;">删除</button></div>';
         });
 
         const html =
-            '<div class="vd-wb-overlay" id="vd-wb-overlay">' +
-            '<div class="vd-wb-modal">' +
-            '<div class="vd-wb-header">' +
-            '<span>弹幕词库 (' + lines.length + '条)</span>' +
-            '<button class="vd-wb-close" id="vd-wb-close">x</button>' +
+            '<div class="vd-wb-overlay" id="vd-wb-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:700;display:flex;justify-content:center;align-items:center;">' +
+            '<div class="vd-wb-modal" style="background:var(--panel-bg);border-radius:22px;width:88%;max-width:400px;max-height:78vh;overflow-y:auto;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,0.15);">' +
+            '<div class="vd-wb-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+            '<span style="font-size:17px;color:var(--text);letter-spacing:1px;">弹幕词库 (' + lines.length + '条)</span>' +
+            '<button class="vd-wb-close" id="vd-wb-close" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-secondary);">✕</button>' +
             '</div>' +
-            '<div class="vd-wb-add-row">' +
-            '<input type="text" id="vd-wb-new-word" placeholder="添加新词条..." maxlength="30">' +
-            '<button id="vd-wb-add-btn">添加</button>' +
+            '<div class="vd-wb-add-row" style="display:flex;gap:6px;margin-bottom:10px;">' +
+            '<input type="text" id="vd-wb-new-word" placeholder="添加新词条..." maxlength="30" style="flex:1;padding:8px 14px;border:2px solid var(--border);border-radius:16px;font-family:var(--font-main);font-size:13px;background:var(--input-box);color:var(--text);outline:none;">' +
+            '<button id="vd-wb-add-btn" style="padding:8px 18px;border-radius:16px;border:none;background:var(--accent);color:var(--text);font-family:var(--font-main);font-size:13px;cursor:pointer;">添加</button>' +
             '</div>' +
-            '<div class="vd-wb-list" id="vd-wb-list">' + (listHtml || '<div class="vd-wb-empty">还没有词条</div>') + '</div>' +
-            '<div class="vd-wb-footer">' +
-            '<button id="vd-wb-reset">恢复默认</button>' +
-            '<button id="vd-wb-done">完成</button>' +
+            '<div class="vd-wb-list" id="vd-wb-list" style="max-height:300px;overflow-y:auto;">' + (listHtml || '<div style="text-align:center;color:var(--text-system);padding:10px;">还没有词条</div>') + '</div>' +
+            '<div class="vd-wb-footer" style="display:flex;gap:8px;justify-content:center;margin-top:12px;">' +
+            '<button id="vd-wb-reset" style="padding:6px 16px;border-radius:14px;border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);font-family:var(--font-main);font-size:12px;cursor:pointer;">恢复默认</button>' +
+            '<button id="vd-wb-done" style="padding:6px 16px;border-radius:14px;border:none;background:var(--accent);color:var(--text);font-family:var(--font-main);font-size:12px;cursor:pointer;">完成</button>' +
             '</div>' +
             '</div>' +
             '</div>';
@@ -195,7 +191,6 @@ const VideoDanmaku = (function() {
 
     let els = {};
 
-    // ==================== 工具函数 ====================
     function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     // ==================== 弹幕引擎 ====================
@@ -467,7 +462,43 @@ const VideoDanmaku = (function() {
 
     // ==================== 公开接口 ====================
     function open() {
-        if (!document.getElementById('video-danmaku-container')) return;
+        // 先检查容器是否存在，如果不存在则创建
+        var container = document.getElementById('video-danmaku-container');
+        if (!container) {
+            // 创建视频弹幕容器
+            container = document.createElement('div');
+            container.id = 'video-danmaku-container';
+            container.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
+            container.innerHTML = `
+                <div class="fullscreen-header">
+                    <button class="fullscreen-back" id="vd-btn-close">
+                        <span class="back-arrow"></span> 返回
+                    </button>
+                    <span class="fullscreen-title">视频弹幕</span>
+                    <span style="width:50px;"></span>
+                </div>
+                <div class="fullscreen-body" style="padding:12px;display:flex;flex-direction:column;gap:10px;flex:1;overflow-y:auto;">
+                    <div id="vd-video-container" style="position:relative;background:var(--item-bg);border-radius:12px;overflow:hidden;aspect-ratio:16/9;border:2px solid var(--border);">
+                        <video id="vd-video" style="width:100%;height:100%;background:#000;" controls playsinline></video>
+                        <canvas id="vd-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
+                        <div id="vd-placeholder" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-system);font-size:14px;pointer-events:none;">加载视频开始观看</div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <input type="text" id="vd-url-input" placeholder="输入 .mp4 视频链接..." style="flex:1;min-width:120px;padding:6px 12px;border:2px solid var(--border);border-radius:12px;font-family:var(--font-main);font-size:13px;background:var(--input-box);color:var(--text);outline:none;">
+                        <button id="vd-btn-load-url" style="padding:6px 14px;border-radius:12px;border:none;background:var(--accent);color:var(--text);font-family:var(--font-main);font-size:13px;cursor:pointer;">加载</button>
+                        <button id="vd-btn-example" style="padding:6px 14px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);font-family:var(--font-main);font-size:13px;cursor:pointer;">示例视频</button>
+                        <button id="vd-btn-wordbank" style="padding:6px 14px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);font-family:var(--font-main);font-size:13px;cursor:pointer;">词库</button>
+                        <label style="padding:6px 14px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);font-family:var(--font-main);font-size:13px;cursor:pointer;">📁 本地视频<input type="file" id="vd-file-input" accept="video/*" style="display:none;"></label>
+                        <span id="vd-source-label" style="font-size:11px;color:var(--text-system);display:flex;align-items:center;padding:0 6px;"></span>
+                    </div>
+                    <div style="display:flex;gap:6px;margin-top:4px;">
+                        <input type="text" id="vd-chat-input" placeholder="发条弹幕..." style="flex:1;padding:6px 12px;border:2px solid var(--border);border-radius:12px;font-family:var(--font-main);font-size:13px;background:var(--input-box);color:var(--text);outline:none;">
+                        <button id="vd-btn-send" style="padding:6px 14px;border-radius:12px;border:none;background:var(--accent);color:var(--text);font-family:var(--font-main);font-size:13px;cursor:pointer;">发送</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(container);
+        }
 
         cacheElements();
         state.video = els.video;
@@ -479,7 +510,7 @@ const VideoDanmaku = (function() {
         setupVideoObserver();
 
         state.isOpen = true;
-        els.container.classList.add('vd-open');
+        els.container.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         setTimeout(resizeCanvas, 100);
 
@@ -495,7 +526,7 @@ const VideoDanmaku = (function() {
         if (!state.isOpen) return;
         closeWordBankModal();
         state.isOpen = false;
-        if (els.container) els.container.classList.remove('vd-open');
+        if (els.container) els.container.style.display = 'none';
         document.body.style.overflow = '';
         stopDanmakuLoop();
         if (state.video && !state.video.paused) state.video.pause();
