@@ -1627,7 +1627,23 @@ function sendWheelInviteManually() { sendWheelInvite(); }
 
 // ========== 打开设置 ==========
 function openSettings() { openModal('settingsOverlay'); }
-function openSubModal(html) { document.getElementById('subModal').innerHTML = html; openModal('subOverlay'); }
+function openSubModal(html) {
+    console.log('openSubModal 被调用');  // 调试日志
+    var modal = document.getElementById('subModal');
+    if (!modal) {
+        console.error('subModal 元素不存在');
+        showToast('系统错误，请刷新重试');
+        return;
+    }
+    modal.innerHTML = html;
+    var overlay = document.getElementById('subOverlay');
+    if (overlay) {
+        overlay.classList.add('show');
+    } else {
+        console.error('subOverlay 元素不存在');
+        showToast('系统错误，请刷新重试');
+    }
+}
 
 // ========== 对方主动发消息 ==========
 function otherSendMessage() {
