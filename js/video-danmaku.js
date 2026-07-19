@@ -467,7 +467,6 @@ const VideoDanmaku = (function() {
 
     // ==================== 公开接口 ====================
     function open() {
-        if (state.isOpen) return;
         if (!document.getElementById('video-danmaku-container')) return;
 
         cacheElements();
