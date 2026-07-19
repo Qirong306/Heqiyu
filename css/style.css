@@ -1943,3 +1943,57 @@ body {
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* ========== 全屏通用 ========== */
+.fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg);
+    z-index: 500;
+    display: none;
+    flex-direction: column;
+}
+.fullscreen-overlay.active {
+    display: flex;
+}
+
+.fullscreen-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--header-bg);
+    border-bottom: 1.5px solid var(--border);
+    flex-shrink: 0;
+    min-height: 48px;
+    gap: 12px;
+}
+.fullscreen-back {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    font-family: var(--font-main);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    letter-spacing: 0.5px;
+}
+.fullscreen-back:active {
+    opacity: 0.6;
+}
+.fullscreen-title {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: 1px;
+    flex: 1;
+}
+.fullscreen-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
