@@ -43,15 +43,31 @@ function openForum() {
                 <span class="back-arrow"></span> 返回
             </button>
             <span class="fullscreen-title">论坛</span>
-            <span style="width:50px;"></span>
+            <span onclick="toggleForumMenu()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</span>
         </div>
-        <div class="fullscreen-body" style="padding:16px;flex:1;overflow-y:auto;">
-            <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">论坛开发中...</div>
+        <div class="fullscreen-body" id="forumFullscreenBody" style="padding:16px;flex:1;overflow-y:auto;">
+            <div id="forumTopicList" style="text-align:left;"></div>
         </div>
     `;
     document.body.appendChild(overlay);
+    
+    var menuDiv = document.createElement('div');
+    menuDiv.id = 'forumDropdownMenu';
+    menuDiv.style.cssText = 'display:none;position:absolute;top:50px;right:16px;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
+    menuDiv.innerHTML = `
+        <div onclick="newForumTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">新建话题</div>
+        <div onclick="importForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入话题</div>
+        <div onclick="exportForumJSON();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导出话题</div>
+        <div onclick="openForumReplyLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">回复词库</div>
+        <div onclick="openForumTemplateLib();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">模板词库</div>
+        <div onclick="autoGenerateTopic();closeForumMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">自动生成</div>
+    `;
+    var header = overlay.querySelector('.fullscreen-header');
+    header.appendChild(menuDiv);
+    
+    currentViewingTopicId = null;
+    renderForumTopics();
 }
-
 function closeForumFullscreen() {
     var el = document.getElementById('forumFullscreen');
     if (el) el.remove();
