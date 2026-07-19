@@ -341,11 +341,11 @@ function cleanOrphanImages() {
         openBackupModal();
     });
 }
-// 确保导出到全局
-window.openBackupModal = openBackupModal;
-window.exportFullAsFile = exportFullAsFile;
-window.exportFull = exportFull;
-window.exportChat = exportChat;
-window.exportLibs = exportLibs;
-window.importDataFile = importDataFile;
-window.cleanOrphanImages = cleanOrphanImages;
+// 确保导出到全局（使用 _ 前缀避免冲突）
+window._openBackupModal = openBackupModal;
+window._exportFullAsFile = exportFullAsFile;
+window._exportFull = exportFull;
+window._exportChat = exportChat;
+window._exportLibs = exportLibs;
+window._importDataFile = importDataFile;
+window._cleanOrphanImages = cleanOrphanImages;
