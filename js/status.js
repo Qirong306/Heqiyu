@@ -168,3 +168,10 @@ function saveStatusList() {
     showToast('状态词库已保存');
     updateStatus();
 }
+// 确保导出到全局
+window.openStatusManageModal = openStatusManageModal;
+window.exportStatusList = exportStatusList;
+window.importStatusList = importStatusList;
+window.saveStatusList = saveStatusList;
+window.copyStatusListToClipboard = copyStatusListToClipboard;
+window.downloadStatusListFile = downloadStatusListFile;
