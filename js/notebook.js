@@ -153,29 +153,96 @@ function openNotebookModal() {
     loadNotebookData();
     closeModal('settingsOverlay');
     
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'notebookFullscreen';
+    
     var myCount = notebookData.myEntries.length;
     var otherCount = notebookData.otherEntries.length;
     
-    var html = '<div style="text-align:center;">' +
-        '<h3>情侣记事本</h3>' +
-        '<div class="subtitle">记录日常，分享生活</div>' +
-        '<div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">' +
-        '<div style="background:var(--item-bg);border-radius:12px;padding:8px 16px;flex:1;"><div style="font-size:20px;font-weight:bold;">' + myCount + '</div><div style="font-size:11px;">我的记录</div></div>' +
-        '<div style="background:var(--item-bg);border-radius:12px;padding:8px 16px;flex:1;"><div style="font-size:20px;font-weight:bold;">' + otherCount + '</div><div style="font-size:11px;">对方的记录</div></div>' +
-        '</div>' +
-        '<div class="btn-row" style="gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">' +
-        '<button class="btn-sm" onclick="showAddMyEntryModal()">写我的日常</button>' +
-        '<button class="btn-sm outline" onclick="showOtherEntriesModal()">看对方的日常</button>' +
-        '<button class="btn-sm outline" onclick="showMyTemplatesModal()">我的词条库</button>' +
-        '<button class="btn-sm outline" onclick="exportNotebook()">导出记事本</button>' +
-        '<button class="btn-sm outline" onclick="importNotebook()">导入记事本</button>' +
-        '</div>' +
-        '<div style="max-height:300px;overflow-y:auto;text-align:left;" id="notebookPreviewList">' +
-        renderNotebookPreview() +
-        '</div>' +
-        '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:12px;">关闭</button>' +
-        '</div>';
-    openSubModal(html);
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeNotebookFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">情侣记事本</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" id="notebookFullscreenBody" style="padding:16px;">
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:14px;color:var(--text-secondary);">记录日常，分享生活</div>
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                    <div style="background:var(--item-bg);border-radius:12px;padding:8px 16px;flex:1;max-width:120px;border:2px solid var(--border);">
+                        <div style="font-size:20px;font-weight:bold;">${myCount}</div>
+                        <div style="font-size:11px;">我的记录</div>
+                    </div>
+                    <div style="background:var(--item-bg);border-radius:12px;padding:8px 16px;flex:1;max-width:120px;border:2px solid var(--border);">
+                        <div style="font-size:20px;font-weight:bold;">${otherCount}</div>
+                        <div style="font-size:11px;">对方的记录</div>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-row" style="gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
+                <button class="btn-sm" onclick="showAddMyEntryModal()">写我的日常</button>
+                <button class="btn-sm outline" onclick="showOtherEntriesModal()">看对方的日常</button>
+                <button class="btn-sm outline" onclick="showMyTemplatesModal()">我的词条库</button>
+                <button class="btn-sm outline" onclick="exportNotebook()">导出记事本</button>
+                <button class="btn-sm outline" onclick="importNotebook()">导入记事本</button>
+            </div>
+            <div style="max-height:50vh;overflow-y:auto;" id="notebookPreviewListFullscreen"></div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    renderNotebookPreviewFullscreen();
+}
+
+function closeNotebookFullscreen() {
+    var el = document.getElementById('notebookFullscreen');
+    if (el) el.remove();
+}
+
+function renderNotebookPreviewFullscreen() {
+    var container = document.getElementById('notebookPreviewListFullscreen');
+    if (!container) return;
+    
+    var allEntries = [];
+    for (var i = 0; i < notebookData.myEntries.length; i++) {
+        allEntries.push({ type: 'my', entry: notebookData.myEntries[i] });
+    }
+    for (var i = 0; i < notebookData.otherEntries.length; i++) {
+        allEntries.push({ type: 'other', entry: notebookData.otherEntries[i] });
+    }
+    allEntries.sort(function(a, b) { return b.entry.time - a.entry.time; });
+    allEntries = allEntries.slice(0, 10);
+    
+    if (allEntries.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:20px;">暂无记录，点击写我的日常</div>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < allEntries.length; i++) {
+        var item = allEntries[i];
+        var entry = item.entry;
+        var isMy = item.type === 'my';
+        var label = isMy ? '我' : appData.otherName;
+        var timeStr = formatTimeShort(entry.time);
+        var commentCount = entry.comments ? entry.comments.length : 0;
+        
+        html += '<div style="background:var(--item-bg);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid var(--border);">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">' +
+            '<span style="font-size:12px;font-weight:bold;color:var(--accent);">' + escapeHTML(label) + '</span>' +
+            '<span style="font-size:10px;color:var(--text-system);">' + timeStr + '</span>' +
+            '</div>' +
+            '<div style="font-size:13px;margin-bottom:6px;">' + escapeHTML(entry.content) + '</div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+            '<span style="font-size:10px;color:var(--text-system);">评论(' + commentCount + ')</span>' +
+            '<button class="del-sm" onclick="viewEntryDetail(\'' + entry.id + '\', \'' + (isMy ? 'my' : 'other') + '\')" style="font-size:10px;padding:2px 8px;">查看评论</button>' +
+            '</div>' +
+            '</div>';
+    }
+    container.innerHTML = html;
 }
 
 function renderNotebookPreview() {
@@ -841,3 +908,5 @@ setInterval(function() {
     `;
     document.head.appendChild(style);
 })();
+window.openNotebookModal = openNotebookModal;
+window.closeNotebookFullscreen = closeNotebookFullscreen;
