@@ -35,8 +35,37 @@ var scratchTimer = null;
 
 // ==================== 打开刮刮乐 ====================
 function openScratchCard() {
-    closeAllFullscreens();
+    // 关闭可能打开的其他弹窗
+    var subOverlay = document.getElementById('subOverlay');
+    if (subOverlay) subOverlay.classList.remove('show');
+    var photoOverlay = document.getElementById('photoOverlay');
+    if (photoOverlay) photoOverlay.classList.remove('show');
+    var letterOverlay = document.getElementById('letterOverlay');
+    if (letterOverlay) letterOverlay.classList.remove('show');
     
+    var morePanel = document.getElementById('morePanel');
+    if (morePanel) morePanel.style.display = 'none';
+
+    var today = new Date().toDateString();
+    if (appData.scratchLastDate !== today) {
+        appData.scratchCount = 0;
+        appData.scratchLastDate = today;
+        saveData();
+    }
+
+    if (appData.scratchCount >= appData.scratchMaxPerDay) {
+        showToast('今天的刮刮乐次数用完了\n明天再来吧');
+        return;
+    }
+
+    scratchCurrentPrize = getRandomPrize();
+    if (!scratchCurrentPrize) scratchCurrentPrize = { text: '神秘礼物', weight: 1 };
+
+    // 检查是否已存在全屏
+    var existing = document.getElementById('scratchFullscreen');
+    if (existing) existing.remove();
+
+    // 创建全屏容器
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'scratchFullscreen';
@@ -50,20 +79,36 @@ function openScratchCard() {
             <span class="fullscreen-title">刮刮乐</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" style="padding:16px;flex:1;overflow-y:auto;">
-            <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">刮刮乐开发中...</div>
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;flex:1;overflow-y:auto;">
+            <div style="font-size:13px;color:var(--text-secondary);" id="scratchRemainText">今日剩余次数：${appData.scratchMaxPerDay - appData.scratchCount}/${appData.scratchMaxPerDay}</div>
+            <div class="scratch-canvas-wrap" id="scratchCanvasWrap" style="width:300px;height:200px;border-radius:var(--radius-md);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.1);position:relative;">
+                <div class="scratch-result" id="scratchResult" style="visibility:hidden;position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;color:var(--text);background:var(--bubble-me);pointer-events:none;">${escapeHTML(scratchCurrentPrize.text)}</div>
+                <canvas id="scratchCanvas"></canvas>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:4px;">
+                <button class="btn-sm" onclick="resetScratchCard()">再刮一次</button>
+                <button class="btn-sm outline" onclick="openScratchManage()">管理奖品</button>
+            </div>
         </div>
     `;
+    
     document.body.appendChild(overlay);
+    
+    clearTimeout(scratchTimer);
+    scratchTimer = setTimeout(function() {
+        initScratchCanvas();
+    }, 400);
 }
 
 function closeScratchFullscreen() {
     var el = document.getElementById('scratchFullscreen');
     if (el) el.remove();
+    clearTimeout(scratchTimer);
+    scratchCanvas = null;
+    scratchCtx = null;
+    scratchIsDrawing = false;
+    scratchCurrentPrize = null;
 }
-
-window.openScratchCard = openScratchCard;
-window.closeScratchFullscreen = closeScratchFullscreen;
 
 function closeScratchCard() {
     clearTimeout(scratchTimer);
@@ -501,7 +546,9 @@ if (document.readyState === 'loading') {
 }
 
 // ========== 导出到全局 ==========
+window.openScratchCard = openScratchCard;
+window.closeScratchFullscreen = closeScratchFullscreen;
 window.resetScratchCard = resetScratchCard;
 window.openScratchManage = openScratchManage;
 
-console.log('刮刮乐模块已加载（修复版）');
+console.log('刮刮乐模块已加载（完整版）');
