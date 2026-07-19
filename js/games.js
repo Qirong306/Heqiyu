@@ -46,6 +46,7 @@ function openSudoku() {
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'sudokuFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     
     overlay.innerHTML = `
         <div class="fullscreen-header">
@@ -55,7 +56,7 @@ function openSudoku() {
             <span class="fullscreen-title">数独</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;">
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;flex:1;overflow-y:auto;">
             <div class="btn-row" style="justify-content:center;">
                 <button class="btn-sm ${sudokuDifficulty === 'easy' ? '' : 'outline'}" onclick="setSudokuDifficulty('easy')">简单</button>
                 <button class="btn-sm ${sudokuDifficulty === 'medium' ? '' : 'outline'}" onclick="setSudokuDifficulty('medium')">中等</button>
@@ -67,7 +68,7 @@ function openSudoku() {
                 <button class="btn-sm outline" onclick="newSudokuGame()">新游戏</button>
                 <button class="btn-sm outline" onclick="giveSudokuHint()">提示</button>
             </div>
-            <div class="gomoku-info" id="sudokuInfo" style="text-align:center;font-size:14px;color:var(--text);">选择单元格，点击数字填充</div>
+            <div id="sudokuInfo" style="text-align:center;font-size:14px;color:var(--text);">选择单元格，点击数字填充</div>
         </div>
     `;
     document.body.appendChild(overlay);
@@ -169,6 +170,7 @@ function renderSudokuBoard() {
         for (var j = 0; j < 9; j++) {
             var cell = document.createElement('div');
             cell.className = 'sudoku-cell';
+            cell.style.cssText = 'background:var(--item-bg);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:var(--text);cursor:pointer;aspect-ratio:1;';
             
             if (i % 3 === 0 && i > 0) {
                 cell.style.borderTop = '2px solid var(--text)';
@@ -181,13 +183,13 @@ function renderSudokuBoard() {
                 cell.textContent = sudokuBoard[i][j];
             }
             if (sudokuGiven[i] && sudokuGiven[i][j]) {
-                cell.classList.add('given');
+                cell.style.color = 'var(--text-secondary)';
             }
             if (sudokuSelected && sudokuSelected.row === i && sudokuSelected.col === j) {
-                cell.classList.add('selected');
+                cell.style.background = 'var(--accent)';
             }
             if (sudokuBoard[i][j] !== 0 && sudokuBoard[i][j] !== sudokuSolution[i][j]) {
-                cell.classList.add('error');
+                cell.style.color = 'var(--danger)';
             }
             
             (function(row, col) {
@@ -214,6 +216,7 @@ function renderSudokuBoard() {
         var btn = document.createElement('div');
         btn.className = 'sudoku-num-btn';
         btn.textContent = n;
+        btn.style.cssText = 'background:var(--item-bg);padding:10px;text-align:center;border-radius:8px;cursor:pointer;font-size:16px;font-weight:bold;color:var(--text);border:1px solid var(--border);';
         (function(num) {
             btn.onclick = function() {
                 if (sudokuSelected) fillSudokuNumber(num);
@@ -224,6 +227,7 @@ function renderSudokuBoard() {
     var eraseBtn = document.createElement('div');
     eraseBtn.className = 'sudoku-num-btn erase';
     eraseBtn.textContent = '清除';
+    eraseBtn.style.cssText = 'background:var(--danger);padding:10px;text-align:center;border-radius:8px;cursor:pointer;font-size:14px;color:#fff;border:none;';
     eraseBtn.onclick = function() {
         if (sudokuSelected) fillSudokuNumber(0);
     };
@@ -274,12 +278,6 @@ function checkSudokuCompletion() {
     var infoEl = document.getElementById('sudokuInfo');
     if (infoEl) infoEl.textContent = '恭喜！完成数独，用时 ' + timeStr;
     showToast('数独完成！用时 ' + timeStr);
-    // 移除 addSystemMsg 调用
-}
-
-function exitSudoku() {
-    closeModal('subOverlay');
-    setInputMode('normal');
 }
 
 // ==================== 五子棋 ====================
@@ -297,6 +295,7 @@ function openGomoku() {
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'gomokuFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     
     overlay.innerHTML = `
         <div class="fullscreen-header">
@@ -306,11 +305,11 @@ function openGomoku() {
             <span class="fullscreen-title">五子棋</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;">
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;flex:1;overflow-y:auto;">
             <div class="gomoku-board-wrap" style="background:var(--item-bg);padding:10px;border-radius:var(--radius-sm);">
                 <canvas class="gomoku-board" id="gomokuCanvas" width="340" height="340"></canvas>
             </div>
-            <div class="gomoku-info" id="gomokuInfo" style="text-align:center;font-size:14px;color:var(--text);">你执黑先行，点击棋盘落子</div>
+            <div id="gomokuInfo" style="text-align:center;font-size:14px;color:var(--text);">你执黑先行，点击棋盘落子</div>
             <div class="btn-row" style="justify-content:center;">
                 <button class="btn-sm outline" onclick="newGomokuGame()">新游戏</button>
                 <button class="btn-sm outline" onclick="undoGomoku()">悔棋</button>
@@ -519,11 +518,6 @@ function renderGomokuBoard() {
     }
 }
 
-function exitGomoku() {
-    closeModal('subOverlay');
-    setInputMode('normal');
-}
-
 // ==================== 剧本杀 ====================
 var murderGameState = null;
 
@@ -535,6 +529,7 @@ function openMurderMystery() {
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'murderFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     
     overlay.innerHTML = `
         <div class="fullscreen-header">
@@ -544,7 +539,7 @@ function openMurderMystery() {
             <span class="fullscreen-title">剧本杀</span>
             <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" id="murderFullscreenBody" style="padding:16px;">
+        <div class="fullscreen-body" id="murderFullscreenBody" style="padding:16px;flex:1;overflow-y:auto;">
             <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">选择剧本开始推理</div>
             <div class="btn-row" style="justify-content:center;margin-bottom:12px;">
                 <button class="btn-sm" onclick="uploadMurderScript()">上传 JSON 剧本</button>
@@ -579,6 +574,7 @@ function renderMurderScriptList() {
                 scripts.forEach(function(script) {
                     var div = document.createElement('div');
                     div.className = 'book-list-item';
+                    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--item-bg);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;border:2px solid transparent;';
                     div.textContent = script.title + ' (' + script.chapters.length + '章)';
                     div.onclick = function() {
                         startMurderGame(script);
@@ -778,7 +774,7 @@ function showMurderChoices(choices) {
     div.className = 'msg other';
     div.innerHTML = '<div class="bubble"><div class="script-choices" id="murderChoices">' +
         choices.map(function(choice, idx) {
-            return '<button class="script-choice-btn" onclick="selectMurderChoice(\'' + choice.nextSceneId + '\')">' + (idx+1) + '. ' + choice.text + '</button>';
+            return '<button class="script-choice-btn" onclick="selectMurderChoice(\'' + choice.nextSceneId + '\')" style="display:block;width:100%;padding:8px 12px;margin:4px 0;border:2px solid var(--border);border-radius:8px;background:var(--item-bg);color:var(--text);font-family:var(--font-main);font-size:13px;cursor:pointer;text-align:left;">' + (idx+1) + '. ' + choice.text + '</button>';
         }).join('') +
         '</div></div>';
     chat.appendChild(div);
@@ -835,11 +831,12 @@ function openClueNotebook() {
         overlay = document.createElement('div');
         overlay.id = 'clueNotebookOverlay';
         overlay.className = 'clue-notebook-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:600;display:flex;justify-content:center;align-items:center;';
         document.body.appendChild(overlay);
     }
-    var html = '<div class="clue-notebook">';
-    html += '<h4>线索笔记本</h4>';
-    html += '<div class="subtitle">点击线索标记分析 (已分析: ' + murderGameState.markedClues.length + '/' + murderGameState.collectedClues.length + ')</div>';
+    var html = '<div style="background:var(--panel-bg);border-radius:22px;width:88%;max-width:400px;max-height:78vh;overflow-y:auto;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,0.15);">';
+    html += '<h4 style="text-align:center;font-size:19px;margin-bottom:6px;color:var(--text);letter-spacing:2px;font-weight:400;">线索笔记本</h4>';
+    html += '<div style="text-align:center;font-size:12px;color:var(--text-system);margin-bottom:16px;letter-spacing:1px;">已分析: ' + murderGameState.markedClues.length + '/' + murderGameState.collectedClues.length + '</div>';
     var script = murderGameState.script;
     var allClues = [];
     script.chapters.forEach(function(ch) {
@@ -853,12 +850,13 @@ function openClueNotebook() {
         var clue = allClues.find(function(c) { return c.id === clueId; });
         if (clue) {
             var marked = murderGameState.markedClues.indexOf(clueId) !== -1;
-            html += '<div class="clue-item' + (marked ? ' marked' : '') + '" onclick="toggleClueMark(\'' + clueId + '\')">';
-            html += '<span class="clue-check">' + (marked ? '[X]' : '[ ]') + '</span>';
-            html += '<span>' + escapeHTML(clue.description) + '</span>';
+            html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--item-bg);border-radius:8px;margin-bottom:4px;cursor:pointer;' + (marked ? 'border-left:3px solid var(--accent);' : '') + '" onclick="toggleClueMark(\'' + clueId + '\')">';
+            html += '<span style="font-size:14px;">' + (marked ? '✅' : '⬜') + '</span>';
+            html += '<span style="font-size:13px;color:var(--text);">' + escapeHTML(clue.description) + '</span>';
             html += '</div>';
         }
     });
+    html += '<button class="btn-close" onclick="closeClueNotebook()" style="display:block;margin:14px auto 0;padding:8px 24px;border:1.5px solid var(--border);border-radius:20px;background:var(--item-bg);cursor:pointer;font-size:13px;color:var(--text-secondary);font-family:var(--font-main);letter-spacing:1px;">关闭</button>';
     html += '</div>';
     overlay.innerHTML = html;
     overlay.classList.add('show');
@@ -876,35 +874,12 @@ function closeClueNotebook() {
     if (overlay) overlay.classList.remove('show');
 }
 
-// ==================== 初始化 ====================
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        var grid = document.querySelector('.more-panel-grid-top');
-        if (grid) {
-            if (!grid.querySelector('.game-sudoku')) {
-                var sudokuBtn = document.createElement('div');
-                sudokuBtn.className = 'more-item-text game-sudoku';
-                sudokuBtn.textContent = '数独';
-                sudokuBtn.onclick = function() { toggleMorePanel(); openSudoku(); };
-                grid.appendChild(sudokuBtn);
-                var gomokuBtn = document.createElement('div');
-                gomokuBtn.className = 'more-item-text game-gomoku';
-                gomokuBtn.textContent = '五子棋';
-                gomokuBtn.onclick = function() { toggleMorePanel(); openGomoku(); };
-                grid.appendChild(gomokuBtn);
-                var murderBtn = document.createElement('div');
-                murderBtn.className = 'more-item-text game-murder';
-                murderBtn.textContent = '剧本杀';
-                murderBtn.onclick = function() { toggleMorePanel(); openMurderMystery(); };
-                grid.appendChild(murderBtn);
-            }
-        }
-    }, 500);
-});
-
 window.openSudoku = openSudoku;
 window.closeSudokuFullscreen = closeSudokuFullscreen;
 window.openGomoku = openGomoku;
 window.closeGomokuFullscreen = closeGomokuFullscreen;
 window.openMurderMystery = openMurderMystery;
 window.closeMurderFullscreen = closeMurderFullscreen;
+window.openClueNotebook = openClueNotebook;
+window.closeClueNotebook = closeClueNotebook;
+window.toggleClueMark = toggleClueMark;
