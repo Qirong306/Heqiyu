@@ -858,7 +858,40 @@ function openThemeModal() {
     var html = '<h4>主题模式</h4><div style="display:flex;gap:10px;justify-content:center;margin-top:12px;"><button class="btn-sm ' + (appData.theme === 'light' ? '' : 'outline') + '" onclick="setThemeLight()">浅色</button><button class="btn-sm ' + (appData.theme === 'dark' ? '' : 'outline') + '" onclick="setThemeDark()">深色</button></div><button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:14px;">关闭</button>';
     openSubModal(html);
 }
+function openColorThemeModal() {
+    // 创建全屏容器
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'themeFullscreen';
+    
+    var currentTheme = localStorage.getItem('color_theme') || 'default';
+    var html = '<div class="fullscreen-header">' +
+        '<button class="fullscreen-back" onclick="closeThemeFullscreen()">' +
+        '<span class="back-arrow"></span> 返回</button>' +
+        '<span class="fullscreen-title">主题颜色</span>' +
+        '<span style="width:50px;"></span>' +
+        '</div>' +
+        '<div class="fullscreen-body">' +
+        '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">选择你喜欢的低饱和颜色</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">';
+    
+    for (var key in colorThemes) {
+        var theme = colorThemes[key];
+        var isActive = (currentTheme === key);
+        html += '<div onclick="applyColorTheme(\'' + key + '\')" style="background:' + theme.accent + ';padding:16px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid ' + (isActive ? '#fff' : 'transparent') + ';box-shadow:0 1px 3px rgba(0,0,0,0.1);">' +
+            '<span style="color:var(--text);font-size:14px;">' + theme.name + '</span>' +
+            '</div>';
+    }
+    html += '</div></div>';
+    
+    overlay.innerHTML = html;
+    document.body.appendChild(overlay);
+}
 
+function closeThemeFullscreen() {
+    var el = document.getElementById('themeFullscreen');
+    if (el) el.remove();
+}
 // ========== 信件 ==========
 function updateLetterBadge() {
     var badge = document.getElementById('letterBadge'), pending = 0;
@@ -911,10 +944,54 @@ function sendLetter() {
     addSystemMsg('你给 ' + appData.otherName + ' 寄出了一封信，预计 ' + formatTime(expectedTime) + ' 收到回信');
 }
 function openLetterModal() {
-    if (document.getElementById('morePanel').style.display === 'block') toggleMorePanel();
+    // 创建全屏容器
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'letterFullscreen';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeLetterFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">写一封信</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" style="display:flex;flex-direction:column;gap:12px;padding:20px;">
+            <div style="font-size:14px;color:var(--text-secondary);">写给 <span id="letterRecipient" style="font-weight:bold;color:var(--text);">${appData.otherName}</span></div>
+            <textarea id="letterContent" placeholder="写下你想说的话...&#10;信件不会直接发送到聊天，对方会在半天到一天半内回信哦~" style="flex:1;min-height:200px;padding:14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-main);font-size:14px;background:var(--input-box);color:var(--text);resize:none;outline:none;"></textarea>
+            <button class="btn-sm" onclick="sendLetterFullscreen()" style="padding:12px;font-size:15px;">寄出信件</button>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
     document.getElementById('letterRecipient').textContent = appData.otherName;
-    document.getElementById('letterContent').value = '';
-    openModal('letterOverlay');
+}
+
+function closeLetterFullscreen() {
+    var el = document.getElementById('letterFullscreen');
+    if (el) el.remove();
+}
+
+function sendLetterFullscreen() {
+    var content = document.getElementById('letterContent').value.trim();
+    if (!content) return showToast('请写下信件内容');
+    var delay = 12*60*60*1000 + Math.random() * 24*60*60*1000;
+    var expectedTime = Date.now() + delay;
+    appData.letters.push({ 
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2,6), 
+        sentContent: content, 
+        sentTime: Date.now(), 
+        expectedReplyTime: expectedTime, 
+        replyContent: '', 
+        replied: false, 
+        replyShown: false 
+    });
+    saveData();
+    closeLetterFullscreen();
+    showToastLong('信件已寄出！\n预计 ' + formatTime(expectedTime) + ' 左右收到回信', 5000);
+    updateLetterBadge();
+    addSystemMsg('你给 ' + appData.otherName + ' 寄出了一封信，预计 ' + formatTime(expectedTime) + ' 收到回信');
 }
 function openLetterManageModal() {
     closeModal('settingsOverlay');
@@ -1703,3 +1780,8 @@ window.switchTab = switchTab;
 window.closeSettingsFullscreen = closeSettingsFullscreen;
 window.toggleChatMorePanel = toggleChatMorePanel;
 window.closeChatMorePanel = closeChatMorePanel;
+window.openLetterModal = openLetterModal;
+window.closeLetterFullscreen = closeLetterFullscreen;
+window.sendLetterFullscreen = sendLetterFullscreen;
+window.openColorThemeModal = openColorThemeModal;
+window.closeThemeFullscreen = closeThemeFullscreen;
