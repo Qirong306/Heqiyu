@@ -158,6 +158,16 @@ body {
 }
 #desktopView.hidden { display: none; }
 
+/* ========== 聊天视图 ========== */
+#chatView {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    background: var(--chat-bg);
+}
+#chatView.active { display: flex; }
+
 /* ========== 音乐播放器 ========== */
 .music-player {
     display: flex;
@@ -219,6 +229,7 @@ body {
 }
 .music-btn:active { background: var(--item-bg); }
 
+/* 音乐控制图标 */
 .icon-prev {
     display: inline-block;
     width: 18px;
@@ -741,7 +752,7 @@ body {
 .icon-palette .c3 { top: 2px; right: 4px; background: #c5c4e8; }
 .icon-palette .c4 { bottom: 4px; left: 2px; background: #b8d9c6; }
 
-/* 全部应用（九宫格 + 小点） */
+/* 全部应用（九宫格） */
 .icon-allapp-shape::before {
     content: '';
     position: absolute;
@@ -749,7 +760,7 @@ body {
     left: 2px;
     width: 26px;
     height: 26px;
-    border: 2px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.3);
     border-radius: 4px;
 }
 .icon-allapp-shape .dot {
@@ -757,28 +768,19 @@ body {
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.55);
 }
-.icon-allapp-shape .d1 { top: 6px; left: 6px; }
-.icon-allapp-shape .d2 { top: 6px; left: 13px; }
-.icon-allapp-shape .d3 { top: 6px; left: 20px; }
-.icon-allapp-shape .d4 { top: 13px; left: 6px; }
+.icon-allapp-shape .d1 { top: 5px; left: 5px; }
+.icon-allapp-shape .d2 { top: 5px; left: 13px; }
+.icon-allapp-shape .d3 { top: 5px; left: 21px; }
+.icon-allapp-shape .d4 { top: 13px; left: 5px; }
 .icon-allapp-shape .d5 { top: 13px; left: 13px; }
-.icon-allapp-shape .d6 { top: 13px; left: 20px; }
-.icon-allapp-shape .d7 { top: 20px; left: 6px; }
-.icon-allapp-shape .d8 { top: 20px; left: 13px; }
-.icon-allapp-shape .d9 { top: 20px; left: 20px; }
+.icon-allapp-shape .d6 { top: 13px; left: 21px; }
+.icon-allapp-shape .d7 { top: 21px; left: 5px; }
+.icon-allapp-shape .d8 { top: 21px; left: 13px; }
+.icon-allapp-shape .d9 { top: 21px; left: 21px; }
 
-/* ========== 聊天视图 ========== */
-#chatView {
-    display: none;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    background: var(--chat-bg);
-}
-#chatView.active { display: flex; }
-
+/* ========== 聊天头部 ========== */
 .chat-header {
     display: flex;
     align-items: center;
@@ -1229,6 +1231,46 @@ body {
     border-top: none;
     border-right: none;
     border-radius: 0 0 0 2px;
+}
+
+/* 主界面Tab图标 - 房子 */
+.tab-icon-desktop {
+    position: relative;
+    width: 22px;
+    height: 22px;
+}
+.tab-icon-desktop::before {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    width: 18px;
+    height: 12px;
+    background: var(--text-secondary);
+    border-radius: 1px;
+    opacity: 0.3;
+}
+.tab-icon-desktop::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 10px;
+    background: var(--text-secondary);
+    clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+    opacity: 0.3;
+}
+.tab-icon-desktop .door {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 6px;
+    background: var(--text-secondary);
+    border-radius: 1px 1px 0 0;
+    opacity: 0.2;
 }
 
 /* 通话Tab图标 */
