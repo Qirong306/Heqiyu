@@ -346,5 +346,4 @@ document.addEventListener('click', function(e) {
 });
 
 window.openWheel = openWheel;
-window.closeWheelFullscreen = closeWheelFullscreen;penWheel = openWheel;
 window.closeWheelFullscreen = closeWheelFullscreen;
