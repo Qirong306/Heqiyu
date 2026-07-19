@@ -1677,7 +1677,17 @@ function closeAllFullscreens() {
 
 // ==================== Tab 切换 ====================
 
+// ==================== Tab 切换 ====================
+
 function switchTab(tab) {
+    var desktopView = document.getElementById('desktopView');
+    var chatView = document.getElementById('chatView');
+    var settingsFullscreen = document.getElementById('settingsFullscreen');
+    
+    closeChatMorePanel();
+    closeAllFullscreens();
+    
+    // 更新tab激活状态
     document.querySelectorAll('.tab-item').forEach(function(el) {
         el.classList.remove('active');
         if (el.dataset.tab === tab) {
@@ -1685,36 +1695,29 @@ function switchTab(tab) {
         }
     });
     
-    var desktopView = document.getElementById('desktopView');
-    var chatView = document.getElementById('chatView');
-    var settingsFullscreen = document.getElementById('settingsFullscreen');
-    var allAppsFullscreen = document.getElementById('allAppsFullscreen');
-    
-    closeChatMorePanel();
-    closeAllFullscreens();
-    closeAllAppsFullscreen();
-    
-    // 聊天Tab - 直接进入聊天
+    // 聊天Tab - 只显示聊天
     if (tab === 'chat') {
         if (desktopView) desktopView.classList.add('hidden');
         if (chatView) chatView.classList.add('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
-        
-        // 更新状态栏标题
         document.getElementById('statusTitle').textContent = appData.otherName || '甜心助手';
-        
-    } else if (tab === 'desktop') {
-        // 保留桌面模式兼容
+        return;
+    }
+    
+    // 主界面Tab - 显示功能图标
+    if (tab === 'desktop') {
         if (desktopView) desktopView.classList.remove('hidden');
         if (chatView) chatView.classList.remove('active');
         if (settingsFullscreen) settingsFullscreen.style.display = 'none';
         document.getElementById('statusTitle').textContent = '甜心助手';
-        
-    } else if (tab === 'call') {
+        return;
+    }
+    
+    // 通话Tab - 弹出通话后回到聊天
+    if (tab === 'call') {
         if (typeof startVoiceCall === 'function') {
             startVoiceCall();
         }
-        // 通话后回到聊天
         setTimeout(function() {
             if (desktopView) desktopView.classList.add('hidden');
             if (chatView) chatView.classList.add('active');
@@ -1726,8 +1729,11 @@ function switchTab(tab) {
             });
             document.getElementById('statusTitle').textContent = appData.otherName || '甜心助手';
         }, 100);
-        
-    } else if (tab === 'settings') {
+        return;
+    }
+    
+    // 设置Tab
+    if (tab === 'settings') {
         if (desktopView) desktopView.classList.add('hidden');
         if (chatView) chatView.classList.remove('active');
         if (settingsFullscreen) {
@@ -1735,6 +1741,7 @@ function switchTab(tab) {
             renderSettingsContent();
         }
         document.getElementById('statusTitle').textContent = '设置';
+        return;
     }
 }
 
