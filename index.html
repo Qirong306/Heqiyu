@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- 功能图标网格（16个功能） -->
+        <!-- 功能图标网格 -->
         <div class="app-grid" id="appGrid">
             <!-- 第1行 -->
             <div class="app-item" onclick="openCozySpace()">
@@ -102,11 +102,8 @@
                 <div class="app-icon icon-notebook"><span class="icon-shape icon-notebook-shape"><span class="line l1"></span><span class="line l2"></span><span class="line l3"></span><span class="line l4"></span><span class="line l5"></span></span></div>
                 <span class="app-name">情侣记事本</span>
             </div>
-            <!-- 第4行 -->
-            <div class="app-item" onclick="openColorThemeModal()">
-                <div class="app-icon icon-theme"><span class="icon-shape icon-palette"><span class="color c1"></span><span class="color c2"></span><span class="color c3"></span><span class="color c4"></span></span></div>
-                <span class="app-name">主题</span>
-            </div>
+            <!-- 第4行 - 主题已移除，留空占位 -->
+            <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
             <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
             <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
             <div class="app-item" style="opacity:0;pointer-events:none;"><div class="app-icon"></div><span class="app-name"></span></div>
@@ -114,7 +111,7 @@
     </div>
 
     <!-- ===== 聊天视图 ===== -->
-    <div id="chatView">
+    <div id="chatView" class="active">
         <div class="chat-header">
             <button class="chat-back" onclick="switchTab('desktop')">
                 <span class="back-arrow"></span>
@@ -125,7 +122,9 @@
                 <span class="mini-icon mini-notebook"></span>
             </span>
         </div>
-        <div class="chat" id="chat"></div>
+        <div class="chat" id="chat">
+            <div class="system-msg">和祁煜开始聊天吧~</div>
+        </div>
         <div class="input-area" id="inputArea">
             <div class="input-row">
                 <button class="text-btn" onclick="startVoiceCall()">通话</button>
