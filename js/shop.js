@@ -415,5 +415,3 @@ setInterval(function() {
     otherRandomBuy();
 }, 30000);
 
-window.openShopModal = openShopModal;
-window.closeShopFullscreen = closeShopFullscreen;
