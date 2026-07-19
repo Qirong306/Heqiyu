@@ -113,23 +113,111 @@ function deleteBook(index) {
 
 function openBookManageModal() {
     closeModal('settingsOverlay');
+    
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay active';
+    overlay.id = 'bookFullscreen';
+    
+    overlay.innerHTML = `
+        <div class="fullscreen-header">
+            <button class="fullscreen-back" onclick="closeBookFullscreen()">
+                <span class="back-arrow"></span> 返回
+            </button>
+            <span class="fullscreen-title">书籍阅读</span>
+            <span style="width:50px;"></span>
+        </div>
+        <div class="fullscreen-body" id="bookFullscreenBody" style="padding:16px;">
+            <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">上传 txt 文件或粘贴内容</div>
+            <div class="btn-row" style="justify-content:center;margin-bottom:12px;">
+                <button class="btn-sm" onclick="showAddBookFormFullscreen()">添加书籍</button>
+            </div>
+            <div id="bookList" style="max-height:60vh;overflow-y:auto;"></div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    renderBookListFullscreen();
+}
+
+function closeBookFullscreen() {
+    var el = document.getElementById('bookFullscreen');
+    if (el) el.remove();
+}
+
+function renderBookListFullscreen() {
+    var container = document.getElementById('bookList');
+    if (!container) return;
     var books = getBooks();
-    var html = '<h4>书籍阅读</h4><div class="subtitle">上传 txt 文件或粘贴内容</div>';
-    html += '<div class="btn-row"><button class="btn-sm" onclick="showAddBookForm()">添加书籍</button></div>';
     if (books.length === 0) {
-        html += '<div style="text-align:center;color:var(--text-system);padding:20px;">书架上还没有书</div>';
-    } else {
-        html += '<div style="max-height:300px;overflow-y:auto;">';
-        books.forEach(function(book, i) {
-            html += '<div class="book-list-item" onclick="openBookReader(' + i + ')" style="display:flex;justify-content:space-between;align-items:center;">';
-            html += '<span>' + escapeHTML(book.title) + ' <span style="font-size:10px;color:var(--text-system);">(' + book.content.length + '字)</span></span>';
-            html += '<button class="del-sm" onclick="event.stopPropagation();deleteBook(' + i + ')" style="margin-left:10px;">删除</button>';
-            html += '</div>';
-        });
-        html += '</div>';
+        container.innerHTML = '<div style="text-align:center;color:var(--text-system);padding:20px;">书架上还没有书</div>';
+        return;
     }
-    html += '<button class="btn-close" onclick="closeModal(\'subOverlay\')" style="margin-top:10px;">关闭</button>';
-    openSubModal(html);
+    var html = '';
+    books.forEach(function(book, i) {
+        html += '<div class="book-list-item" onclick="openBookReader(' + i + ')" style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--item-bg);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;border:2px solid transparent;">' +
+            '<span>' + escapeHTML(book.title) + ' <span style="font-size:10px;color:var(--text-system);">(' + book.content.length + '字)</span></span>' +
+            '<button class="del-sm" onclick="event.stopPropagation();deleteBook(' + i + ')" style="margin-left:10px;">删除</button>' +
+            '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function showAddBookFormFullscreen() {
+    var body = document.getElementById('bookFullscreenBody');
+    if (!body) return;
+    body.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <div class="form-row">
+                <label>书名</label>
+                <input type="text" id="newBookTitle" placeholder="输入书名">
+            </div>
+            <div class="form-row">
+                <label>内容（粘贴文本或选择文件）</label>
+                <textarea id="newBookContent" placeholder="在此粘贴文本内容..." style="min-height:120px;"></textarea>
+            </div>
+            <div class="btn-row">
+                <button class="btn-sm outline" onclick="document.getElementById('bookFileInput').click()">上传文件 (txt/epub)</button>
+                <input type="file" id="bookFileInput" accept=".txt,.epub" style="display:none" onchange="loadBookFile()">
+            </div>
+            <div class="btn-row">
+                <button class="btn-sm" onclick="saveNewBookFullscreen()">保存</button>
+                <button class="btn-sm outline" onclick="renderBookListFullscreen();showAddBookFormFullscreenCancel();">取消</button>
+            </div>
+            <div id="bookList" style="max-height:40vh;overflow-y:auto;"></div>
+        </div>
+    `;
+    renderBookListFullscreen();
+}
+
+function showAddBookFormFullscreenCancel() {
+    var body = document.getElementById('bookFullscreenBody');
+    if (!body) return;
+    body.innerHTML = `
+        <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">上传 txt 文件或粘贴内容</div>
+        <div class="btn-row" style="justify-content:center;margin-bottom:12px;">
+            <button class="btn-sm" onclick="showAddBookFormFullscreen()">添加书籍</button>
+        </div>
+        <div id="bookList" style="max-height:60vh;overflow-y:auto;"></div>
+    `;
+    renderBookListFullscreen();
+}
+
+function saveNewBookFullscreen() {
+    var title = document.getElementById('newBookTitle').value.trim();
+    var content = document.getElementById('newBookContent').value.trim();
+    if (!title) { showToast('请输入书名'); return; }
+    if (!content) { showToast('请输入或选择文本内容'); return; }
+    var books = getBooks();
+    books.push({
+        id: 'book_' + Date.now(),
+        title: title,
+        content: content,
+        annotations: [],
+        addedTime: Date.now()
+    });
+    saveBookData();
+    showToast('书籍已添加');
+    showAddBookFormFullscreenCancel();
 }
 
 // 解析内容为章节
