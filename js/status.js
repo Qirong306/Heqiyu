@@ -168,10 +168,10 @@ function saveStatusList() {
     showToast('状态词库已保存');
     updateStatus();
 }
-// 确保导出到全局
-window.openStatusManageModal = openStatusManageModal;
-window.exportStatusList = exportStatusList;
-window.importStatusList = importStatusList;
-window.saveStatusList = saveStatusList;
-window.copyStatusListToClipboard = copyStatusListToClipboard;
-window.downloadStatusListFile = downloadStatusListFile;
+// 确保导出到全局（使用 _ 前缀避免冲突）
+window._openStatusManageModal = openStatusManageModal;
+window._exportStatusList = exportStatusList;
+window._importStatusList = importStatusList;
+window._saveStatusList = saveStatusList;
+window._copyStatusListToClipboard = copyStatusListToClipboard;
+window._downloadStatusListFile = downloadStatusListFile;
