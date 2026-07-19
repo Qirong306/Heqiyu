@@ -1681,8 +1681,7 @@ function closeAllFullscreens() {
         'gomokuFullscreen', 
         'murderFullscreen', 
         'wheelFullscreen',
-        'bookFullscreen', 
-        'notebookFullscreen', 
+        'bookFullscreen',  
         'themeFullscreen', 
         'musicPlayerFullscreen',
         'cozyOverlay'
