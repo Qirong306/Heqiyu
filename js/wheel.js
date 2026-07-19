@@ -39,21 +39,12 @@ var wheelAngle = 0;
 var wheelTimer = null;
 
 function openWheel() {
-    if (typeof closeAllModals === 'function') closeAllModals();
-    if (typeof toggleMorePanel === 'function') {
-        var p = document.getElementById('morePanel');
-        if (p && p.style.display === 'block') toggleMorePanel();
-    }
-
-    var items = appData.wheelItems || [];
-    if (items.length < 2) {
-        showToast('至少需要2个词条，请先添加');
-        return;
-    }
-
+    closeAllFullscreens();
+    
     var overlay = document.createElement('div');
     overlay.className = 'fullscreen-overlay active';
     overlay.id = 'wheelFullscreen';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;';
     
     overlay.innerHTML = `
         <div class="fullscreen-header">
@@ -61,51 +52,22 @@ function openWheel() {
                 <span class="back-arrow"></span> 返回
             </button>
             <span class="fullscreen-title">幸福转盘</span>
-            <span onclick="toggleWheelMenu()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</span>
+            <span style="width:50px;"></span>
         </div>
-        <div class="fullscreen-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;">
-            <div style="font-size:13px;color:var(--text-secondary);">共 ${items.length} 件幸福小事</div>
-            <div style="position:relative;width:300px;height:300px;">
-                <canvas id="wheelCanvas" width="600" height="600" style="width:300px;height:300px;border-radius:50%;"></canvas>
-                <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid var(--danger);z-index:2;"></div>
-            </div>
-            <button class="btn-sm" onclick="spinWheel()" id="wheelSpinBtn">开始转动</button>
-            <div id="wheelResult" style="text-align:center;font-size:16px;color:var(--accent);min-height:28px;font-weight:bold;"></div>
+        <div class="fullscreen-body" style="padding:16px;flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:12px;">幸福转盘开发中...</div>
         </div>
     `;
     document.body.appendChild(overlay);
-    
-    var menuDiv = document.createElement('div');
-    menuDiv.id = 'wheelMenu';
-    menuDiv.style.cssText = 'display:none;position:absolute;top:50px;right:16px;background:var(--panel-bg);border:2px solid var(--border);border-radius:var(--radius-sm);z-index:10;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
-    menuDiv.innerHTML = `
-        <div onclick="openWheelManage();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">管理词库</div>
-        <div onclick="importWheelJSON();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);">导入词库</div>
-        <div onclick="exportWheelJSON();closeWheelMenu();" style="padding:10px 16px;cursor:pointer;font-size:14px;color:var(--text);">导出词库</div>
-    `;
-    var header = overlay.querySelector('.fullscreen-header');
-    header.appendChild(menuDiv);
-    
-    setTimeout(function() { 
-        var canvas = document.getElementById('wheelCanvas');
-        if (canvas) {
-            canvas.width = 600;
-            canvas.height = 600;
-            canvas.style.width = '300px';
-            canvas.style.height = '300px';
-            drawWheel();
-        }
-    }, 300);
 }
 
 function closeWheelFullscreen() {
     var el = document.getElementById('wheelFullscreen');
     if (el) el.remove();
-    clearTimeout(wheelTimer);
-    wheelSpinning = false;
-    var menu = document.getElementById('wheelMenu');
-    if (menu) menu.remove();
 }
+
+window.openWheel = openWheel;
+window.closeWheelFullscreen = closeWheelFullscreen;
 
 function drawWheel() {
     var canvas = document.getElementById('wheelCanvas');
@@ -344,6 +306,3 @@ document.addEventListener('click', function(e) {
         closeWheelMenu();
     }
 });
-
-window.openWheel = openWheel;
-window.closeWheelFullscreen = closeWheelFullscreen;
