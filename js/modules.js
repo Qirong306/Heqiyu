@@ -526,3 +526,5 @@ function openBookFromSettings() {
     closeModal('settingsOverlay');
     openBookManageModal();
 }
+window.openBookManageModal = openBookManageModal;
+window.closeBookFullscreen = closeBookFullscreen;
