@@ -1517,3 +1517,69 @@ initApp().then(function() {
         setTimeout(function() { if (typeof showFloatingBall === 'function') { showFloatingBall(); } }, 1000);
     }
 }).catch(function(e) { console.error('启动失败:', e); });
+// ==================== Tab 切换 ====================
+
+function switchTab(tab) {
+    // 更新 Tab 高亮
+    document.querySelectorAll('.tab-item').forEach(function(el) {
+        el.classList.remove('active');
+        if (el.dataset.tab === tab) {
+            el.classList.add('active');
+        }
+    });
+    
+    var desktopView = document.getElementById('desktopView');
+    var chatView = document.getElementById('chatView');
+    var settingsOverlay = document.getElementById('settingsOverlay');
+    
+    if (tab === 'chat') {
+        if (desktopView) desktopView.style.display = 'flex';
+        if (chatView) chatView.classList.remove('active');
+        if (settingsOverlay) settingsOverlay.classList.remove('show');
+        // 关闭更多面板
+        var morePanel = document.getElementById('morePanel');
+        if (morePanel) morePanel.style.display = 'none';
+    } else if (tab === 'call') {
+        if (typeof startVoiceCall === 'function') {
+            startVoiceCall();
+        }
+        // 切回聊天Tab（因为通话是浮窗，不占界面）
+        setTimeout(function() {
+            document.querySelectorAll('.tab-item').forEach(function(el) {
+                el.classList.remove('active');
+                if (el.dataset.tab === 'chat') {
+                    el.classList.add('active');
+                }
+            });
+        }, 100);
+    } else if (tab === 'settings') {
+        if (typeof openSettings === 'function') {
+            openSettings();
+        }
+        // 切回聊天Tab（因为设置是弹窗）
+        setTimeout(function() {
+            document.querySelectorAll('.tab-item').forEach(function(el) {
+                el.classList.remove('active');
+                if (el.dataset.tab === 'chat') {
+                    el.classList.add('active');
+                }
+            });
+        }, 100);
+    }
+}
+
+// 更新时间
+function updateStatusTime() {
+    var el = document.getElementById('statusTime');
+    if (el) {
+        var now = new Date();
+        var h = String(now.getHours()).padStart(2, '0');
+        var m = String(now.getMinutes()).padStart(2, '0');
+        el.textContent = h + ':' + m;
+    }
+}
+setInterval(updateStatusTime, 10000);
+updateStatusTime();
+
+// 导出到全局
+window.switchTab = switchTab;
