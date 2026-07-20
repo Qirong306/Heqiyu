@@ -27,7 +27,7 @@
     --radius-lg: 22px;
     --radius-md: 16px;
     --radius-sm: 12px;
-    --font-main: 'Ma Shan Zheng', 'STKaiti', 'KaiTi', '楷体', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-main: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
     
     --icon-cozy: #f0c78e;
     --icon-shop: #f2cec0;
