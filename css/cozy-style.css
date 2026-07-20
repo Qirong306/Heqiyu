@@ -10,7 +10,8 @@
     background: #f5ede4;
     display: none;
     flex-direction: column;
-    font-family: 'Ma Shan Zheng', 'STKaiti', 'KaiTi', sans-serif;
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 17px;
     overflow: hidden;
 }
 .cozy-overlay.show {
