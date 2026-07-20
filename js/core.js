@@ -1809,7 +1809,7 @@ function renderSettingsContent() {
             </div>
             <div class="settings-item" onclick="openThemeModal()">
                 <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-theme"></div>
+                    <div class="settings-item-icon s-icon-dark"></div>
                     <span class="settings-item-name">深色模式</span>
                 </div>
                 <span class="settings-item-arrow">›</span>
