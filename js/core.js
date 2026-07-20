@@ -402,7 +402,18 @@ function getAllReplies() {
 
 // ========== 工具函数 ==========
 function openModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function closeModal(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+    
+    // 如果关闭的是子模态框，且购物商城正在显示，刷新列表
+    if (id === 'subOverlay') {
+        var shopFullscreen = document.getElementById('shopFullscreen');
+        if (shopFullscreen && typeof renderShopItemsList === 'function') {
+            renderShopItemsList();
+        }
+    }
+}
 function formatTime(ts) { if (!ts) return ''; var d = new Date(ts); return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
 function formatTimeShort(ts) { if (!ts) return ''; var d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
 function escapeHTML(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
