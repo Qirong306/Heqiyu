@@ -149,10 +149,10 @@ function renderShopFullscreen() {
         '</button>' +
         '</div>';
     
-    html += '<div class="btn-row" style="gap:8px;justify-content:center;margin-bottom:12px;">' +
-        '<button class="btn-sm" onclick="showAddItemModal()">添加商品</button>' +
-        '<button class="btn-sm outline" onclick="exportShopItems()">导出商品库</button>' +
-        '<button class="btn-sm outline" onclick="importShopItems()">导入商品库</button>' +
+    html += '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;justify-content:center;">' +
+        '<button onclick="showAddItemModal()" style="flex:1;min-width:90px;padding:12px 18px;border:none;border-radius:12px;background:var(--accent);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.25s;box-shadow:0 2px 8px rgba(0,0,0,0.06);">添加商品</button>' +
+        '<button onclick="exportShopItems()" style="flex:1;min-width:90px;padding:12px 18px;border:1.5px solid var(--border);border-radius:12px;background:var(--item-bg);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.25s;box-shadow:0 2px 8px rgba(0,0,0,0.04);">导出商品库</button>' +
+        '<button onclick="importShopItems()" style="flex:1;min-width:90px;padding:12px 18px;border:1.5px solid var(--border);border-radius:12px;background:var(--item-bg);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.25s;box-shadow:0 2px 8px rgba(0,0,0,0.04);">导入商品库</button>' +
         '</div>';
     
     html += '<div style="max-height:50vh;overflow-y:auto;" id="shopItemsList">加载中...</div>';
