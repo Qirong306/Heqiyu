@@ -43,13 +43,22 @@ function openForum() {
                 <span class="back-arrow"></span> 返回
             </button>
             <span class="fullscreen-title">论坛</span>
-            <span onclick="toggleForumMenu()" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</span>
+            <span id="forumMenuBtn" style="font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px;">☰</span>
         </div>
         <div class="fullscreen-body" id="forumFullscreenBody" style="padding:16px;flex:1;overflow-y:auto;">
             <div id="forumTopicList" style="text-align:left;"></div>
         </div>
     `;
     document.body.appendChild(overlay);
+    
+    // 用 addEventListener 绑定点击事件
+    var menuBtn = overlay.querySelector('#forumMenuBtn');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleForumMenu();
+        });
+    }
     
     var menuDiv = document.createElement('div');
     menuDiv.id = 'forumDropdownMenu';
