@@ -1639,7 +1639,6 @@ function sendWheelInviteManually() { sendWheelInvite(); }
 // ========== 打开设置 ==========
 function openSettings() { openModal('settingsOverlay'); }
 function openSubModal(html) {
-    console.log('openSubModal 被调用');  // 调试日志
     var modal = document.getElementById('subModal');
     if (!modal) {
         console.error('subModal 元素不存在');
@@ -1649,10 +1648,10 @@ function openSubModal(html) {
     modal.innerHTML = html;
     var overlay = document.getElementById('subOverlay');
     if (overlay) {
+        // 关键：把 subOverlay 移到 body 最底部，确保它在所有元素之上
+        document.body.appendChild(overlay);
         overlay.classList.add('show');
-    } else {
-        console.error('subOverlay 元素不存在');
-        showToast('系统错误，请刷新重试');
+        overlay.style.zIndex = '1000';
     }
 }
 
