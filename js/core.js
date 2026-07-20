@@ -1798,49 +1798,34 @@ function renderSettingsContent() {
     if (!body) return;
     
     body.innerHTML = `
-        <div class="settings-group">
+    <div class="settings-group">
             <div class="settings-group-title">外观</div>
             <div class="settings-item" onclick="openColorThemeModal()">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-theme"></div>
-                    <span class="settings-item-name">主题颜色</span>
-                </div>
+                <span class="settings-item-name">主题颜色</span>
                 <span class="settings-item-arrow">›</span>
             </div>
             <div class="settings-item" onclick="openThemeModal()">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-dark"></div>
-                    <span class="settings-item-name">深色模式</span>
-                </div>
+                <span class="settings-item-name">深色模式</span>
                 <span class="settings-item-arrow">›</span>
             </div>
         </div>
-        
+    
         <div class="settings-group">
             <div class="settings-group-title">音乐</div>
             <div class="settings-item" onclick="openMusicPlayerFullscreen()">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-music"></div>
-                    <span class="settings-item-name">音乐播放器</span>
-                </div>
+                <span class="settings-item-name">音乐播放器</span>
                 <span class="settings-item-arrow">›</span>
             </div>
         </div>
-        
+    
         <div class="settings-group">
             <div class="settings-group-title">数据</div>
             <div class="settings-item" onclick="openBackupModal()">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-data"></div>
-                    <span class="settings-item-name">数据管理</span>
-                </div>
+                <span class="settings-item-name">数据管理</span>
                 <span class="settings-item-arrow">›</span>
             </div>
             <div class="settings-item" onclick="if(confirm('确定清除所有聊天记录吗？')){clearChatHistory();}">
-                <div class="settings-item-left">
-                    <div class="settings-item-icon s-icon-privacy"></div>
-                    <span class="settings-item-name">清空聊天记录</span>
-                </div>
+                <span class="settings-item-name">清空聊天记录</span>
                 <span class="settings-item-arrow">›</span>
             </div>
         </div>
